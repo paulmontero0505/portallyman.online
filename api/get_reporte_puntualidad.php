@@ -62,39 +62,34 @@ while ($row = mysqli_fetch_assoc($res)) {
 mysqli_stmt_close($st);
 
 $tallysPorTurno = [];
-$minutosAcumuladosPorTurno = [];
+$minutosTurnoPorTurno = [];
 $turnoIds = array_map(static fn($r) => (int)$r['id'], $registros);
 if ($turnoIds) {
     $idsSql = implode(',', $turnoIds);
     $tallyRes = mysqli_query($conn,
         "SELECT tp.turno_id, c.codigo, c.nombre, tp.funcion AS posicion, c.tipo_funcion, c.cuadrilla,
-                tp.ubicacion AS zona, COALESCE(ha.minutos_acumulados, 0) AS minutos_acumulados
+                tp.ubicacion AS zona,
+                CASE WHEN j.hora_fin > j.hora_inicio
+                     THEN TIME_TO_SEC(TIMEDIFF(j.hora_fin, j.hora_inicio)) / 60
+                     ELSE TIME_TO_SEC(TIMEDIFF(j.hora_fin, j.hora_inicio)) / 60 + 1440
+                END AS minutos_turno
            FROM turno_personal tp
             JOIN colaboradores c ON c.id=tp.colaborador_id
-           LEFT JOIN (
-                SELECT tph.colaborador_id,
-                       SUM(CASE WHEN jh.hora_fin > jh.hora_inicio
-                                THEN TIME_TO_SEC(TIMEDIFF(jh.hora_fin, jh.hora_inicio)) / 60
-                                ELSE TIME_TO_SEC(TIMEDIFF(jh.hora_fin, jh.hora_inicio)) / 60 + 1440
-                           END) AS minutos_acumulados
-                  FROM turno_personal tph
-                  JOIN turnos th ON th.id=tph.turno_id
-                  JOIN jornadas jh ON jh.id=th.jornada_id
-                 GROUP BY tph.colaborador_id
-           ) ha ON ha.colaborador_id=tp.colaborador_id
+           JOIN turnos t ON t.id=tp.turno_id
+           JOIN jornadas j ON j.id=t.jornada_id
            WHERE tp.turno_id IN ($idsSql)
            ORDER BY tp.turno_id, c.nombre");
     while ($row = mysqli_fetch_assoc($tallyRes)) {
         $turnoId = (string)$row['turno_id'];
-        $row['minutos_acumulados'] = (int)$row['minutos_acumulados'];
+        $row['minutos_turno'] = (int)$row['minutos_turno'];
         if (!isset($tallysPorTurno[$turnoId])) $tallysPorTurno[$turnoId] = [];
         $tallysPorTurno[$turnoId][] = $row;
-        $minutosAcumuladosPorTurno[$turnoId] = ($minutosAcumuladosPorTurno[$turnoId] ?? 0) + $row['minutos_acumulados'];
+        $minutosTurnoPorTurno[$turnoId] = ($minutosTurnoPorTurno[$turnoId] ?? 0) + $row['minutos_turno'];
     }
 }
 
 foreach ($registros as &$registro) {
-    $registro['minutos_acumulados'] = $minutosAcumuladosPorTurno[(string)$registro['id']] ?? 0;
+    $registro['minutos_turno'] = $minutosTurnoPorTurno[(string)$registro['id']] ?? 0;
 }
 unset($registro);
 
