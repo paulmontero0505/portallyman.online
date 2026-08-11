@@ -15,6 +15,7 @@ if (!is_array($data)) {
 $id           = isset($data['id']) ? (int)$data['id'] : 0;
 $codigo       = trim($data['codigo'] ?? '');
 $dni          = trim($data['dni'] ?? '');
+$celular      = trim($data['celular'] ?? '');
 $nombre       = trim($data['nombre'] ?? '');
 $funcion      = trim($data['funcion_principal'] ?? '');
 $tipo_funcion = trim($data['tipo_funcion'] ?? '');
@@ -29,7 +30,11 @@ if ($codigo === '' || !preg_match('/^[A-Za-z0-9]+$/', $codigo) || mb_strlen($cod
 if ($dni !== '' && !preg_match('/^\d{8}$/', $dni)) {
     echo json_encode(['success' => false, 'error' => 'DNI inválido (debe tener 8 dígitos).']); exit;
 }
+if ($celular !== '' && !preg_match('/^\+51 9\d{8}$/', $celular)) {
+    echo json_encode(['success' => false, 'error' => 'Celular inválido (formato: +51 9XXXXXXXX).']); exit;
+}
 $dniVal = $dni === '' ? null : $dni;
+$celularVal = $celular === '' ? null : $celular;
 if ($nombre === '' || mb_strlen($nombre) < 3) {
     echo json_encode(['success' => false, 'error' => 'Nombre requerido (mínimo 3 caracteres).']); exit;
 }
@@ -57,11 +62,11 @@ if ($id > 0) {
     $stmt = mysqli_prepare(
         $conn,
         "UPDATE colaboradores
-            SET codigo=?, dni=?, nombre=?, funcion_principal=?, tipo_funcion=?, cuadrilla=?,
+            SET codigo=?, dni=?, celular=?, nombre=?, funcion_principal=?, tipo_funcion=?, cuadrilla=?,
                 coordinador_id=?, activo=?
           WHERE id=?"
     );
-    mysqli_stmt_bind_param($stmt, 'ssssssiii', $codigo, $dniVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo, $id);
+    mysqli_stmt_bind_param($stmt, 'sssssssiii', $codigo, $dniVal, $celularVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo, $id);
 
     $ok  = mysqli_stmt_execute($stmt);
     $err = mysqli_stmt_error($stmt);
@@ -84,10 +89,10 @@ if ($id > 0) {
     // INSERT con codigo provisto por el usuario.
     $stmt = mysqli_prepare(
         $conn,
-        "INSERT INTO colaboradores (codigo, dni, nombre, funcion_principal, tipo_funcion, cuadrilla, coordinador_id, activo)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO colaboradores (codigo, dni, celular, nombre, funcion_principal, tipo_funcion, cuadrilla, coordinador_id, activo)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    mysqli_stmt_bind_param($stmt, 'ssssssii', $codigo, $dniVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo);
+    mysqli_stmt_bind_param($stmt, 'sssssssii', $codigo, $dniVal, $celularVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo);
     $ok  = mysqli_stmt_execute($stmt);
     $err = mysqli_stmt_error($stmt);
 

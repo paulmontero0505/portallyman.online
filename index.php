@@ -570,6 +570,25 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
     body .est-drawer .est-event[data-tipo="permiso"]::before {
       border-color: #ef4444 !important;
     }
+
+    /* Refrigerio masivo: búsqueda rápida y disposición utilizable en móvil. */
+    #refMasivoModal .rm-modal-body { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+    #refMasivoModal .rm-search { min-height:44px; display:flex; align-items:center; gap:9px; padding:0 12px; border:1.5px solid #00875A; border-radius:11px; background:#fff; color:#00875A; }
+    #refMasivoModal .rm-search:focus-within { box-shadow:0 0 0 3px rgba(0,135,90,.14); }
+    #refMasivoModal .rm-search svg { width:18px; height:18px; flex:0 0 auto; }
+    #refMasivoModal .rm-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#172033; font:600 13px 'DM Sans',sans-serif; }
+    #refMasivoModal .rm-search input::placeholder { color:#94a3b8; font-weight:500; }
+    #refMasivoModal .rm-modal-foot { flex:0 0 auto; border-top:1px solid #e2e8f0; background:#fff; }
+    @media (max-width:640px) {
+      body #refMasivoModal { top:auto; bottom:0; left:0; transform:translateY(105%); width:100% !important; max-width:none !important; max-height:94dvh; border-radius:18px 18px 0 0; }
+      body #refMasivoModal.open { transform:translateY(0); }
+      #refMasivoModal .rm-modal-body { padding:14px 18px!important; gap:12px!important; }
+      #refMasivoModal .rm-time-grid, #refMasivoModal .rm-filter-grid { grid-template-columns:1fr!important; gap:10px!important; }
+      #refMasivoModal .est-field input, #refMasivoModal .est-field select, #refMasivoModal .rm-search input { min-height:44px; font-size:16px; }
+      #refMasivoModal #rmLista { max-height:min(30dvh,260px)!important; }
+      #refMasivoModal .rm-modal-foot { padding:12px 18px max(12px,env(safe-area-inset-bottom))!important; }
+      #refMasivoModal .rm-modal-foot .est-btn { min-height:46px; }
+    }
   </style>
 </head>
 <body>
@@ -910,8 +929,8 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
             </div>
             <button class="est-modal-close" id="refMasivoClose">×</button>
           </div>
-          <div style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="rm-modal-body" style="padding:18px 20px;display:flex;flex-direction:column;gap:14px">
+            <div class="rm-time-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="est-field">
                 <label>Hora inicio</label>
                 <input type="time" id="rmIni">
@@ -930,7 +949,7 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
               </select>
             </div>
             <!-- Filtros de la lista (ubicación / función) -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div class="rm-filter-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
               <div class="est-field">
                 <label>Filtrar por ubicación</label>
                 <select id="rmFiltroUbic"><option value="">Todas</option></select>
@@ -940,6 +959,7 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
                 <select id="rmFiltroFunc"><option value="">Todas</option></select>
               </div>
             </div>
+            <label class="rm-search" for="rmBuscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="rmBuscar" type="search" placeholder="Buscar por nombre, código o función" autocomplete="off"></label>
             <!-- Lista de personal activo para seleccionar -->
             <div>
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -954,7 +974,7 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
             </div>
             <div id="rmInfo" style="font-size:12px;color:#6b7a8d;padding:7px 10px;background:#fff8ed;border-radius:8px;border:1px solid #fed7aa"></div>
           </div>
-          <div style="padding:0 20px 18px;display:flex;gap:10px">
+          <div class="rm-modal-foot" style="padding:0 20px 18px;display:flex;gap:10px">
             <button class="est-btn" id="refMasivoCancel" style="flex:1">Cancelar</button>
             <button class="est-btn primary" id="refMasivoGuardar" style="flex:2;background:#00875A;border-color:#00875A">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>

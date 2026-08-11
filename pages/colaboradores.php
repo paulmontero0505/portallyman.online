@@ -303,6 +303,9 @@ require_admin();
       box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2) !important;
     }
     .col-cell-actions { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+    body .col-act-btn.whatsapp { padding:6px 9px; border-color:rgba(22,163,74,.30) !important; background:rgba(22,163,74,.07) !important; color:#16a34a !important; }
+    body .col-act-btn.whatsapp:hover { background:#16a34a !important; color:#fff !important; border-color:#16a34a !important; }
+    body .col-act-btn.whatsapp:disabled { cursor:not-allowed; opacity:.42; background:#f1f5f9 !important; border-color:#cbd5e1 !important; color:#94a3b8 !important; box-shadow:none !important; }
 
     /* Modal Form overrides */
     body .col-modal {
@@ -345,7 +348,8 @@ require_admin();
       font-size: 11.5px !important;
     }
     body .col-modal .col-field input,
-    body .col-modal .col-field select {
+    body .col-modal .col-field select,
+    body .col-modal .col-field textarea {
       background-color: #ffffff !important;
       border: 1.5px solid #d1d5db !important;
       color: #111827 !important;
@@ -353,7 +357,8 @@ require_admin();
       padding: 10px 12px !important;
     }
     body .col-modal .col-field input:focus,
-    body .col-modal .col-field select:focus {
+    body .col-modal .col-field select:focus,
+    body .col-modal .col-field textarea:focus {
       border-color: #00875A !important;
       box-shadow: 0 0 0 3px rgba(0, 135, 90, 0.15) !important;
       background-color: #ffffff !important;
@@ -361,6 +366,7 @@ require_admin();
     body .col-modal .col-field input::placeholder {
       color: #9ca3af !important;
     }
+    body .col-modal .col-field textarea { min-height:120px; resize:vertical; line-height:1.45; }
 
     /* Modal cancellation buttons */
     body .col-modal-foot button:not(.primary) {
@@ -775,6 +781,10 @@ require_admin();
           <input id="cm-dni" type="text" inputmode="numeric" placeholder="8 dígitos" maxlength="8" pattern="\d{8}">
         </div>
       </div>
+      <div class="col-field">
+        <label>Celular</label>
+        <input id="cm-celular" type="tel" inputmode="numeric" placeholder="+51 987654321" maxlength="13" pattern="\+51 9\d{8}">
+      </div>
       <div class="col-row2">
         <div class="col-field">
           <label>Team</label>
@@ -820,6 +830,15 @@ require_admin();
       <button class="col-btn" id="colModalCancel">Cancelar</button>
       <button class="col-btn primary" id="colModalSave">Guardar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL: mensaje individual por WhatsApp -->
+<div class="col-modal-back" id="waModalBack">
+  <div class="col-modal" style="width:560px">
+    <div class="col-modal-head"><div><h3>Enviar WhatsApp</h3><div class="sub" id="waModalSub">Mensaje al colaborador.</div></div><button class="col-modal-close" id="waModalClose" type="button" aria-label="Cerrar">×</button></div>
+    <div class="col-modal-body"><input id="waColaboradorId" type="hidden"><div class="col-field"><label for="waMessage">Mensaje</label><textarea id="waMessage" maxlength="800" placeholder="Escribe el mensaje para el colaborador..."></textarea></div><div class="col-codigo" id="waMessageCount">0 / 800 caracteres</div></div>
+    <div class="col-modal-foot"><button class="col-btn" id="waModalCancel" type="button">Cancelar</button><button class="col-btn primary" id="waModalSave" type="button">Enviar WhatsApp</button></div>
   </div>
 </div>
 
@@ -907,6 +926,37 @@ require_admin();
     const w = String(n || '').trim().split(/\s+/);
     return ((w[0]?.[0] ?? '') + (w[1]?.[0] ?? '')).toUpperCase();
   }
+  function whatsappNumero(celular) {
+    let digits = String(celular || '').replace(/\D/g, '');
+    if (/^9\d{8}$/.test(digits)) digits = `51${digits}`;
+    return /^519\d{8}$/.test(digits) ? digits : '';
+  }
+  function openWhatsAppModal(id) {
+    const c = colaboradores.find(x => Number(x.id) === Number(id));
+    if (!c || !whatsappNumero(c.celular)) { toast('El colaborador no tiene un celular válido', 'error'); return; }
+    $('waColaboradorId').value = c.id;
+    $('waModalSub').textContent = `${c.nombre} · ${c.celular}`;
+    $('waMessage').value = `Hola ${String(c.nombre || '').trim()}, te escribimos desde Tallyman Control.`;
+    updateWhatsAppCount();
+    $('waModalBack').classList.add('open');
+    setTimeout(() => $('waMessage').focus(), 80);
+  }
+  function closeWhatsAppModal() { $('waModalBack').classList.remove('open'); }
+  function updateWhatsAppCount() { $('waMessageCount').textContent = `${$('waMessage').value.length} / 800 caracteres`; }
+  async function enviarWhatsApp() {
+    const colaboradorId = Number($('waColaboradorId').value || 0);
+    const mensaje = $('waMessage').value.trim();
+    if (mensaje.length < 3) { toast('Escribe un mensaje de al menos 3 caracteres', 'error'); return; }
+    const btn = $('waModalSave'); const original = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    try {
+      const res = await fetch('../api/send_colaborador_whatsapp.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ colaborador_id:colaboradorId, mensaje }) });
+      const data = await res.json();
+      if (!data.success) { toast(data.error || 'No se pudo enviar el mensaje', 'error'); return; }
+      toast('Mensaje enviado por WhatsApp'); closeWhatsAppModal();
+    } catch (e) { console.error('[colaboradores] WhatsApp:', e); toast('Error de red', 'error'); }
+    finally { btn.disabled = false; btn.textContent = original; }
+  }
 
   function renderKpis() {
     $('kpiTotal').textContent      = colaboradores.length;
@@ -949,6 +999,7 @@ require_admin();
     }
     list.forEach(c => {
       const tr = document.createElement('tr');
+      const waNumero = whatsappNumero(c.celular);
       tr.innerHTML = `
         <td>
           <div class="col-cell-name">
@@ -968,6 +1019,7 @@ require_admin();
         <td><span class="col-badge ${c.activo ? 'is-active' : 'is-inactive'}"><span class="dot"></span>${c.activo ? 'Activo' : 'Inactivo'}</span></td>
         <td>
           <div class="col-cell-actions">
+            <button class="col-act-btn whatsapp" data-action="whatsapp" data-id="${c.id}" ${waNumero ? '' : 'disabled'} title="${waNumero ? 'Enviar WhatsApp' : 'Sin celular válido'}">WhatsApp</button>
             <button class="col-act-btn" data-action="edit" data-id="${c.id}">Editar</button>
             <button class="col-act-btn danger" data-action="del" data-id="${c.id}">Eliminar</button>
           </div>
@@ -1037,6 +1089,7 @@ require_admin();
     $('cm-nombre').value          = c ? (c.nombre ?? '') : '';
     $('cm-codigo').value          = c ? (c.codigo ?? '') : '';
     $('cm-dni').value             = c ? (c.dni ?? '') : '';
+    $('cm-celular').value         = c ? (c.celular ?? '') : '';
     $('cm-funcion').value         = c ? (c.funcion_principal ?? '') : '';
     $('cm-tipo-funcion').value    = c ? (c.tipo_funcion ?? '') : '';
     $('cm-cuadrilla').value       = c ? (c.cuadrilla ?? '') : '';
@@ -1052,6 +1105,7 @@ require_admin();
       id:                Number($('cm-id').value || 0),
       codigo:            $('cm-codigo').value.trim(),
       dni:               $('cm-dni').value.trim(),
+      celular:           $('cm-celular').value.trim(),
       nombre:            $('cm-nombre').value.trim(),
       funcion_principal: $('cm-funcion').value.trim(),
       tipo_funcion:      $('cm-tipo-funcion').value.trim(),
@@ -1064,6 +1118,9 @@ require_admin();
     }
     if (payload.dni && !/^\d{8}$/.test(payload.dni)) {
       toast('DNI inválido (8 dígitos)', 'error'); $('cm-dni').focus(); return;
+    }
+    if (payload.celular && !/^\+51 9\d{8}$/.test(payload.celular)) {
+      toast('Celular inválido (formato: +51 9XXXXXXXX)', 'error'); $('cm-celular').focus(); return;
     }
     if (payload.nombre.length < 3) { toast('Nombre requerido', 'error'); $('cm-nombre').focus(); return; }
     if (!payload.funcion_principal) { toast('Puesto requerido', 'error'); $('cm-funcion').focus(); return; }
@@ -1286,6 +1343,11 @@ require_admin();
   // ─── Eventos ───
   $('btnNew').addEventListener('click', () => openModal(null));
   $('btnImport').addEventListener('click', impOpen);
+  $('cm-celular').addEventListener('input', e => {
+    let digits = e.target.value.replace(/\D/g, '');
+    if (digits.startsWith('51')) digits = digits.slice(2);
+    e.target.value = digits ? `+51 ${digits.slice(0, 9)}` : '';
+  });
   $('colSearch').addEventListener('input', e => { query = e.target.value; render(); });
   $('colCoordFilter').addEventListener('change', e => {
     coordFiltro = e.target.value;
@@ -1300,6 +1362,7 @@ require_admin();
   });
   $('colTbody').addEventListener('click', e => {
     const b = e.target.closest('[data-action]'); if (!b) return;
+    if (b.dataset.action === 'whatsapp') return openWhatsAppModal(b.dataset.id);
     if (b.dataset.action === 'edit') openModal(b.dataset.id);
     if (b.dataset.action === 'del')  eliminar(b.dataset.id);
   });
@@ -1307,9 +1370,15 @@ require_admin();
   $('colModalCancel').addEventListener('click', closeModal);
   $('colModalBack').addEventListener('click', e => { if (e.target === $('colModalBack')) closeModal(); });
   $('colModalSave').addEventListener('click', guardar);
+  $('waModalClose').addEventListener('click', closeWhatsAppModal);
+  $('waModalCancel').addEventListener('click', closeWhatsAppModal);
+  $('waModalBack').addEventListener('click', e => { if (e.target === $('waModalBack')) closeWhatsAppModal(); });
+  $('waMessage').addEventListener('input', updateWhatsAppCount);
+  $('waModalSave').addEventListener('click', enviarWhatsApp);
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if ($('colModalBack').classList.contains('open')) closeModal();
+    if ($('waModalBack').classList.contains('open')) closeWhatsAppModal();
     if ($('impModalBack').classList.contains('open')) impClose();
   });
 

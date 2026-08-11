@@ -50,7 +50,7 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
     <!-- OPERACIÓN · Coordinador / Supervisor / Administrador -->
 
     <!-- CONTROL DE CAMPO (grupo) · contiene Incidencias -->
-    <?php $ccActive = in_array($cur, ['incidencias.php', 'reporte_inspeccion.php', 'evaluacion_desempeno.php', 'evades.php', 'asistencias.php', 'capacitaciones.php', 'reconocimientos.php'], true); ?>
+    <?php $ccActive = in_array($cur, ['incidencias.php', 'reporte_inspeccion.php', 'evaluacion_desempeno.php', 'evades.php', 'asistencias.php', 'capacitaciones.php', 'reconocimientos.php', 'record_personal_tallyman.php'], true); ?>
     <a href="#" class="nav-item nav-toggle<?= $ccActive ? ' open' : '' ?>" data-submenu="submenu-cc">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -128,6 +128,10 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
           </svg>
         </span>
         <span class="sub-label">Reconocimiento Tally</span>
+      </a>
+      <a href="<?= $sb_base ?? '..' ?>/pages/record_personal_tallyman.php" class="sub-item sub-item--icon<?= ($cur === 'record_personal_tallyman.php') ? ' active' : '' ?>">
+        <span class="sub-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/><path d="M17 11h4M19 9v4"/></svg></span>
+        <span class="sub-label">Récord personal</span>
       </a>
     </div>
 
@@ -242,6 +246,14 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
       </span>
       <span class="nav-label">Sugerencias Tallyman</span>
       <span class="tip">Sugerencias Tallyman</span>
+    </a>
+
+    <a href="<?= $sb_base ?? '..' ?>/pages/whatsapp.php" class="nav-item<?= ($cur === 'whatsapp.php') ? ' active' : '' ?>">
+      <span class="nav-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M8.5 9.2c.3 2.2 2.1 4 4.3 4.3"/></svg>
+      </span>
+      <span class="nav-label">WhatsApp</span>
+      <span class="tip">WhatsApp</span>
     </a>
     <?php endif; ?>
 

@@ -2579,8 +2579,10 @@
     function rmFiltrados() {
       const u = $('rmFiltroUbic') ? $('rmFiltroUbic').value : '';
       const f = $('rmFiltroFunc') ? $('rmFiltroFunc').value : '';
+      const q = $('rmBuscar') ? $('rmBuscar').value.trim().toLowerCase() : '';
       return rmActivos().filter(p =>
-        (!u || (p.ubicacion || '—') === u) && (!f || (p.funcion || '—') === f));
+        (!u || (p.ubicacion || '—') === u) && (!f || (p.funcion || '—') === f)
+        && (!q || [p.nombre, p.codigo, p.funcion, p.ubicacion].some(v => String(v || '').toLowerCase().includes(q))));
     }
     function rmSeleccionados() { return [...rmSel]; }
     function rmUpdateInfo() {
@@ -2634,6 +2636,7 @@
       $('rmIni').value = ''; $('rmFin').value = '';
       if ($('rmFiltroUbic')) $('rmFiltroUbic').value = '';
       if ($('rmFiltroFunc')) $('rmFiltroFunc').value = '';
+      if ($('rmBuscar')) $('rmBuscar').value = '';
       rmSel = new Set(rmActivos().map(p => p.id));   // por defecto, todos seleccionados
       llenarRmFiltros();
       renderRmLista();
@@ -2685,6 +2688,7 @@
     // Al cambiar un filtro, re-renderiza la lista conservando la selección.
     if ($('rmFiltroUbic')) $('rmFiltroUbic').addEventListener('change', renderRmLista);
     if ($('rmFiltroFunc')) $('rmFiltroFunc').addEventListener('change', renderRmLista);
+    if ($('rmBuscar')) $('rmBuscar').addEventListener('input', renderRmLista);
 
     // ── Cierre de refrigerio masivo (poner hora fin a los abiertos) ─────────
     let rcSel = new Set();
