@@ -2,6 +2,8 @@ deployment:
   tasks:
     - export DEPLOY_PATH=/home/portally/portallyman.online
     - /bin/mkdir -p $DEPLOY_PATH
-    - /bin/cp -R api assets css img includes js logo pages $DEPLOY_PATH/
+    - /bin/cp -R api assets css img js logo pages $DEPLOY_PATH/
+    - /bin/mkdir -p $DEPLOY_PATH/includes
+    - /usr/bin/find includes -mindepth 1 -maxdepth 1 ! -name db.php -exec /bin/cp -R {} $DEPLOY_PATH/includes/ \;
     - /bin/cp .htaccess index.php login.php $DEPLOY_PATH/
     - echo "Despliegue completado en $(date)" >> $DEPLOY_PATH/deploy.log
