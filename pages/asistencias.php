@@ -481,16 +481,16 @@ require_once('../includes/drive_config.php');
   let query = '', filtro = 'todos', filtroPunt = 'todos';
 
   // ─── Puntualidad de la charla pre-operativa ───
-  // Hora tope para subir la charla según el turno. Hasta la hora exacta cuenta
-  // como On time; a partir del minuto siguiente, Off time.
-  const HORA_LIMITE = { dia: '06:45', noche: '18:45' };
+  // Solo las ventanas definidas se clasifican como Off time. Una marcación
+  // posterior vuelve a contar como On time para el reporte operativo.
+  const VENTANA_OFF_TIME = { dia: ['06:45', '07:30'], noche: ['18:45', '19:30'] };
 
   // 'ontime' | 'offtime' | null (sin hora registrada o turno desconocido).
   function puntualidad(a) {
-    const limite = HORA_LIMITE[a.turno];
+    const ventana = VENTANA_OFF_TIME[a.turno];
     const hora = fmtHora(a.hora);            // "HH:MM"
-    if (!limite || !hora) return null;
-    return hora <= limite ? 'ontime' : 'offtime';   // comparación lexicográfica: válida en HH:MM
+    if (!ventana || !hora) return null;
+    return hora >= ventana[0] && hora <= ventana[1] ? 'offtime' : 'ontime';
   }
   function puntBadge(a) {
     const p = puntualidad(a);
