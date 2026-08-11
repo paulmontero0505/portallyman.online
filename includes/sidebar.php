@@ -36,6 +36,11 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
       <span class="nav-label">Reporte de turno</span>
       <span class="tip">Reporte de turno</span>
     </a>
+    <a href="<?= $sb_base ?? '..' ?>/pages/reporte_tardanzas_charlas.php" class="nav-item<?= ($cur === 'reporte_tardanzas_charlas.php') ? ' active' : '' ?>">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/><path d="M12 3v2"/></svg></span>
+      <span class="nav-label">Tardanzas en charlas</span>
+      <span class="tip">Tardanzas en charlas</span>
+    </a>
     <?php endif; ?>
 
     <?php if (in_array($rol, ['Administrador', 'Supervisor', 'Coordinador', 'Soporte'], true)): ?>
