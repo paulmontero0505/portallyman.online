@@ -399,6 +399,15 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
               <option value="sin">Sin calificar</option>
             </select>
           </div>
+
+          <div class="sg-select-wrap" id="sgWaWrap">
+            <label for="sgFilterWa">WhatsApp</label>
+            <select id="sgFilterWa" title="Filtra por respuestas enviadas por WhatsApp">
+              <option value="todos">Todos</option>
+              <option value="respondido">Respondido</option>
+              <option value="pendiente">Sin responder</option>
+            </select>
+          </div>
         </div>
 
         <div class="sg-table-wrap">
@@ -411,12 +420,13 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
                 <th>Detalle</th>
                 <th>Calificación</th>
                 <th>Decisión</th>
+                <th>WhatsApp</th>
                 <th>Fecha</th>
                 <th style="text-align:right">Acciones</th>
               </tr>
             </thead>
             <tbody id="sgTbody">
-              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -505,6 +515,7 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
   let filtroCoord  = 'todos';
   let filtroImpacto= 'todos';
   let filtroViab   = 'todos';
+  let filtroWa     = 'todos';
   let currentViewId = null;
 
   function banda(viab) {
@@ -595,6 +606,18 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
     return sugerencias.filter(s => Number(s.coord_cargo_id) === Number(filtroCoord));
   }
 
+  function waEstado(s) {
+    if (!s.colaborador_nombre) return 'no_aplica';
+    return s.respuesta_whatsapp_at ? 'respondido' : 'pendiente';
+  }
+  function waCell(s) {
+    const e = waEstado(s);
+    if (e === 'no_aplica') return `<span class="sg-sub">—</span>`;
+    if (e === 'respondido')
+      return `<span class="sg-pill" style="color:#12B76A;background:#12B76A1A" title="Respuesta enviada ${fmtFechaHora(s.respuesta_whatsapp_at)}"><span class="dot"></span>Respondido</span>`;
+    return `<span class="sg-pill" style="color:#b45309;background:#FEF3C71A;border:1px solid #FDE68A" title="Aún no se ha respondido"><span class="dot"></span>Sin responder</span>`;
+  }
+
   function renderKpis() {
     const base = alcanceCoord();
     $('kpiTotal').textContent = base.length;
@@ -632,6 +655,12 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
         else if (!b || b.key !== filtroViab) return false;
       }
 
+      if (filtroWa !== 'todos') {
+        const e = waEstado(s);
+        if (filtroWa === 'respondido' && e !== 'respondido') return false;
+        if (filtroWa === 'pendiente' && e !== 'pendiente') return false;
+      }
+
       if (!q) return true;
       return [s.colaborador_nombre, s.colaborador_cargo, s.coord_cargo_nombre, s.detalle]
         .some(v => String(v ?? '').toLowerCase().includes(q));
@@ -643,7 +672,7 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
     const tb = $('sgTbody');
     tb.innerHTML = '';
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Sin registros.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--co-faint)">Sin registros.</td></tr>`;
       return;
     }
     list.forEach(s => {
@@ -659,6 +688,7 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
         <td><div class="sg-detalle-preview" title="${esc(detalleTexto(s))}">${esc(detalleTexto(s))}</div></td>
         <td>${califCell(s)}</td>
         <td>${decCell(s)}</td>
+        <td>${waCell(s)}</td>
         <td>${fmtFechaHora(s.created_at)}</td>
         <td>
           <div class="sg-cell-actions">
@@ -792,6 +822,10 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
           <div class="sg-wa-head"><span class="sg-wa-title">Respuesta por WhatsApp</span><span class="sg-wa-meta">${telefonoDisponible ? esc(s.colaborador_celular) : 'Celular no disponible'}</span></div>
           <textarea id="sgWhatsappRespuesta" maxlength="800" placeholder="Escribe la respuesta para el colaborador..." ${telefonoDisponible ? '' : 'disabled'}>${esc(s.respuesta_whatsapp || '')}</textarea>
           <div class="sg-wa-actions"><span class="sg-wa-status ${telefonoDisponible ? '' : 'is-disabled'}">${telefonoDisponible ? estadoEnvio : 'Registra un celular con formato +51 9XXXXXXXX para enviar.'}</span><button class="sg-btn primary" id="sgEnviarWhatsapp" ${telefonoDisponible ? '' : 'disabled'}>Enviar WhatsApp</button></div>
+        </div>
+        <div class="sg-wa-box" style="background:var(--co-deck)">
+          <div class="sg-wa-head"><span class="sg-wa-title">Historial de respuestas por WhatsApp</span></div>
+          <div id="sgWaHistorial" style="display:flex;flex-direction:column;gap:8px"><span class="sg-wa-status">Cargando historial…</span></div>
         </div>`;
     }
 
@@ -876,6 +910,28 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
       });
     }
 
+    if (!esAnon) {
+      (async () => {
+        try {
+          const res = await fetch(`${BASE}/api/get_sugerencia_whatsapp_historial.php?id=${s.id}`, { cache: 'no-store' });
+          const data = await res.json();
+          const cont = $('sgWaHistorial');
+          if (!data.success || !(data.data || []).length) {
+            cont.innerHTML = `<span class="sg-wa-status">Sin respuestas registradas todavía.</span>`;
+            return;
+          }
+          cont.innerHTML = data.data.map(h => `
+            <div style="background:#fff;border:1px solid rgba(0,135,90,.18);border-radius:9px;padding:10px 12px;display:flex;flex-direction:column;gap:4px">
+              <div style="font-size:11px;color:var(--co-mute)">${esc(h.enviado_por || 'Administrador')} · ${fmtFechaHora(h.enviado_at)}</div>
+              <div style="font-size:13px;color:var(--co-ink);white-space:pre-wrap">${esc(h.mensaje)}</div>
+            </div>`).join('');
+        } catch (e) {
+          const cont = $('sgWaHistorial');
+          if (cont) cont.innerHTML = `<span class="sg-wa-status is-disabled">No se pudo cargar el historial.</span>`;
+        }
+      })();
+    }
+
     $('sgViewBack').classList.add('open');
   }
   function closeView() { $('sgViewBack').classList.remove('open'); currentViewId = null; }
@@ -905,6 +961,11 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
   $('sgFilterViab').addEventListener('change', e => {
     filtroViab = e.target.value;
     $('sgViabWrap').classList.toggle('on', filtroViab !== 'todos');
+    render();
+  });
+  $('sgFilterWa').addEventListener('change', e => {
+    filtroWa = e.target.value;
+    $('sgWaWrap').classList.toggle('on', filtroWa !== 'todos');
     render();
   });
   $('sgTbody').addEventListener('click', e => {
