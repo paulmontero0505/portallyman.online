@@ -1,0 +1,97 @@
+<div id="evb-prototype">
+  <style>
+    #evb-prototype{font-family:Inter,Arial,sans-serif;color:#183b5b}
+    #evb-prototype *{box-sizing:border-box}
+    #evb-prototype .stage-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0}
+    #evb-prototype .stage-tab{border:1px solid #d4e0ea;background:#fff;color:#4d657a;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
+    #evb-prototype .stage-tab.on{background:#24557f;color:#fff;border-color:#24557f}
+    #evb-prototype .screen{display:none}#evb-prototype .screen.on{display:block}
+    #evb-prototype .window{border:1px solid #d6e0e9;border-radius:18px;overflow:hidden;background:#f4f7fa;box-shadow:0 18px 50px rgba(26,60,91,.12)}
+    #evb-prototype .bar{display:flex;align-items:center;justify-content:space-between;padding:15px 18px;background:#204d74;color:#fff}
+    #evb-prototype .bar-title{font-weight:800}.bar-meta{font-size:12px;color:#d3e3f0}
+    #evb-prototype .bar-actions{display:flex;gap:8px}.bar-action{padding:7px 10px;border:1px solid rgba(255,255,255,.24);border-radius:8px;font-size:11px}.bar-action.primary{background:#fff;color:#204d74;font-weight:800}
+    #evb-prototype .content{padding:16px}.grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:14px}.panel{background:#fff;border:1px solid #dce5ed;border-radius:13px;padding:14px}
+    #evb-prototype .eyebrow{font-size:10px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#7790a5}.heading{font-size:16px;font-weight:800;margin-top:4px}.muted{font-size:11px;color:#708295;margin-top:4px}
+    #evb-prototype .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:13px}.field{border:1px solid #d5e0e8;border-radius:9px;padding:9px;background:#fafcfd}.field b{display:block;margin-top:4px}
+    #evb-prototype .coverage{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.metric{background:#eef4f8;border-radius:9px;padding:10px}.metric strong{display:block;font-size:19px}.metric small{color:#718497}
+    #evb-prototype .roster-preview{margin-top:12px}.roster-line{display:grid;grid-template-columns:1fr repeat(4,48px);gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #edf1f5}.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:#2fa46f}.dot.warn{background:#df8c2e}.tag{padding:4px 6px;border-radius:6px;background:#edf3f7;text-align:center;font-size:10px}.tag.bad{background:#fff0ef;color:#ad3c38}.tag.good{background:#e9f7f0;color:#277a57}
+    #evb-prototype .note{border-left:3px solid #2b70a7;background:#eef6fb;padding:10px 12px;border-radius:4px 9px 9px 4px;margin-top:11px;font-size:11px;color:#43627b}
+    #evb-prototype .workspace{display:grid;grid-template-columns:205px 1fr;min-height:585px}.rail{background:#183d5d;padding:14px;color:#d8e6f1}.rail-search{border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:8px;color:#aac1d4;margin:10px 0}.person{padding:10px;border-radius:9px;margin-bottom:5px;color:#cfe0ed}.person.on{background:#2c6d9f;color:#fff}.person-row{display:flex;justify-content:space-between}.person small{opacity:.75}.score-pill{font-weight:800}.workspace-main{padding:15px;background:#f4f7fa}
+    #evb-prototype .profile{display:grid;grid-template-columns:62px 1fr auto;gap:12px;align-items:center}.avatar{width:58px;height:58px;border-radius:15px;background:#dbeaf5;display:grid;place-items:center;font-weight:900;font-size:18px}.scorebox{text-align:right}.scorebox strong{font-size:28px;display:block}.status{font-size:10px;padding:4px 7px;border-radius:999px;background:#fff0ef;color:#a33c37}
+    #evb-prototype .subtabs{display:flex;gap:7px;margin:13px 0}.subtab{padding:8px 11px;background:#e7edf2;border-radius:8px;color:#587085;font-weight:700;font-size:11px}.subtab.on{background:#204d74;color:#fff}
+    #evb-prototype .competence{background:#fff;border:1px solid #dce5ed;border-radius:12px;padding:12px;margin-bottom:9px;display:grid;grid-template-columns:1fr auto;gap:12px}.comp-title{font-weight:800}.cross{font-size:10px;color:#42739a;margin-top:3px}.evidence{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.evi{font-size:10px;padding:5px 7px;border-radius:7px;background:#edf3f7;color:#566d80}.evi.neg{background:#fff0ef;color:#a7463f}.evi.pos{background:#e9f7f0;color:#257654}.calculation{display:flex;align-items:center;gap:5px}.num{min-width:31px;padding:7px;border-radius:7px;text-align:center;background:#eef3f7;font-weight:800}.num.plus{color:#227754;background:#e9f7f0}.num.minus{color:#ac3f39;background:#fff0ef}.num.final{background:#204d74;color:#fff}
+    #evb-prototype .why{grid-column:1/-1;border-top:1px solid #edf1f5;padding-top:9px;font-size:11px;color:#637b90}.why b{color:#244d6f}
+    #evb-prototype .report{padding:18px}.report-head{display:grid;grid-template-columns:1fr 110px;gap:16px}.report-score{background:#204d74;color:#fff;border-radius:14px;padding:16px;text-align:center}.report-score strong{font-size:34px;display:block}.section-title{font-weight:800;margin:15px 0 8px}.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.summary-row{background:#fff;border:1px solid #dce5ed;border-radius:10px;padding:10px}.summary-row-head{display:flex;justify-content:space-between;font-weight:800}.barline{height:6px;background:#e5ebf0;border-radius:999px;margin-top:8px;overflow:hidden}.barline span{display:block;height:100%;background:#2d73aa}.timeline{border-left:2px solid #cddbe6;margin-left:8px;padding-left:14px}.event{margin:10px 0}.event b{display:block}.event small{color:#718497}
+    #evb-prototype .approve{margin-top:18px;border:1px solid #cfdde8;border-radius:12px;padding:13px;text-align:center;cursor:pointer;background:#fff}.approve.selected{outline:3px solid #2c70a7}.approve strong{display:block}
+    @media(max-width:850px){#evb-prototype .grid2,#evb-prototype .summary-grid{grid-template-columns:1fr}#evb-prototype .coverage{grid-template-columns:1fr 1fr}#evb-prototype .workspace{grid-template-columns:1fr}#evb-prototype .rail{display:flex;gap:6px;overflow:auto}#evb-prototype .rail .eyebrow,#evb-prototype .rail-search{display:none}#evb-prototype .person{min-width:135px}#evb-prototype .report-head{grid-template-columns:1fr}}
+  </style>
+
+  <h2>Opción B aplicada a todo el flujo</h2>
+  <p class="subtitle">Cambia entre las tres vistas: generación del bloque, evaluación con evidencia y consulta final.</p>
+  <div class="stage-tabs">
+    <button class="stage-tab on" type="button" data-screen="generate">1. Generar bloque</button>
+    <button class="stage-tab" type="button" data-screen="evaluate">2. Evaluar equipo</button>
+    <button class="stage-tab" type="button" data-screen="view">3. Visualizar resultado</button>
+  </div>
+
+  <section class="screen on" data-panel="generate">
+    <div class="window">
+      <div class="bar"><div><div class="bar-title">Nueva evaluación trimestral</div><div class="bar-meta">Configure el bloque y valide la cobertura antes de generarlo</div></div><div class="bar-actions"><span class="bar-action">Cancelar</span><span class="bar-action primary">Generar 18 evaluaciones</span></div></div>
+      <div class="content grid2">
+        <div class="panel">
+          <div class="eyebrow">Contexto de evaluación</div><div class="heading">Equipo y período</div>
+          <div class="form-grid"><div class="field"><span class="eyebrow">Coordinador</span><b>Grecia Risco Seminario</b></div><div class="field"><span class="eyebrow">Puesto</span><b>Asistente de estiba</b></div><div class="field"><span class="eyebrow">Período</span><b>2026 - T3 · Jul a Sep</b></div><div class="field"><span class="eyebrow">Estado inicial</span><b>Generado</b></div></div>
+          <div class="note">El cálculo solo utilizará evidencia fechada dentro de 2026-T3. Los incidentes de otro trimestre no se mezclarán.</div>
+          <div class="coverage"><div class="metric"><strong>18</strong><small>personas</small></div><div class="metric"><strong>31</strong><small>incidencias</small></div><div class="metric"><strong>29</strong><small>EPT</small></div><div class="metric"><strong>5</strong><small>reconocimientos</small></div></div>
+        </div>
+        <div class="panel">
+          <div class="eyebrow">Vista previa de cobertura</div><div class="heading">¿Hay evidencia suficiente?</div>
+          <div class="roster-preview"><div class="roster-line"><strong><i class="dot"></i>Nayeli Melgarejo</strong><span class="tag bad">2 inc.</span><span class="tag good">4 EPT</span><span class="tag">1 rec.</span><span class="tag">Lista</span></div><div class="roster-line"><strong><i class="dot"></i>Carolay Huanca</strong><span class="tag">0 inc.</span><span class="tag good">5 EPT</span><span class="tag">0 rec.</span><span class="tag">Lista</span></div><div class="roster-line"><strong><i class="dot warn"></i>Kathlin Alejo</strong><span class="tag bad">1 inc.</span><span class="tag">1 EPT</span><span class="tag">0 rec.</span><span class="tag bad">Revisar</span></div></div>
+          <div class="note"><strong>3 personas requieren revisión:</strong> tienen poca evidencia automática. Podrán evaluarse con apreciación documentada del coordinador.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-panel="evaluate">
+    <div class="window">
+      <div class="bar"><div><div class="bar-title">2026-T3 · Asistente de estiba</div><div class="bar-meta">Bloque #EV-2026-003 · Revisado</div></div><div class="bar-actions"><span class="bar-action">Guardar borrador</span><span class="bar-action primary">Cerrar evaluación</span></div></div>
+      <div class="workspace">
+        <aside class="rail"><div class="eyebrow" style="color:#9dbbd0">Equipo · 18</div><div class="rail-search">Buscar colaborador…</div><div class="person on"><div class="person-row"><b>Nayeli M.</b><span class="score-pill">52</span></div><small>3 fuentes · revisar</small></div><div class="person"><div class="person-row"><b>Carolay H.</b><span class="score-pill">64</span></div><small>2 fuentes · lista</small></div><div class="person"><div class="person-row"><b>Kathlin A.</b><span class="score-pill">58</span></div><small>2 fuentes · cambios</small></div><div class="person"><div class="person-row"><b>Elizabeth C.</b><span class="score-pill">62</span></div><small>4 fuentes · lista</small></div></aside>
+        <main class="workspace-main">
+          <div class="panel profile"><div class="avatar">NM</div><div><div class="eyebrow">Asistente de estiba · Cód. 0049</div><div class="heading">Melgarejo Wu Nayeli Patricia</div><div class="evidence"><span class="evi">4 EPT</span><span class="evi neg">2 incidencias</span><span class="evi pos">1 reconocimiento</span><span class="evi">1 cruce aplicado</span></div></div><div class="scorebox"><strong>52</strong><span class="status">Debajo de lo esperado</span></div></div>
+          <div class="subtabs"><span class="subtab on">Conductuales · 24/50</span><span class="subtab">Operativas · 28/50</span><span class="subtab">Feedback y plan</span></div>
+          <article class="competence"><div><div class="comp-title">Organización y gestión del tiempo</div><div class="cross">Cruce: Disciplina profesional</div><div class="evidence"><span class="evi">3 asistencias verificadas</span><span class="evi neg">1 incidencia: refrigerio</span></div></div><div class="calculation"><span class="num">6</span><span>+</span><span class="num plus">0</span><span>−</span><span class="num minus">2</span><span>=</span><span class="num final">4</span></div><div class="why"><b>Por qué:</b> frecuencia 1 × impacto bajo = −2. El mismo evento sustenta el cruce con Disciplina, visible y auditable.</div></article>
+          <article class="competence"><div><div class="comp-title">Eficiencia</div><div class="cross">Cruce: Dominio sólido en tareas asignadas</div><div class="evidence"><span class="evi">EPT procedimientos 4.0/5</span><span class="evi neg">2 errores técnicos</span></div></div><div class="calculation"><span class="num">6</span><span>+</span><span class="num plus">0</span><span>−</span><span class="num minus">4</span><span>=</span><span class="num final">2</span></div><div class="why"><b>Por qué:</b> los errores de pedeteo/balanzas/USR/CDR/PS afectan Dominio y, por relación cruzada de la guía, también Eficiencia.</div></article>
+          <article class="competence"><div><div class="comp-title">Comunicación y colaboración</div><div class="cross">Competencia independiente</div><div class="evidence"><span class="evi pos">Reconocimiento aprobado</span><span class="evi">EPT comunicación 4.4/5</span></div></div><div class="calculation"><span class="num">6</span><span>+</span><span class="num plus">2</span><span>−</span><span class="num minus">0</span><span>=</span><span class="num final">8</span></div><div class="why"><b>Por qué:</b> desempeño superior documentado. El coordinador puede ajustar, pero deberá registrar un motivo obligatorio.</div></article>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" data-panel="view">
+    <div class="window">
+      <div class="bar"><div><div class="bar-title">Evaluación EVADES · Solo lectura</div><div class="bar-meta">Nayeli Melgarejo · 2026-T3 · Cerrado</div></div><div class="bar-actions"><span class="bar-action">Descargar PDF</span><span class="bar-action primary">Cerrar vista</span></div></div>
+      <div class="report">
+        <div class="report-head"><div class="panel"><div class="eyebrow">Resultado trimestral</div><div class="heading">Desempeño explicado, no solo una cifra</div><div class="muted">Cada variación conserva la fuente, fecha, competencia primaria y cruce aplicado.</div><div class="coverage"><div class="metric"><strong>24</strong><small>Conductual /50</small></div><div class="metric"><strong>28</strong><small>Operativa /50</small></div><div class="metric"><strong>−10</strong><small>Descuentos</small></div><div class="metric"><strong>+2</strong><small>Incrementos</small></div></div></div><div class="report-score"><small>Puntaje total</small><strong>52</strong><span>Debajo de lo esperado</span></div></div>
+        <div class="section-title">Resumen por competencia</div>
+        <div class="summary-grid"><div class="summary-row"><div class="summary-row-head"><span>Organización y tiempo</span><span>4/10</span></div><div class="barline"><span style="width:40%"></span></div><div class="muted">−2 por incidencia cruzada con Disciplina</div></div><div class="summary-row"><div class="summary-row-head"><span>Comunicación y colaboración</span><span>8/10</span></div><div class="barline"><span style="width:80%"></span></div><div class="muted">+2 por reconocimiento aprobado</div></div><div class="summary-row"><div class="summary-row-head"><span>Eficiencia</span><span>2/10</span></div><div class="barline"><span style="width:20%"></span></div><div class="muted">−4 por errores técnicos; relación con Dominio</div></div><div class="summary-row"><div class="summary-row-head"><span>Seguridad en el trabajo</span><span>6/10</span></div><div class="barline"><span style="width:60%"></span></div><div class="muted">EPT 3.8/5, sin cambio automático</div></div></div>
+        <div class="section-title">Trazabilidad</div><div class="panel timeline"><div class="event"><b>Generado · 01 oct 2026, 09:10</b><small>18 evaluaciones creadas con evidencia del trimestre</small></div><div class="event"><b>Revisado · 02 oct 2026, 11:45</b><small>Primera apertura por Grecia Risco</small></div><div class="event"><b>Modificado · 03 oct 2026, 16:20</b><small>Ajuste manual en Productividad, con motivo registrado</small></div><div class="event"><b>Cerrado · 04 oct 2026, 10:05</b><small>Evaluación bloqueada contra cambios posteriores</small></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="approve" data-choice="aprobar-diseno-b-completo" onclick="toggleSelect(this)"><strong>Aprobar este diseño integral</strong><span class="muted">Generación con cobertura + evaluación híbrida + consulta trazable</span></div>
+
+  <script>
+    (() => {
+      const root = document.getElementById('evb-prototype');
+      root.querySelectorAll('.stage-tab').forEach(button => button.addEventListener('click', () => {
+        root.querySelectorAll('.stage-tab').forEach(item => item.classList.remove('on'));
+        root.querySelectorAll('.screen').forEach(item => item.classList.remove('on'));
+        button.classList.add('on');
+        root.querySelector(`[data-panel="${button.dataset.screen}"]`).classList.add('on');
+      }));
+    })();
+  </script>
+</div>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mockup · Operaciones → Histórico de naves</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --co-navy:#005c3d; --co-navy-700:#00875A; --co-red:#dc2626;
+    --co-deck:#f5f8f7; --co-line:rgba(0,135,90,.18); --co-ink:#111827;
+    --co-mute:#4b5563; --co-faint:#9ca3af;
+    --amber:#B45309; --amber-bg:#FFFBEB; --amber-line:#FDE68A;
+    --mono: ui-monospace, Consolas, monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#eef2f1;font-family:'DM Sans',system-ui,sans-serif;color:var(--co-ink);}
+  .page{max-width:1300px;margin:0 auto;padding:22px 24px 70px;display:flex;flex-direction:column;gap:16px;}
+
+  .mock-flag{background:#1f2937;color:#fff;border-radius:12px;padding:11px 16px;font-size:12.5px;
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .mock-flag b{color:#fbbf24;}
+
+  .hero{background:linear-gradient(135deg,#005c3d 0%,#00875A 100%);color:#fff;border-radius:20px;
+    padding:22px 28px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    box-shadow:0 8px 32px rgba(0,135,90,.10);}
+  .hero h1{margin:6px 0 4px;font-size:22px;font-weight:700;letter-spacing:-.01em;}
+  .hero p{margin:0;color:rgba(255,255,255,.85);font-size:13px;max-width:620px;}
+  .tag{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:999px;
+    background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);font-size:11px;font-weight:600;
+    letter-spacing:.12em;text-transform:uppercase;}
+  .mes-picker{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);
+    border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:8px 12px;}
+  .mes-picker button{border:0;background:transparent;color:#fff;font:inherit;font-size:16px;cursor:pointer;padding:0 6px;opacity:.8;}
+  .mes-picker .val{font-size:14px;font-weight:700;min-width:120px;text-align:center;}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px;}
+  .kpi{background:#fff;border:1px solid var(--co-line);border-radius:14px;padding:14px 18px;
+    box-shadow:0 4px 16px rgba(0,0,0,.02);}
+  .kpi .lbl{font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--co-mute);}
+  .kpi .val{font-size:26px;font-weight:800;margin-top:4px;line-height:1;}
+  .kpi .sub{font-size:11px;color:var(--co-faint);margin-top:5px;}
+  .kpi.k1 .val{color:var(--co-navy-700);}
+  .kpi.k2 .val{color:#3b82f6;}
+  .kpi.k3 .val{color:#7c3aed;}
+  .kpi.k4 .val{color:#F79009;}
+  .kpi.k5 .val{color:var(--amber);}
+
+  .card{background:#fff;border:1px solid var(--co-line);border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,.02);}
+  .card-head{padding:14px 18px;border-bottom:1px solid rgba(0,135,90,.08);display:flex;
+    align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .card-head h2{margin:0;font-size:14px;font-weight:800;letter-spacing:.02em;}
+  .card-head .hint{font-size:11.5px;color:var(--co-faint);}
+
+  .mix{padding:14px 18px;display:flex;flex-direction:column;gap:9px;}
+  .mix-row{display:grid;grid-template-columns:150px 1fr 100px;gap:12px;align-items:center;}
+  .mix-row .nm{font-size:12.5px;font-weight:600;}
+  .mix-bar{height:20px;background:#f1f5f4;border-radius:6px;overflow:hidden;display:flex;}
+  .mix-bar span{display:block;height:100%;}
+  .mix-num{font-size:11.5px;color:var(--co-mute);text-align:right;font-variant-numeric:tabular-nums;}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;
+    border:1px solid var(--co-line);border-radius:14px;padding:10px 12px;box-shadow:0 4px 16px rgba(0,0,0,.02);}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:var(--co-deck);
+    border:1px solid rgba(0,135,90,.15);border-radius:10px;padding:8px 12px;}
+  .search input{flex:1;border:0;outline:0;background:transparent;font:inherit;font-size:13.5px;}
+  .sel{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid rgba(0,135,90,.15);
+    border-radius:10px;padding:5px 9px;}
+  .sel label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--co-mute);}
+  .sel select{border:0;outline:0;background:transparent;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;}
+
+  .tbl-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  thead tr{background:rgba(0,135,90,.04);border-bottom:1px solid var(--co-line);}
+  th{padding:11px 14px;text-align:left;white-space:nowrap;font-size:10.5px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--co-navy);font-weight:700;}
+  tbody tr{border-bottom:1px solid rgba(0,135,90,.06);}
+  tbody tr.main:hover{background:rgba(0,135,90,.02);}
+  td{padding:11px 14px;vertical-align:middle;}
+  .nave-nm{font-weight:700;}
+  .nave-sub{font-size:11px;color:var(--co-faint);}
+  .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+    font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#fff;}
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;}
+  .big{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .big small{font-size:11px;font-weight:600;color:var(--co-faint);}
+  .dn{display:flex;gap:4px;margin-top:3px;}
+  .dn i{font-style:normal;font-size:9.5px;font-weight:800;padding:1px 5px;border-radius:4px;}
+  .dn .d{background:#FEF3C7;color:#92400E;}
+  .dn .n{background:#E0E7FF;color:#3730A3;}
+  .idle{font-size:10px;font-weight:800;color:var(--amber);background:var(--amber-bg);
+    border:1px solid var(--amber-line);padding:1px 6px;border-radius:5px;display:inline-block;margin-top:3px;}
+  .f2{font-size:9.5px;font-weight:800;letter-spacing:.06em;color:var(--co-faint);
+    background:#f1f5f4;border:1px dashed #d1d5db;padding:2px 7px;border-radius:5px;}
+  .expand-btn{border:1px solid rgba(0,135,90,.25);background:rgba(0,135,90,.05);color:var(--co-navy-700);
+    border-radius:7px;padding:5px 10px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+  .avance{min-width:130px;}
+  .avance-bar{height:7px;background:#eef2f1;border-radius:99px;overflow:hidden;}
+  .avance-bar span{display:block;height:100%;background:linear-gradient(90deg,#00875A,#12B76A);}
+  .avance-txt{font-size:10.5px;color:var(--co-mute);margin-top:4px;font-variant-numeric:tabular-nums;}
+
+  tr.detail>td{background:var(--co-deck);padding:0;}
+  .detail-in{padding:16px 18px;display:flex;flex-direction:column;gap:16px;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:980px){.detail-grid{grid-template-columns:1fr;}}
+  .sect-t{font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--co-navy);margin-bottom:8px;}
+
+  /* Ventana de estadía: hace auditable el conteo de días y turnos */
+  .cal{background:#fff;border:1px solid var(--co-line);border-radius:10px;padding:12px;}
+  .cal-days{display:flex;gap:3px;margin-left:19px;margin-bottom:3px;}
+  .cal-days i{width:22px;font-style:normal;font-size:8.5px;color:var(--co-faint);text-align:center;font-weight:700;}
+  .cal-row{display:flex;gap:3px;align-items:center;margin-bottom:3px;}
+  .cal-row .k{width:16px;font-size:9.5px;font-weight:800;color:var(--co-mute);}
+  .cal-c{width:22px;height:19px;border-radius:4px;background:#eef2f1;display:grid;place-items:center;
+    font-size:8.5px;font-weight:800;color:#cbd5e1;}
+  .cal-c.on{background:#00875A;color:#fff;}
+  .cal-c.idle{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-line);}
+  .cal-c.out{background:transparent;color:#e5e7eb;}
+  .cal-leg{display:flex;gap:13px;font-size:10.5px;color:var(--co-mute);margin-top:9px;flex-wrap:wrap;}
+  .cal-leg b{display:inline-block;width:9px;height:9px;border-radius:3px;vertical-align:-1px;margin-right:4px;}
+  .cal-win{display:flex;gap:16px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(0,135,90,.08);flex-wrap:wrap;}
+  .cal-win div{font-size:11px;}
+  .cal-win .k{color:var(--co-faint);font-weight:700;text-transform:uppercase;font-size:9.5px;letter-spacing:.06em;}
+  .cal-win .v{font-weight:700;font-variant-numeric:tabular-nums;}
+
+  .tl{background:#fff;border:1px solid var(--co-line);border-radius:10px;padding:6px 0;max-height:330px;overflow-y:auto;}
+  .tl-i{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:9px 13px;border-bottom:1px solid rgba(0,135,90,.06);}
+  .tl-i:last-child{border-bottom:0;}
+  .tl-i.gap{background:var(--amber-bg);}
+  .tl-d{font-size:10.5px;font-weight:800;color:var(--co-navy-700);font-variant-numeric:tabular-nums;}
+  .tl-d span{display:block;font-size:9px;font-weight:700;color:var(--co-faint);}
+  .tl-t{font-size:12.5px;font-weight:600;}
+  .tl-m{font-size:11px;color:var(--co-mute);margin-top:2px;font-variant-numeric:tabular-nums;}
+  .tl-tags{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap;}
+  .tl-tag{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;background:#f1f5f4;color:var(--co-mute);}
+  .tl-tag.ok{background:rgba(0,135,90,.10);color:var(--co-navy-700);}
+  .tl-tag.warn{background:var(--amber-bg);color:var(--amber);}
+
+  .f2-box{background:#fff;border:1px dashed #d1d5db;border-radius:10px;padding:14px 16px;
+    display:flex;align-items:center;gap:12px;color:var(--co-faint);font-size:12.5px;}
+  .f2-box .ico{font-size:20px;}
+
+  .warn-box{background:var(--amber-bg);border:1px solid var(--amber-line);border-radius:12px;
+    padding:13px 16px;font-size:12.5px;color:#78350F;line-height:1.55;}
+  .warn-box h3{margin:0 0 6px;font-size:12.5px;font-weight:800;color:var(--amber);}
+  .warn-box h3:not(:first-child){margin-top:14px;}
+  .warn-box code{font-family:var(--mono);font-size:11.5px;background:rgba(180,83,9,.10);padding:1px 5px;border-radius:4px;}
+  .warn-box ul{margin:6px 0 0;padding-left:18px;}
+  .warn-box li{margin:3px 0;}
+  .ok-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:13px 16px;
+    font-size:12.5px;color:#14532D;line-height:1.55;}
+  .ok-box h3{margin:0 0 6px;font-size:12.5px;font-weight:800;color:var(--co-navy-700);}
+  .ok-box code{font-family:var(--mono);font-size:11.5px;background:rgba(0,135,90,.10);padding:1px 5px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="mock-flag">
+    <b>MOCKUP · FASE 1</b>
+    <span>Alcance: operación en <b>muelle</b> únicamente, desde el inicio hasta el zarpe. Patio queda fuera. Datos de ejemplo.</span>
+  </div>
+
+  <section class="hero">
+    <div>
+      <span class="tag">OPERACIONES · HISTÓRICO DE NAVES</span>
+      <h1>Histórico de naves</h1>
+      <p>Cada nave atendida en el mes: cuándo empezó y terminó su operación de muelle, cuántos días estuvo, cuántos turnos consumió y cómo avanzó.</p>
+    </div>
+    <div class="mes-picker">
+      <button>‹</button><span class="val">Junio 2026</span><button>›</button>
+    </div>
+  </section>
+
+  <section class="kpis">
+    <div class="kpi k1"><div class="lbl">Naves atendidas</div><div class="val">5</div>
+      <div class="sub">con operación en muelle</div></div>
+    <div class="kpi k2"><div class="lbl">Días de estadía</div><div class="val">26</div>
+      <div class="sub">suma de inicio → fin de cada nave</div></div>
+    <div class="kpi k3"><div class="lbl">Turnos trabajados</div><div class="val">44</div>
+      <div class="sub">solo turnos con avance en muelle</div></div>
+    <div class="kpi k4"><div class="lbl">TM movilizadas</div><div class="val">47 860</div>
+      <div class="sub">suma de lo ejecutado</div></div>
+    <div class="kpi k5"><div class="lbl">Turnos sin operación</div><div class="val">6</div>
+      <div class="sub">dentro de la estadía, sin avance</div></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Composición por tipo de nave</h2><span class="hint">días de estadía · naves</span></div>
+    <div class="mix">
+      <div class="mix-row"><span class="nm">Containera</span>
+        <div class="mix-bar"><span style="width:50%;background:#00875A"></span></div><span class="mix-num">13 d · 2 naves</span></div>
+      <div class="mix-row"><span class="nm">Granelera</span>
+        <div class="mix-bar"><span style="width:35%;background:#3b82f6"></span></div><span class="mix-num">9 d · 1 nave</span></div>
+      <div class="mix-row"><span class="nm">Ro-Ro</span>
+        <div class="mix-bar"><span style="width:19%;background:#7c3aed"></span></div><span class="mix-num">5 d · 1 nave</span></div>
+      <div class="mix-row"><span class="nm">Carga General</span>
+        <div class="mix-bar"><span style="width:12%;background:#F79009"></span></div><span class="mix-num">3 d · 1 nave</span></div>
+    </div>
+  </section>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input placeholder="Buscar nave o muelle…">
+    </div>
+    <div class="sel"><label>Tipo</label><select><option>Todos</option><option>Containera</option><option>Granelera</option><option>Ro-Ro</option><option>Carga General</option></select></div>
+    <div class="sel"><label>Muelle</label><select><option>Todos</option><option>Muelle 1</option><option>Muelle 2</option><option>Muelle 4</option></select></div>
+    <div class="sel"><label>Estado</label><select><option>Todos</option><option>Finalizada</option><option>En Operaciones</option></select></div>
+  </div>
+
+  <section class="card">
+    <div class="card-head"><h2>Naves con operación en muelle</h2>
+      <span class="hint">Junio 2026 · 5 naves · ordenado por inicio de operación</span></div>
+    <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>Nave</th><th>Tipo</th><th>Muelle</th><th>Operación en muelle</th>
+        <th>Días</th><th>Turnos</th><th>Avance</th><th>Personas</th><th>Estado</th><th></th>
+      </tr></thead>
+      <tbody>
+
+        <tr class="main">
+          <td><div class="nave-nm">COSCO SHIPPING SHANGAI</div><div class="nave-sub">ETB 02/06 11:30 · ETD 09/06 10:30</div></td>
+          <td><span class="chip" style="background:#00875A">Containera</span></td>
+          <td>Muelle 4</td>
+          <td><div style="font-weight:700;font-size:12.5px">02/06 → 09/06</div>
+              <div class="nave-sub">inicio 02/06 DÍA · cierre 09/06 DÍA</div></td>
+          <td><span class="big">8 <small>días</small></span><div class="idle">1 turno sin operación</div></td>
+          <td><span class="big">13</span><div class="dn"><i class="d">7 D</i><i class="n">6 N</i></div></td>
+          <td><div class="avance"><div class="avance-bar"><span style="width:100%"></span></div>
+              <div class="avance-txt">12 480 / 12 480 TM · 100%</div></div></td>
+          <td><span class="f2">FASE 2</span></td>
+          <td><span class="pill" style="background:rgba(0,135,90,.10);color:#00875A">Finalizada</span></td>
+          <td><button class="expand-btn">Ocultar ▲</button></td>
+        </tr>
+
+        <tr class="detail"><td colspan="10">
+          <div class="detail-in">
+           <div class="detail-grid">
+
+            <div>
+              <div class="sect-t">Ventana de operación en muelle</div>
+              <div class="cal">
+                <div class="cal-days"><i>1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i><i>7</i><i>8</i><i>9</i><i>10</i><i>11</i><i>12</i></div>
+                <div class="cal-row"><span class="k">D</span>
+                  <span class="cal-c out">·</span><span class="cal-c on">D</span><span class="cal-c on">D</span><span class="cal-c on">D</span>
+                  <span class="cal-c idle">—</span><span class="cal-c on">D</span><span class="cal-c on">D</span><span class="cal-c on">D</span>
+                  <span class="cal-c on">D</span><span class="cal-c out">·</span><span class="cal-c out">·</span><span class="cal-c out">·</span>
+                </div>
+                <div class="cal-row"><span class="k">N</span>
+                  <span class="cal-c out">·</span><span class="cal-c on">N</span><span class="cal-c on">N</span><span class="cal-c on">N</span>
+                  <span class="cal-c on">N</span><span class="cal-c on">N</span><span class="cal-c on">N</span><span class="cal-c">·</span>
+                  <span class="cal-c out">·</span><span class="cal-c out">·</span><span class="cal-c out">·</span><span class="cal-c out">·</span>
+                </div>
+                <div class="cal-leg">
+                  <span><b style="background:#00875A"></b>Turno con avance</span>
+                  <span><b style="background:#FFFBEB;border:1px solid #FDE68A"></b>Sin operación</span>
+                  <span><b style="background:#eef2f1"></b>Sin registro</span>
+                  <span><b style="background:transparent;border:1px solid #e5e7eb"></b>Fuera de estadía</span>
+                </div>
+                <div class="cal-win">
+                  <div><div class="k">Inicio real</div><div class="v">02/06 · DÍA</div></div>
+                  <div><div class="k">Cierre real</div><div class="v">09/06 · DÍA</div></div>
+                  <div><div class="k">Estadía</div><div class="v">8 días</div></div>
+                  <div><div class="k">Turnos posibles</div><div class="v">16</div></div>
+                  <div><div class="k">Trabajados</div><div class="v">13 · 81%</div></div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="sect-t">Cómo fue el proceso</div>
+              <div class="tl">
+                <div class="tl-i"><div class="tl-d">02/06<span>DÍA</span></div>
+                  <div><div class="tl-t">Containers Loading/Discharge</div>
+                    <div class="tl-m">1 040 TM · acumulado 1 040 / 12 480 · 86,7 TM/h</div>
+                    <div class="tl-tags"><span class="tl-tag ok">Inicio</span><span class="tl-tag">Coord. entra: M. Torres</span></div></div></div>
+                <div class="tl-i"><div class="tl-d">02/06<span>NOCHE</span></div>
+                  <div><div class="tl-t">Containers Loading/Discharge</div>
+                    <div class="tl-m">1 320 TM · acumulado 2 360 / 12 480 · 110,0 TM/h</div>
+                    <div class="tl-tags"><span class="tl-tag ok">En proceso</span><span class="tl-tag">Coord. entra: A. Vega</span></div></div></div>
+                <div class="tl-i"><div class="tl-d">03/06<span>DÍA</span></div>
+                  <div><div class="tl-t">Containers Loading/Discharge</div>
+                    <div class="tl-m">980 TM · acumulado 3 340 / 12 480 · 81,7 TM/h</div>
+                    <div class="tl-tags"><span class="tl-tag warn">Bajo el ritmo medio</span></div></div></div>
+                <div class="tl-i gap"><div class="tl-d">05/06<span>DÍA</span></div>
+                  <div><div class="tl-t">Sin operación</div>
+                    <div class="tl-m">Turno dentro de la estadía sin ningún registro de avance</div>
+                    <div class="tl-tags"><span class="tl-tag warn">Hueco</span></div></div></div>
+                <div class="tl-i"><div class="tl-d">05/06<span>NOCHE</span></div>
+                  <div><div class="tl-t">Containers Loading/Discharge</div>
+                    <div class="tl-m">1 180 TM · acumulado 6 420 / 12 480 · 98,3 TM/h</div>
+                    <div class="tl-tags"><span class="tl-tag ok">En proceso</span></div></div></div>
+                <div class="tl-i"><div class="tl-d">09/06<span>DÍA</span></div>
+                  <div><div class="tl-t">Containers Loading/Discharge</div>
+                    <div class="tl-m">610 TM · acumulado 12 480 / 12 480 · zarpe 10:30</div>
+                    <div class="tl-tags"><span class="tl-tag ok">Culminado</span></div></div></div>
+              </div>
+            </div>
+
+           </div>
+
+           <div class="f2-box">
+             <span class="ico">👥</span>
+             <div><b style="color:var(--co-mute)">Personas por turno y ubicación · llega en Fase 2.</b><br>
+               Aquí irá la tabla de cantidad de personas por turno en este muelle. Requiere
+               <code style="font-family:var(--mono);font-size:11px">nave_id</code> en <code style="font-family:var(--mono);font-size:11px">turno_personal</code>;
+               hoy no existe vínculo entre colaborador y nave.</div>
+           </div>
+
+          </div>
+        </td></tr>
+
+        <tr class="main">
+          <td><div class="nave-nm">MSC VALENCIA</div><div class="nave-sub">ETB 10/06 06:00 · ETD 18/06 22:00</div></td>
+          <td><span class="chip" style="background:#3b82f6">Granelera</span></td>
+          <td>Muelle 1</td>
+          <td><div style="font-weight:700;font-size:12.5px">10/06 → 18/06</div>
+              <div class="nave-sub">inicio 10/06 DÍA · cierre 18/06 NOCHE</div></td>
+          <td><span class="big">9 <small>días</small></span><div class="idle">3 turnos sin operación</div></td>
+          <td><span class="big">15</span><div class="dn"><i class="d">8 D</i><i class="n">7 N</i></div></td>
+          <td><div class="avance"><div class="avance-bar"><span style="width:100%"></span></div>
+              <div class="avance-txt">21 300 / 21 300 TM · 100%</div></div></td>
+          <td><span class="f2">FASE 2</span></td>
+          <td><span class="pill" style="background:rgba(0,135,90,.10);color:#00875A">Finalizada</span></td>
+          <td><button class="expand-btn">Ver ▼</button></td>
+        </tr>
+
+        <tr class="main">
+          <td><div class="nave-nm">HIAN HE KOU</div><div class="nave-sub">ETB 31/05 11:40 · ETD 05/06 10:40</div></td>
+          <td><span class="chip" style="background:#7c3aed">Ro-Ro</span></td>
+          <td>Muelle 2</td>
+          <td><div style="font-weight:700;font-size:12.5px">01/06 → 05/06</div>
+              <div class="nave-sub">inicio 31/05 NOCHE · cierre 05/06 DÍA</div></td>
+          <td><span class="big">5 <small>días</small></span><div class="nave-sub">inicio en mayo</div></td>
+          <td><span class="big">9</span><div class="dn"><i class="d">5 D</i><i class="n">4 N</i></div></td>
+          <td><div class="avance"><div class="avance-bar"><span style="width:100%"></span></div>
+              <div class="avance-txt">4 900 / 4 900 TM · 100%</div></div></td>
+          <td><span class="f2">FASE 2</span></td>
+          <td><span class="pill" style="background:rgba(0,135,90,.10);color:#00875A">Finalizada</span></td>
+          <td><button class="expand-btn">Ver ▼</button></td>
+        </tr>
+
+        <tr class="main">
+          <td><div class="nave-nm">NORDIC ORION</div><div class="nave-sub">ETB 20/06 14:00 · ETD 23/06 09:00</div></td>
+          <td><span class="chip" style="background:#F79009">Carga General</span></td>
+          <td>Muelle 2</td>
+          <td><div style="font-weight:700;font-size:12.5px">20/06 → 22/06</div>
+              <div class="nave-sub">inicio 20/06 NOCHE · cierre 22/06 DÍA</div></td>
+          <td><span class="big">3 <small>días</small></span></td>
+          <td><span class="big">5</span><div class="dn"><i class="d">3 D</i><i class="n">2 N</i></div></td>
+          <td><div class="avance"><div class="avance-bar"><span style="width:100%"></span></div>
+              <div class="avance-txt">3 100 / 3 100 TM · 100%</div></div></td>
+          <td><span class="f2">FASE 2</span></td>
+          <td><span class="pill" style="background:rgba(0,135,90,.10);color:#00875A">Finalizada</span></td>
+          <td><button class="expand-btn">Ver ▼</button></td>
+        </tr>
+
+        <tr class="main">
+          <td><div class="nave-nm">EVER GIVEN II</div><div class="nave-sub">ETB 27/06 08:00 · ETD —</div></td>
+          <td><span class="chip" style="background:#00875A">Containera</span></td>
+          <td>Muelle 4</td>
+          <td><div style="font-weight:700;font-size:12.5px">27/06 → en curso</div>
+              <div class="nave-sub">inicio 27/06 DÍA · sin cierre</div></td>
+          <td><span class="big">5 <small>días</small></span><div class="idle">2 turnos sin operación</div></td>
+          <td><span class="big">8</span><div class="dn"><i class="d">4 D</i><i class="n">4 N</i></div></td>
+          <td><div class="avance"><div class="avance-bar"><span style="width:64%"></span></div>
+              <div class="avance-txt">6 080 / 9 500 TM · 64%</div></div></td>
+          <td><span class="f2">FASE 2</span></td>
+          <td><span class="pill" style="background:#FFFBEB;color:#B45309">En Operaciones</span></td>
+          <td><button class="expand-btn">Ver ▼</button></td>
+        </tr>
+
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <div class="ok-box">
+    <h3>✓ De dónde sale cada número — todo exacto, sin inferencias</h3>
+    Fuente única: <code>operaciones.tallyman_registros</code> filtrado por <code>ubicacion_tipo = 'BERTH'</code> y <code>nave_id IS NOT NULL</code>.
+    <ul>
+      <li><b>Inicio / cierre real</b> — el registro con <code>status_act='Inicio'</code> y el de <code>'Culminado'</code>. Si faltan, se cae al primer y último <code>fecha_turno</code> con avance.</li>
+      <li><b>Días de estadía</b> — días de calendario entre inicio y cierre, ambos incluidos. No es lo mismo que días trabajados: la diferencia son los huecos.</li>
+      <li><b>Turnos trabajados</b> — pares <code>fecha_turno + turno</code> distintos con avance en muelle.</li>
+      <li><b>Turnos sin operación</b> — turnos que caen dentro de la ventana y no tienen ningún registro. Es el dato que muestra los tiempos muertos.</li>
+      <li><b>TM movilizadas</b> — <code>SUM(executed)</code>. El campo es incremental por turno, así que la suma es correcta.</li>
+    </ul>
+  </div>
+
+  <div class="warn-box">
+    <h3>⚠ Tres trampas del cálculo que el módulo evita</h3>
+    <ul>
+      <li><b><code>planned</code> es UN total por nave, no por actividad.</b> Lo confirma el controlador: al marcar «Inicio» empuja ese número a la nave bajo una sola clave, sobrescribiendo. Por eso <code>SUM(planned)</code> lo multiplica (nave 4 → 7 050) y agruparlo por actividad+ubicación también lo infla (→ 4 700). El correcto es el <code>planned</code> del registro que marcó <b>Inicio</b>: 2 350, avance 93,6%. Sin ese marcador se cae al mayor plan visto y la UI lo señala con <code>≈</code>.</li>
+      <li><b><code>ubicacion</code> es texto libre.</b> Tus datos ya tienen «Muelle 2» y «Berth 02» para el mismo atracadero. Se normaliza (<code>BERTH nn ≡ MUELLE nn</code>) para que una sola nave no parezca haber operado en dos muelles distintos.</li>
+      <li><b><code>turno</code> también es texto libre.</b> Guarda códigos de <code>jornadas</code> (<code>D</code>, <code>N</code>, <code>U</code>) sin validación. El desglose D/N resuelve la etiqueta contra el catálogo y muestra el código crudo si no lo reconoce, en vez de descartar la fila en silencio.</li>
+    </ul>
+
+    <h3>Fuera de esta fase</h3>
+    <ul>
+      <li><b>Patio.</b> Todo <code>ubicacion_tipo='YARD'</code> queda excluido por decisión de alcance.</li>
+      <li><b>Personas por turno.</b> Requiere <code>nave_id</code> en <code>turno_personal</code>. El diseño ya reserva el sitio.</li>
+      <li><b><code>avances_nave</code>.</b> Tabla vacía y con vocabulario de turno incompatible (<code>'Mañana'/'Noche'</code> frente a <code>D/N/U</code>). No se usa como fuente.</li>
+    </ul>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<style>
+  .evades-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:24px}
+  .evades-choice{border:1px solid #d8e1eb;border-radius:18px;overflow:hidden;background:#fff;cursor:pointer;transition:.18s ease;box-shadow:0 8px 28px rgba(24,57,89,.07)}
+  .evades-choice:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(24,57,89,.12)}
+  .evades-choice.selected{outline:3px solid #2d6fa6;outline-offset:2px}
+  .evades-caption{padding:16px 17px 18px}
+  .evades-caption h3{margin:0 0 6px;color:#173b5c;font-size:17px}
+  .evades-caption p{margin:0;color:#627286;font-size:13px;line-height:1.45}
+  .evades-reco{display:inline-flex;margin-bottom:9px;padding:4px 8px;border-radius:999px;background:#e7f1fa;color:#245b87;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+  .ev-window{background:#f4f7fa;border-bottom:1px solid #e0e7ef;min-height:390px;padding:12px;color:#173b5c;font:12px/1.35 Arial,sans-serif}
+  .ev-top{display:flex;align-items:center;justify-content:space-between;background:#234f77;color:#fff;padding:10px 12px;border-radius:10px 10px 4px 4px}
+  .ev-top strong{font-size:12px}.ev-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#4ec395;margin-right:5px}
+  .ev-body{display:grid;gap:10px;margin-top:10px}.ev-panel{background:#fff;border:1px solid #dde6ee;border-radius:10px;padding:10px}
+  .ev-label{color:#7b8998;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.ev-title{font-weight:700;margin-top:3px}
+  .ev-fields{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}.ev-field{background:#f7f9fb;border:1px solid #dce4ec;border-radius:7px;padding:7px}
+  .ev-btn{background:#2f74aa;color:#fff;border-radius:7px;text-align:center;padding:8px;font-weight:700;margin-top:9px}
+  .ev-roster{display:grid;grid-template-columns:82px 1fr;gap:8px}.ev-list{background:#173b5c;border-radius:9px;padding:7px;color:#dcebf7}.ev-person{padding:7px 5px;border-bottom:1px solid rgba(255,255,255,.12)}.ev-person.active{background:#2d6fa6;border-radius:6px;color:#fff}
+  .ev-scoreline{display:grid;grid-template-columns:1fr 30px 30px 30px;gap:5px;align-items:center;padding:7px 0;border-bottom:1px solid #edf1f5}.ev-score{display:grid;place-items:center;border-radius:6px;background:#e8f2f9;height:26px;font-weight:700}.ev-neg{background:#fff0ef;color:#b23a34}.ev-pos{background:#eaf7f0;color:#237b55}
+  .ev-tabs{display:flex;gap:5px;margin:8px 0}.ev-tab{padding:6px 8px;border-radius:7px;background:#edf2f6;color:#536476}.ev-tab.on{background:#234f77;color:#fff}
+  .ev-cardrow{display:grid;grid-template-columns:1fr auto;gap:8px;border-left:3px solid #2d6fa6;padding:8px;background:#f8fafc;border-radius:4px 8px 8px 4px;margin-top:7px}.ev-evidence{color:#697b8e;font-size:10px;margin-top:3px}
+  .ev-summary{display:grid;grid-template-columns:64px 1fr;gap:9px;align-items:center}.ev-ring{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#2d6fa6 0 64%,#e2e9f0 64%);position:relative;color:#173b5c;font-weight:800}.ev-ring:after{content:"";position:absolute;inset:7px;border-radius:50%;background:#fff}.ev-ring span{z-index:1}
+  .ev-legend{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.ev-chip{padding:3px 6px;border-radius:999px;background:#edf3f7;color:#536476;font-size:9px}.ev-chip.bad{background:#fff0ef;color:#b23a34}.ev-chip.good{background:#eaf7f0;color:#237b55}
+  @media(max-width:900px){.evades-choice-grid{grid-template-columns:1fr}.ev-window{min-height:auto}}
+</style>
+
+<h2>¿Qué experiencia debe tener EVADES?</h2>
+<p class="subtitle">Las tres conservan el azul actual. Cambia la forma de generar, evaluar y entender por qué subió o bajó cada puntaje.</p>
+
+<div class="evades-choice-grid">
+  <article class="evades-choice" data-choice="a-matriz-compacta" onclick="toggleSelect(this)">
+    <div class="ev-window">
+      <div class="ev-top"><strong>Evaluación EVADES</strong><span><i class="ev-dot"></i> Modificado</span></div>
+      <div class="ev-body">
+        <div class="ev-panel">
+          <div class="ev-label">Colaborador</div><div class="ev-title">Nayeli Melgarejo · Asistente de estiba</div>
+          <div class="ev-tabs"><span class="ev-tab on">Conductuales</span><span class="ev-tab">Operativas</span></div>
+          <div class="ev-scoreline"><strong>Autonomía</strong><span class="ev-score ev-pos">+2</span><span class="ev-score">0</span><span class="ev-score">8</span></div>
+          <div class="ev-scoreline"><strong>Organización</strong><span class="ev-score">0</span><span class="ev-score ev-neg">-2</span><span class="ev-score">4</span></div>
+          <div class="ev-scoreline"><strong>Adaptabilidad</strong><span class="ev-score">0</span><span class="ev-score">0</span><span class="ev-score">6</span></div>
+          <div class="ev-scoreline"><strong>Productividad</strong><span class="ev-score ev-pos">+2</span><span class="ev-score">0</span><span class="ev-score">8</span></div>
+          <div class="ev-scoreline"><strong>Eficiencia</strong><span class="ev-score">0</span><span class="ev-score ev-neg">-4</span><span class="ev-score">2</span></div>
+        </div>
+        <div class="ev-btn">Guardar evaluación</div>
+      </div>
+    </div>
+    <div class="evades-caption"><h3>A. Matriz compacta</h3><p>Más personas por pantalla y edición rápida. La evidencia queda en paneles secundarios.</p></div>
+  </article>
+
+  <article class="evades-choice selected" data-choice="b-hibrido-operativo" onclick="toggleSelect(this)">
+    <div class="ev-window">
+      <div class="ev-top"><strong>2026-T3 · Asistente de estiba</strong><span><i class="ev-dot"></i> Revisado</span></div>
+      <div class="ev-body ev-roster">
+        <div class="ev-list">
+          <div class="ev-label" style="color:#9fc1db">Equipo 18</div>
+          <div class="ev-person active">Nayeli<br><small>52 pts</small></div>
+          <div class="ev-person">Carolay<br><small>64 pts</small></div>
+          <div class="ev-person">Kathlin<br><small>58 pts</small></div>
+        </div>
+        <div>
+          <div class="ev-panel ev-summary">
+            <div class="ev-ring"><span>52</span></div>
+            <div><div class="ev-label">Resultado calculado</div><div class="ev-title">Debajo de lo esperado</div><div class="ev-legend"><span class="ev-chip good">2 reconocimientos</span><span class="ev-chip bad">3 incidencias</span><span class="ev-chip">4 EPT</span></div></div>
+          </div>
+          <div class="ev-tabs"><span class="ev-tab on">Conductuales 24/50</span><span class="ev-tab">Operativas 28/50</span></div>
+          <div class="ev-cardrow"><div><strong>Eficiencia</strong><div class="ev-evidence">2 errores técnicos · Cruza con Dominio sólido</div></div><span class="ev-score ev-neg">2</span></div>
+          <div class="ev-cardrow"><div><strong>Comunicación y colaboración</strong><div class="ev-evidence">EPT 4.3/5 · 1 reconocimiento aprobado</div></div><span class="ev-score ev-pos">8</span></div>
+          <div class="ev-cardrow"><div><strong>Seguridad en el trabajo</strong><div class="ev-evidence">Uso EPP 3.8/5 · 1 observación</div></div><span class="ev-score">6</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="evades-caption"><span class="evades-reco">Recomendado</span><h3>B. Espacio híbrido operativo</h3><p>Nómina a la izquierda, resultado y evidencia en el centro. Permite evaluar rápido sin perder trazabilidad.</p></div>
+  </article>
+
+  <article class="evades-choice" data-choice="c-expediente-guiado" onclick="toggleSelect(this)">
+    <div class="ev-window">
+      <div class="ev-top"><strong>Nueva evaluación por bloque</strong><span>Paso 2 de 3</span></div>
+      <div class="ev-body">
+        <div class="ev-panel">
+          <div class="ev-label">01 · Contexto</div><div class="ev-title">Coordinación Grecia Risco · 2026-T3</div>
+        </div>
+        <div class="ev-panel">
+          <div class="ev-label">02 · Cobertura de evidencia</div>
+          <div class="ev-scoreline"><strong>18 colaboradores</strong><span class="ev-score ev-pos">15</span><span class="ev-score ev-neg">3</span><span class="ev-score">83%</span></div>
+          <div class="ev-legend"><span class="ev-chip">31 incidencias</span><span class="ev-chip">29 EPT</span><span class="ev-chip">5 reconocimientos</span></div>
+        </div>
+        <div class="ev-panel">
+          <div class="ev-label">03 · Confirmación</div><div class="ev-title">Se crearán 18 evaluaciones con puntaje explicado</div>
+          <div class="ev-fields"><div class="ev-field">Puesto<br><strong>Asistente de estiba</strong></div><div class="ev-field">Estado inicial<br><strong>Generado</strong></div></div>
+          <div class="ev-btn">Generar bloque trimestral</div>
+        </div>
+      </div>
+    </div>
+    <div class="evades-caption"><h3>C. Expediente guiado</h3><p>Proceso paso a paso, muy claro y controlado. Más lento para coordinadores con equipos grandes.</p></div>
+  </article>
+</div>
+
+<p class="subtitle" style="margin-top:18px">Haz clic sobre la opción que prefieras. Mi recomendación es B y usar el asistente de C únicamente para generar el bloque.</p>

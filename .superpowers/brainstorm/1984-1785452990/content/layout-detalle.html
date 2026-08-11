@@ -1,0 +1,129 @@
+<style>
+  .wf { border:1px solid rgba(128,128,128,.35); border-radius:10px; overflow:hidden; font-size:11.5px; line-height:1.45; }
+  .wf-top { padding:7px 10px; border-bottom:1px solid rgba(128,128,128,.28); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .wf-top b { font-size:12.5px; }
+  .wf-body { padding:9px 10px; display:flex; flex-direction:column; gap:8px; }
+  .blk { border:1px dashed rgba(128,128,128,.42); border-radius:7px; padding:6px 8px; }
+  .blk .label { display:block; margin-bottom:4px; }
+  .row { display:flex; gap:6px; align-items:center; }
+  .row + .row { margin-top:3px; }
+  .chip { border:1px solid rgba(128,128,128,.4); border-radius:999px; padding:0 7px; font-size:10px; white-space:nowrap; }
+  .chip-a { border-color:#12B76A; color:#12B76A; }
+  .chip-f { border-color:#DC2626; color:#DC2626; }
+  .chip-t { border-color:#F79009; color:#F79009; }
+  .tabs { display:flex; gap:0; border-bottom:1px solid rgba(128,128,128,.28); }
+  .tab { padding:6px 11px; font-size:11.5px; border-bottom:2px solid transparent; opacity:.6; }
+  .tab.on { border-bottom-color:#12B76A; color:#12B76A; opacity:1; font-weight:600; }
+  .scrollhint { text-align:center; font-size:10px; opacity:.5; padding:2px; }
+  .grow { flex:1; }
+  .mini { font-size:10.5px; opacity:.6; }
+  .note { font-size:12.5px; opacity:.85; line-height:1.55; }
+  .dim { opacity:.45; }
+</style>
+
+<h2>El «llenado de información»: ¿modal, pestañas o página?</h2>
+<p class="subtitle">Dentro de la capacitación caben cuatro cosas: temas, adjuntos, la asistencia de <b>toda la plantilla</b> y —después— la validación del administrador. Con la plantilla completa, eso es mucho contenido para una sola caja.</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Un modal, secciones apiladas</h3>
+      <div class="wf" style="margin:8px 0">
+        <div class="wf-top"><b>Uso correcto de arnés</b><span class="chip">Programada</span></div>
+        <div class="wf-body">
+          <div class="blk"><span class="label">Datos</span>
+            <div class="row"><input class="mock-input grow" value="30/07/2026"><input class="mock-input grow" value="14:00"></div>
+          </div>
+          <div class="blk"><span class="label">Temas</span>
+            <div class="row"><span class="mini">1.</span><input class="mock-input grow" value="Tipos de arnés"></div>
+            <div class="row"><span class="mini">2.</span><input class="mock-input grow" value="Puntos de anclaje"></div>
+            <div class="row"><span class="mini dim">+ Agregar tema</span></div>
+          </div>
+          <div class="blk"><span class="label">Adjuntos</span>
+            <div class="row"><span class="chip">PPT.pdf</span><span class="chip">foto1.jpg</span><span class="mini dim">+ Subir</span></div>
+          </div>
+          <div class="blk"><span class="label">Asistencia &middot; 38 colaboradores</span>
+            <div class="row"><span class="grow">Juan Pérez</span><span class="chip chip-a">A</span><span class="chip dim">F</span><span class="chip dim">T</span></div>
+            <div class="row"><span class="grow">Carlos Mendoza</span><span class="chip dim">A</span><span class="chip chip-f">F</span><span class="chip dim">T</span></div>
+            <div class="row dim"><span class="grow">Luis Ramírez</span><span class="chip">A</span><span class="chip">F</span><span class="chip">T</span></div>
+          </div>
+          <div class="scrollhint">&darr; &darr; &darr; siguen 35 filas &darr; &darr; &darr;</div>
+        </div>
+      </div>
+      <p class="note"><b>A favor:</b> todo a la vista, nada escondido, cero clics extra. Es el patrón que ya usan Incidencias y Charlas, así que no hay nada nuevo que aprender.</p>
+      <p class="note"><b>En contra:</b> la asistencia empuja los adjuntos y la validación tan abajo que dejan de existir. En móvil, encontrar el botón de guardar exige recorrer 38 filas.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Un modal con pestañas <span style="font-size:11px;opacity:.7">(recomendado)</span></h3>
+      <div class="wf" style="margin:8px 0">
+        <div class="wf-top"><b>Uso correcto de arnés</b><span class="chip">Programada</span></div>
+        <div class="tabs">
+          <div class="tab on">Contenido</div>
+          <div class="tab">Asistencia <span class="mini">24/38</span></div>
+          <div class="tab">Validación</div>
+        </div>
+        <div class="wf-body">
+          <div class="blk"><span class="label">Datos</span>
+            <div class="row"><input class="mock-input grow" value="30/07/2026"><input class="mock-input grow" value="14:00"></div>
+          </div>
+          <div class="blk"><span class="label">Temas</span>
+            <div class="row"><span class="mini">1.</span><input class="mock-input grow" value="Tipos de arnés"></div>
+            <div class="row"><span class="mini">2.</span><input class="mock-input grow" value="Puntos de anclaje"></div>
+            <div class="row"><span class="mini dim">+ Agregar tema</span></div>
+          </div>
+          <div class="blk"><span class="label">Adjuntos</span>
+            <div class="row"><span class="chip">PPT.pdf</span><span class="chip">foto1.jpg</span><span class="mini dim">+ Subir</span></div>
+          </div>
+        </div>
+        <div class="wf-top" style="border-bottom:0;border-top:1px solid rgba(128,128,128,.28);justify-content:flex-end">
+          <button class="mock-button">Guardar</button><button class="mock-button">Enviar a validación</button>
+        </div>
+      </div>
+      <p class="note"><b>A favor:</b> cada pestaña es una tarea completa y corta. El contador <span class="mini">24/38</span> en la pestaña de Asistencia dice cuánto falta sin necesidad de entrar. La barra de acciones queda siempre fija abajo, se vea la pestaña que se vea.</p>
+      <p class="note"><b>En contra:</b> hay que decidir qué pasa al cambiar de pestaña con cambios sin guardar. Se resuelve guardando en memoria y persistiendo todo junto al pulsar Guardar.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Página de detalle completa</h3>
+      <div class="wf" style="margin:8px 0">
+        <div class="wf-top"><b>&larr; Capacitaciones / Uso correcto de arnés</b><span class="chip">Programada</span></div>
+        <div class="wf-body" style="flex-direction:row">
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+            <div class="blk"><span class="label">Temas</span>
+              <div class="row"><span class="mini">1.</span><input class="mock-input grow" value="Tipos de arnés"></div>
+              <div class="row"><span class="mini">2.</span><input class="mock-input grow" value="Puntos de anclaje"></div>
+            </div>
+            <div class="blk"><span class="label">Adjuntos</span>
+              <div class="row"><span class="chip">PPT.pdf</span><span class="chip">foto1.jpg</span></div>
+            </div>
+            <div class="blk"><span class="label">Validación</span><div class="mini">Pendiente</div></div>
+          </div>
+          <div style="flex:1">
+            <div class="blk" style="height:100%"><span class="label">Asistencia &middot; 24/38</span>
+              <div class="row"><span class="grow">Juan Pérez</span><span class="chip chip-a">A</span></div>
+              <div class="row"><span class="grow">Carlos Mendoza</span><span class="chip chip-f">F</span></div>
+              <div class="row"><span class="grow">Luis Ramírez</span><span class="chip chip-t">T</span></div>
+              <div class="row dim"><span class="grow">Pedro Huamán</span><span class="chip">&mdash;</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="note"><b>A favor:</b> el espacio deja de ser un problema. Dos columnas, contenido a la izquierda y plantilla a la derecha, todo simultáneo. Ya existe precedente en el proyecto: <code>pages/operaciones_nave.php</code>.</p>
+      <p class="note"><b>En contra:</b> es una página más, con su navegación, su carga y su vuelta atrás. Rompe con el resto del módulo de Control de Campo, donde todo se resuelve en modales.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="note" style="margin-top:22px;max-width:74ch">
+  <b>Nota:</b> en los tres bocetos dibujé los <b>temas como filas numeradas</b> (una tabla aparte en BD), no como un párrafo de texto libre. Si prefieres un solo campo de texto corrido, dímelo y lo cambio &mdash; es la otra decisión que queda pendiente.
+</p>

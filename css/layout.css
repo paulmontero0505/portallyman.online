@@ -1,0 +1,105 @@
+/* ── RESET + VARIABLES + LAYOUT BASE ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --azul-oscuro:  #005c3d;
+  --azul-medio:   #00875A;
+  --azul-claro:   #00b377;
+  --blanco:       #ffffff;
+  --gris-fondo:   #f5f8f7;
+  --gris-borde:   rgba(0, 135, 90, 0.18);
+  --gris-texto:   #6b7280;
+  --texto-main:   #111827;
+  --sw:           268px;
+  --sc:           64px;
+  --hh:           64px;
+  --trans:        0.28s cubic-bezier(0.4,0,0.2,1);
+  --fuente:       'DM Sans','Segoe UI',sans-serif;
+}
+
+/* ══════════════════════════════
+   BASE & MÓVIL (Natural Scroll)
+   Comportamiento por defecto: el documento hace scroll.
+══════════════════════════════ */
+html, body {
+  min-height: 100%;
+  font-family: var(--fuente);
+  background: var(--gris-fondo);
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  -webkit-tap-highlight-color: transparent;
+  scroll-behavior: smooth;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible !important;
+}
+
+.main-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  overflow: visible !important;
+}
+
+.content {
+  padding: 20px 16px;
+  background: var(--gris-fondo);
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden !important;
+  overflow-y: visible !important; /* El scroll lo hace el body */
+}
+
+/* ══════════════════════════════
+   DESKTOP (App Shell - Internal Scroll)
+   Solo se aplica en pantallas grandes (> 1024px)
+══════════════════════════════ */
+@media (min-width: 1025px) {
+  html, body {
+    height: 100%;
+    overflow: hidden !important;
+  }
+
+  .shell {
+    flex-direction: row;
+    height: 100vh;
+    overflow: hidden !important;
+  }
+
+  .main-area {
+    height: 100%;
+    overflow: hidden !important;
+  }
+
+  .content {
+    flex: 1;
+    height: 100%;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 32px;
+    overscroll-behavior: contain;
+  }
+}
+
+/* ── AJUSTES ADICIONALES ── */
+@media (max-width: 480px) {
+  .content {
+    padding: 16px 12px;
+  }
+}
+
+/* Safe area para iPhone con notch */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  @media (max-width: 1024px) {
+    .content {
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+  }
+}

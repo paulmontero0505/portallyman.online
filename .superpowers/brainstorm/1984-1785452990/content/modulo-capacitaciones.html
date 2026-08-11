@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capacitaciones · Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --green:#00875A; --green-d:#005c3d; --green-l:rgba(0,135,90,.1);
+    --ink:#1e293b; --mute:#64748b; --faint:#94a3b8;
+    --line:rgba(0,0,0,.08); --deck:#f1f5f9; --soft:#f8fafc;
+    --amber:#d97706; --amber-bg:rgba(217,119,6,.1);
+    --red:#dc2626;   --red-bg:rgba(220,38,38,.1);
+    --ok:#047857;    --ok-bg:rgba(4,120,87,.1);
+    --slate:#475569; --slate-bg:rgba(100,116,139,.12);
+  }
+  body{margin:0;background:var(--deck);font-family:'DM Sans',system-ui,sans-serif;color:var(--ink);
+       -webkit-font-smoothing:antialiased}
+
+  /* ── Barra de navegación del mockup (no es parte del producto) ── */
+  .mkbar{position:sticky;top:0;z-index:50;background:#0f172a;color:#fff;padding:10px 18px;
+         display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .mkbar .mk-t{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.55}
+  .mkbar nav{display:flex;gap:5px;flex-wrap:wrap}
+  .mkbar button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#cbd5e1;
+        border-radius:8px;padding:6px 12px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+  .mkbar button:hover{background:rgba(255,255,255,.16);color:#fff}
+  .mkbar button.on{background:var(--green);border-color:var(--green);color:#fff}
+
+  .stage{padding:22px;max-width:1180px;margin:0 auto}
+  .screen{display:none}.screen.on{display:block}
+
+  h1.pg{margin:0 0 3px;font-size:22px;font-weight:800}
+  p.pgsub{margin:0 0 18px;font-size:13px;color:var(--mute)}
+
+  /* ── KPIs ── */
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:10px;margin-bottom:14px}
+  .kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 17px}
+  .kpi .lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+  .kpi .val{font-size:29px;font-weight:800;color:var(--green);margin-top:3px;line-height:1.05}
+  .kpi .val.amber{color:var(--amber)}.kpi .val.slate{color:var(--slate)}.kpi .val.red{color:var(--red)}
+  .kpi .foot{font-size:11px;color:var(--faint);margin-top:3px}
+
+  /* ── Toolbar ── */
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#fff;
+           border:1px solid var(--line);border-radius:14px;padding:11px 13px;margin-bottom:14px}
+  .search{flex:1;min-width:210px;display:flex;align-items:center;gap:8px;background:var(--soft);
+          border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 11px}
+  .search input{flex:1;border:none;background:none;outline:none;font:inherit;font-size:13px;color:var(--ink)}
+  .search svg{width:15px;height:15px;color:var(--faint);flex-shrink:0}
+  .flt{display:flex;gap:4px;flex-wrap:wrap}
+  .flt button{padding:7px 11px;border:1px solid var(--line);background:#fff;border-radius:9px;
+      font:inherit;font-size:12.5px;font-weight:600;color:var(--mute);cursor:pointer}
+  .flt button.on{background:var(--green);border-color:var(--green);color:#fff}
+  .flt-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+  select.sel{padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:10px;font:inherit;font-size:12.5px;
+      font-weight:600;color:var(--mute);background:#fff;outline:none}
+
+  .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;
+       border:1px solid rgba(0,135,90,.3);background:#fff;cursor:pointer;font:inherit;font-size:13px;
+       font-weight:600;color:var(--green);transition:.15s}
+  .btn:hover{background:rgba(0,135,90,.05)}
+  .btn svg{width:15px;height:15px}
+  .btn.primary{background:linear-gradient(135deg,var(--green),var(--green-d));color:#fff;border:none;
+       font-weight:700;box-shadow:0 4px 18px rgba(0,135,90,.2)}
+  .btn.primary:hover{filter:brightness(1.08)}
+  .btn.ghost{border-color:var(--line);color:var(--mute)}
+  .btn.danger{color:var(--red);border-color:rgba(220,38,38,.3)}
+  .btn.danger:hover{background:rgba(220,38,38,.06)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* ── Tabla ── */
+  .tcard{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  thead th{background:var(--soft);text-align:left;font-size:10.5px;text-transform:uppercase;
+      letter-spacing:.05em;color:var(--mute);padding:11px 13px;border-bottom:1px solid var(--line);white-space:nowrap}
+  tbody td{padding:11px 13px;border-bottom:1px solid #f1f5f9;font-size:13px;vertical-align:middle}
+  tbody tr:hover{background:var(--soft);cursor:pointer}
+  .tt{font-weight:700;color:var(--ink)}
+  .sub{font-size:11.5px;color:var(--mute);margin-top:1px}
+
+  /* ── Chips de estado ── */
+  .st{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;
+      font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+  .st .dot{width:6px;height:6px;border-radius:50%}
+  .st.prog {background:var(--slate-bg);color:var(--slate)}      .st.prog .dot{background:var(--slate)}
+  .st.val  {background:var(--amber-bg);color:var(--amber)}      .st.val .dot{background:var(--amber)}
+  .st.ok   {background:var(--ok-bg);color:var(--ok)}            .st.ok .dot{background:var(--ok)}
+  .st.no   {background:var(--red-bg);color:var(--red)}          .st.no .dot{background:var(--red)}
+
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+        font-size:11px;font-weight:700;background:var(--green-l);color:var(--green)}
+  .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 7px;
+       border-radius:7px;background:#eef2f7;font-size:12px;font-weight:800;color:#334155}
+
+  /* barra de asistencia en la tabla */
+  .bar{width:96px;height:6px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--green)}
+  .bar.low i{background:var(--amber)}
+  .barwrap{display:flex;align-items:center;gap:8px}
+  .barwrap b{font-size:12px;font-weight:800;color:var(--slate)}
+
+  .act{display:flex;gap:6px;justify-content:flex-end}
+  .act button{padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;
+      font:inherit;font-size:12px;font-weight:600;color:var(--mute);cursor:pointer}
+  .act button:hover{border-color:var(--green);color:var(--green)}
+
+  /* ── Modal ── */
+  .mwrap{display:flex;justify-content:center;padding:8px 0 30px}
+  .modal{background:#fff;border-radius:18px;width:100%;max-width:820px;
+         box-shadow:0 24px 70px rgba(0,0,0,.22);display:flex;flex-direction:column;overflow:hidden}
+  .modal.wide{max-width:960px}
+  .mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+         padding:18px 22px;border-bottom:1px solid var(--line)}
+  .mhead h2{margin:0;font-size:18px;font-weight:800}
+  .mhead .sub{font-size:12.5px;color:var(--mute);margin-top:2px}
+  .mclose{border:none;background:#f1f5f9;width:32px;height:32px;border-radius:9px;font-size:19px;
+          color:var(--mute);cursor:pointer;flex-shrink:0;line-height:1}
+  .mbody{padding:18px 22px;display:flex;flex-direction:column;gap:15px}
+  .mfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 22px;
+         border-top:1px solid var(--line);background:var(--soft)}
+  .mfoot .right{display:flex;gap:8px}
+
+  /* ── Pestañas del modal ── */
+  .tabs{display:flex;gap:2px;padding:0 22px;border-bottom:1px solid var(--line);background:#fff}
+  .tab{padding:11px 15px;font-size:13px;font-weight:600;color:var(--mute);border-bottom:2.5px solid transparent;
+       cursor:pointer;display:inline-flex;align-items:center;gap:8px;background:none;border-top:0;border-left:0;border-right:0;font-family:inherit}
+  .tab:hover{color:var(--ink)}
+  .tab.on{color:var(--green);border-bottom-color:var(--green);font-weight:700}
+  .tab .badge{font-size:10.5px;font-weight:800;background:#eef2f7;color:#475569;border-radius:6px;padding:1px 6px}
+  .tab.on .badge{background:var(--green-l);color:var(--green)}
+  .tab .badge.warn{background:var(--amber-bg);color:var(--amber)}
+  .tab:disabled{opacity:.4;cursor:not-allowed}
+
+  /* ── Campos ── */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .f{display:flex;flex-direction:column;gap:5px}
+  .f.full{grid-column:1/-1}
+  .f label{font-size:11.5px;font-weight:700;color:var(--slate)}
+  .f input,.f select,.f textarea{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;
+      font:inherit;font-size:13px;color:var(--ink);background:#fff;outline:none;font-family:inherit}
+  .f textarea{min-height:64px;resize:vertical}
+  .f input:focus,.f select:focus,.f textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,135,90,.12)}
+  .f .hint{font-size:11px;color:var(--faint)}
+  .req{color:var(--red)}
+
+  .step{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);
+        display:flex;align-items:center;gap:8px;margin:2px 0 -4px}
+  .step .n{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;border-radius:6px;
+        background:#eef2f7;color:#475569;font-size:10.5px}
+
+  /* ── Temas ── */
+  .temas{display:flex;flex-direction:column;gap:7px}
+  .tema{display:flex;align-items:flex-start;gap:9px;border:1.5px solid #e5e7eb;border-radius:11px;padding:9px 11px;background:#fff}
+  .tema .num{flex-shrink:0;width:22px;height:22px;border-radius:7px;background:var(--green-l);color:var(--green);
+       font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;margin-top:2px}
+  .tema .cols{flex:1;display:flex;flex-direction:column;gap:5px}
+  .tema input,.tema textarea{border:none;outline:none;font:inherit;font-family:inherit;padding:0;width:100%;background:none}
+  .tema .ttl{font-size:13.5px;font-weight:700;color:var(--ink)}
+  .tema .dsc{font-size:12px;color:var(--mute);min-height:18px;resize:none}
+  .tema .drag,.tema .del{flex-shrink:0;border:none;background:none;color:var(--faint);cursor:pointer;font-size:14px;padding:2px 4px}
+  .tema .del:hover{color:var(--red)}
+  .addtema{align-self:flex-start;border:1.5px dashed #cbd5e1;background:none;border-radius:10px;padding:8px 13px;
+       font:inherit;font-family:inherit;font-size:12.5px;font-weight:600;color:var(--mute);cursor:pointer}
+  .addtema:hover{border-color:var(--green);color:var(--green)}
+
+  /* ── Adjuntos ── */
+  .drop{border:1.5px dashed #cbd5e1;border-radius:12px;padding:16px;text-align:center;background:var(--soft)}
+  .drop .big{font-size:13px;font-weight:700;color:var(--slate)}
+  .drop .sm{font-size:11.5px;color:var(--faint);margin-top:3px}
+  .files{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+  .file{display:flex;align-items:center;gap:10px;border:1px solid #e5e7eb;border-radius:10px;padding:8px 11px}
+  .file .ic{width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
+       font-size:10px;font-weight:800;color:#fff;flex-shrink:0}
+  .file .ic.pdf{background:#dc2626}.file .ic.img{background:#7c3aed}.file .ic.ppt{background:#ea580c}
+  .file .nm{flex:1;font-size:12.5px;font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file .mt{font-size:11px;color:var(--faint)}
+  .file .drv{font-size:10px;font-weight:700;color:var(--green);background:var(--green-l);border-radius:999px;padding:2px 8px;white-space:nowrap}
+  .file .drv.pend{color:var(--amber);background:var(--amber-bg)}
+
+  /* ── Asistencia ── */
+  .asbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--soft);border:1px solid var(--line);
+         border-radius:12px;padding:10px 12px}
+  .asbar .grow{flex:1;min-width:150px}
+  .mass{display:flex;gap:5px}
+  .mass button{padding:6px 10px;border:1px solid var(--line);background:#fff;border-radius:8px;font:inherit;
+      font-family:inherit;font-size:11.5px;font-weight:700;color:var(--mute);cursor:pointer}
+  .mass button:hover{border-color:var(--green);color:var(--green)}
+
+  .roster{border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;max-height:340px;overflow-y:auto}
+  .rgrp{background:var(--soft);padding:6px 12px;font-size:10.5px;font-weight:800;letter-spacing:.06em;
+        text-transform:uppercase;color:var(--mute);border-bottom:1px solid #eef2f7;position:sticky;top:0}
+  .rrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f5f7fa}
+  .rrow:hover{background:#fbfdfc}
+  .rrow.pend{background:#fffdf5}
+  .av{width:29px;height:29px;border-radius:9px;background:#eef2f7;color:#475569;font-size:11px;font-weight:800;
+      display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+  .rrow .who{flex:1;min-width:0}
+  .rrow .nm{font-size:13px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .rrow .mt{font-size:11px;color:var(--mute)}
+  .aft{display:flex;gap:3px;flex-shrink:0}
+  .aft button{width:31px;height:29px;border:1.5px solid #e5e7eb;background:#fff;border-radius:8px;font:inherit;
+      font-family:inherit;font-size:12px;font-weight:800;color:var(--faint);cursor:pointer}
+  .aft button:hover{border-color:#cbd5e1}
+  .aft button.on[data-v="A"]{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+  .aft button.on[data-v="T"]{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+  .aft button.on[data-v="F"]{background:var(--red-bg);border-color:var(--red);color:var(--red)}
+
+  /* ── Validación ── */
+  .verdict{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .vopt{border:2px solid #e5e7eb;border-radius:14px;padding:14px;cursor:pointer;background:#fff;text-align:left;font-family:inherit}
+  .vopt .vt{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+  .vopt .vd{font-size:12px;color:var(--mute);margin-top:5px;line-height:1.45}
+  .vopt .ico{width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;
+       font-size:14px;color:#fff}
+  .vopt.ok .ico{background:var(--ok)} .vopt.no .ico{background:var(--red)}
+  .vopt.ok.on{border-color:var(--ok);background:var(--ok-bg)}
+  .vopt.no.on{border-color:var(--red);background:var(--red-bg)}
+
+  .ro{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
+  .ro .rt{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:7px}
+  .ro ol{margin:0;padding-left:19px;font-size:13px;line-height:1.65}
+  .ro ol span{color:var(--mute);font-size:12px}
+  .metrics{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
+  .metric{flex:1;min-width:110px;background:#fff;border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+  .metric .m1{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+  .metric .m2{font-size:21px;font-weight:800;margin-top:2px}
+
+  .cmt{display:flex;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#fff}
+  .cmt .av{background:var(--green-l);color:var(--green)}
+  .cmt .cb{flex:1}
+  .cmt .ch{font-size:12px;font-weight:700}
+  .cmt .ch span{font-weight:400;color:var(--faint);font-size:11.5px}
+  .cmt .cx{font-size:12.5px;color:var(--slate);margin-top:4px;line-height:1.5}
+
+  .note{background:#fffbeb;border:1px solid #fde68a;border-radius:11px;padding:10px 13px;font-size:12.5px;
+        color:#92400e;line-height:1.5}
+  .note b{font-weight:800}
+
+  /* Panel de supuestos */
+  .assum{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px}
+  .assum h3{margin:0 0 10px;font-size:14px;font-weight:800}
+  .assum table{width:100%}
+  .assum td{border-bottom:1px solid #f1f5f9;padding:8px 6px;font-size:12.5px;vertical-align:top}
+  .assum td:first-child{width:170px;font-weight:700;color:var(--slate)}
+  .assum td:last-child{color:var(--mute);line-height:1.5}
+  @media(max-width:720px){.grid,.verdict{grid-template-columns:1fr}.stage{padding:14px}}
+</style>
+</head>
+<body>
+
+<div class="mkbar">
+  <span class="mk-t">Mockup · Capacitaciones</span>
+  <nav>
+    <button class="on" data-s="s1">1 · Listado</button>
+    <button data-s="s2">2 · Crear</button>
+    <button data-s="s3">3 · Contenido</button>
+    <button data-s="s4">4 · Asistencia</button>
+    <button data-s="s5">5 · Validación (admin)</button>
+    <button data-s="s6">Supuestos</button>
+  </nav>
+</div>
+
+<div class="stage">
+
+<!-- ══════════════════ 1 · LISTADO ══════════════════ -->
+<section class="screen on" id="s1">
+  <h1 class="pg">Capacitaciones</h1>
+  <p class="pgsub">Plan de formación del personal · julio 2026</p>
+
+  <div class="kpis">
+    <div class="kpi"><div class="lbl">Programadas</div><div class="val slate">4</div><div class="foot">2 vencidas sin enviar</div></div>
+    <div class="kpi"><div class="lbl">Por validar</div><div class="val amber">3</div><div class="foot">esperan al administrador</div></div>
+    <div class="kpi"><div class="lbl">Realizadas · mes</div><div class="val">11</div><div class="foot">+2 vs. junio</div></div>
+    <div class="kpi"><div class="lbl">No realizadas</div><div class="val red">2</div><div class="foot">con motivo registrado</div></div>
+    <div class="kpi"><div class="lbl">Asistencia media</div><div class="val">86<span style="font-size:17px">%</span></div><div class="foot">sobre 38 colaboradores</div></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input placeholder="Buscar por título, tema o expositor…">
+    </div>
+    <span class="flt-lbl">Estado</span>
+    <div class="flt">
+      <button class="on">Todas</button><button>Programadas</button><button>Por validar</button>
+      <button>Realizadas</button><button>No realizadas</button>
+    </div>
+    <select class="sel"><option>Todos los coordinadores</option><option>M. Torres</option><option>A. Vega</option></select>
+    <select class="sel"><option>Julio 2026</option><option>Junio 2026</option></select>
+    <button class="btn primary">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nueva capacitación
+    </button>
+  </div>
+
+  <div class="tcard">
+    <table>
+      <thead><tr>
+        <th>Capacitación</th><th>Fecha y hora</th><th>Temas</th><th>Adj.</th>
+        <th>Asistencia</th><th>Estado</th><th>Coordinador</th><th></th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><div class="tt">Uso correcto de arnés y línea de vida</div><div class="sub">Expositor: M. Torres · Muelle 2</div></td>
+          <td>30/07/2026<div class="sub">14:00 · 45 min</div></td>
+          <td><span class="cnt">4</span></td>
+          <td><span class="cnt">3</span></td>
+          <td><div class="barwrap"><div class="bar"><i style="width:89%"></i></div><b>34/38</b></div></td>
+          <td><span class="st val"><span class="dot"></span>Por validar</span></td>
+          <td><span class="pill">M. Torres</span></td>
+          <td><div class="act"><button>Abrir</button></div></td>
+        </tr>
+        <tr>
+          <td><div class="tt">Señalización de maniobras con grúa</div><div class="sub">Expositor: A. Vega · Patio</div></td>
+          <td>28/07/2026<div class="sub">08:30 · 30 min</div></td>
+          <td><span class="cnt">3</span></td>
+          <td><span class="cnt">5</span></td>
+          <td><div class="barwrap"><div class="bar"><i style="width:97%"></i></div><b>37/38</b></div></td>
+          <td><span class="st ok"><span class="dot"></span>Realizada</span></td>
+          <td><span class="pill">A. Vega</span></td>
+          <td><div class="act"><button>Abrir</button></div></td>
+        </tr>
+        <tr>
+          <td><div class="tt">Manipulación de big bags</div><div class="sub">Expositor: M. Torres · Almacén</div></td>
+          <td>25/07/2026<div class="sub">15:00 · 60 min</div></td>
+          <td><span class="cnt">5</span></td>
+          <td><span class="cnt">2</span></td>
+          <td><div class="barwrap"><div class="bar low"><i style="width:58%"></i></div><b>22/38</b></div></td>
+          <td><span class="st ok"><span class="dot"></span>Realizada</span></td>
+          <td><span class="pill">M. Torres</span></td>
+          <td><div class="act"><button>Abrir</button></div></td>
+        </tr>
+        <tr>
+          <td><div class="tt">Respuesta ante derrame de granel</div><div class="sub">Expositor: J. Salas · Muelle 1</div></td>
+          <td>22/07/2026<div class="sub">07:00 · —</div></td>
+          <td><span class="cnt">2</span></td>
+          <td><span class="cnt">0</span></td>
+          <td><span style="font-size:12px;color:var(--faint)">—</span></td>
+          <td><span class="st no"><span class="dot"></span>No realizada</span></td>
+          <td><span class="pill">J. Salas</span></td>
+          <td><div class="act"><button>Abrir</button></div></td>
+        </tr>
+        <tr>
+          <td><div class="tt">Lecciones aprendidas · incidente 07-18</div><div class="sub">Sin expositor asignado</div></td>
+          <td>05/08/2026<div class="sub">16:00 · —</div></td>
+          <td><span class="cnt" style="background:#fef3c7;color:#92400e">0</span></td>
+          <td><span class="cnt">0</span></td>
+          <td><span style="font-size:12px;color:var(--faint)">—</span></td>
+          <td><span class="st prog"><span class="dot"></span>Programada</span></td>
+          <td><span class="pill">M. Torres</span></td>
+          <td><div class="act"><button>Abrir</button></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:12px;color:var(--faint);margin-top:10px">
+    La barra de asistencia es lo que convierte la tabla en un tablero: «22/38 en ámbar» se lee antes que cualquier número suelto.
+  </p>
+</section>
+
+<!-- ══════════════════ 2 · CREAR ══════════════════ -->
+<section class="screen" id="s2">
+  <h1 class="pg">Modal de creación</h1>
+  <p class="pgsub">Corto a propósito: solo lo necesario para que la capacitación exista en el calendario. El contenido se carga después.</p>
+  <div class="mwrap"><div class="modal" style="max-width:620px">
+    <div class="mhead">
+      <div><h2>Nueva capacitación</h2><div class="sub">Quedará como <b>Programada</b> hasta que la envíes a validación</div></div>
+      <button class="mclose">×</button>
+    </div>
+    <div class="mbody">
+      <div class="grid">
+        <div class="f full">
+          <label>Título de la capacitación <span class="req">*</span></label>
+          <input value="Uso correcto de arnés y línea de vida">
+          <span class="hint">Lo que verá el administrador en su bandeja. Sé específico.</span>
+        </div>
+        <div class="f"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-30"></div>
+        <div class="f"><label>Hora <span class="req">*</span></label><input type="time" value="14:00"></div>
+        <div class="f"><label>Duración estimada</label><input placeholder="45 min"></div>
+        <div class="f"><label>Lugar</label><input placeholder="Muelle 2"></div>
+        <div class="f full"><label>Expositor / capacitador</label><input value="Miguel Ángel Torres"></div>
+      </div>
+      <div class="note">
+        <b>Nada más.</b> Los temas, los archivos y la asistencia se cargan entrando a la capacitación,
+        que es exactamente lo que pediste. Pedirlo todo aquí obligaría a llenar en el momento de programar
+        cosas que solo se saben después.
+      </div>
+    </div>
+    <div class="mfoot">
+      <span style="font-size:12px;color:var(--faint)">Se registrará a tu nombre · M. Torres</span>
+      <div class="right"><button class="btn ghost">Cancelar</button><button class="btn primary">Crear capacitación</button></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ══════════════════ 3 · CONTENIDO ══════════════════ -->
+<section class="screen" id="s3">
+  <h1 class="pg">Detalle · pestaña Contenido</h1>
+  <p class="pgsub">Aquí el coordinador desarrolla los temas y sube el material.</p>
+  <div class="mwrap"><div class="modal wide">
+    <div class="mhead">
+      <div>
+        <h2>Uso correcto de arnés y línea de vida</h2>
+        <div class="sub">30/07/2026 · 14:00 · 45 min · Muelle 2 · Expositor: M. Torres</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="st prog"><span class="dot"></span>Programada</span>
+        <button class="mclose">×</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab on">Contenido <span class="badge">4</span></button>
+      <button class="tab">Asistencia <span class="badge warn">0/38</span></button>
+      <button class="tab" disabled>Validación</button>
+    </div>
+    <div class="mbody">
+      <div class="step"><span class="n">1</span> Temas desarrollados</div>
+      <div class="temas">
+        <div class="tema">
+          <span class="num">1</span>
+          <div class="cols">
+            <input class="ttl" value="Tipos de arnés y cuándo usar cada uno">
+            <textarea class="dsc">Arnés de cuerpo entero vs. cinturón de posicionamiento. Revisión de etiquetas y vida útil.</textarea>
+          </div>
+          <button class="del" title="Quitar">×</button>
+        </div>
+        <div class="tema">
+          <span class="num">2</span>
+          <div class="cols">
+            <input class="ttl" value="Puntos de anclaje certificados en muelle">
+            <textarea class="dsc">Identificación en campo, carga mínima 22 kN, qué NO sirve como anclaje.</textarea>
+          </div>
+          <button class="del">×</button>
+        </div>
+        <div class="tema">
+          <span class="num">3</span>
+          <div class="cols">
+            <input class="ttl" value="Inspección previa al uso">
+            <textarea class="dsc" placeholder="Descripción (opcional)"></textarea>
+          </div>
+          <button class="del">×</button>
+        </div>
+        <div class="tema">
+          <span class="num">4</span>
+          <div class="cols">
+            <input class="ttl" value="Rescate en altura: primeros 15 minutos">
+            <textarea class="dsc">Síndrome de suspensión. Quién llama y a quién.</textarea>
+          </div>
+          <button class="del">×</button>
+        </div>
+      </div>
+      <button class="addtema">+ Agregar tema</button>
+
+      <div class="step" style="margin-top:8px"><span class="n">2</span> Material y evidencias</div>
+      <div class="drop">
+        <div class="big">Arrastra archivos aquí o haz clic para seleccionar</div>
+        <div class="sm">Imágenes, PDF, Word, Excel, PowerPoint y video · máx. 4 MB por archivo</div>
+      </div>
+      <div class="files">
+        <div class="file"><span class="ic ppt">PPT</span><span class="nm">Arnes_y_linea_de_vida_v3.pptx</span><span class="mt">2.1 MB</span><span class="drv">En Drive</span></div>
+        <div class="file"><span class="ic pdf">PDF</span><span class="nm">Ficha_tecnica_anclajes.pdf</span><span class="mt">640 KB</span><span class="drv">En Drive</span></div>
+        <div class="file"><span class="ic img">JPG</span><span class="nm">foto_charla_muelle2.jpg</span><span class="mt">1.8 MB</span><span class="drv pend">Subiendo…</span></div>
+      </div>
+
+      <div class="step" style="margin-top:8px"><span class="n">3</span> Observaciones del coordinador</div>
+      <div class="f"><textarea placeholder="Contexto, incidencias durante la sesión, compromisos asumidos…"></textarea></div>
+    </div>
+    <div class="mfoot">
+      <span style="font-size:12px;color:var(--faint)">Guardado automático · última vez 14:52</span>
+      <div class="right">
+        <button class="btn ghost">Guardar borrador</button>
+        <button class="btn primary">Enviar a validación</button>
+      </div>
+    </div>
+  </div></div>
+  <p style="font-size:12px;color:var(--faint);margin-top:4px;text-align:center">
+    «Enviar a validación» se habilita solo con ≥1 tema y la asistencia marcada. La pestaña Validación está en gris porque aún no hay nada que validar.
+  </p>
+</section>
+
+<!-- ══════════════════ 4 · ASISTENCIA ══════════════════ -->
+<section class="screen" id="s4">
+  <h1 class="pg">Detalle · pestaña Asistencia</h1>
+  <p class="pgsub">Toda la plantilla precargada. El coordinador marca; no elige a nadie.</p>
+  <div class="mwrap"><div class="modal wide">
+    <div class="mhead">
+      <div><h2>Uso correcto de arnés y línea de vida</h2>
+      <div class="sub">30/07/2026 · 14:00 · Muelle 2</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="st prog"><span class="dot"></span>Programada</span><button class="mclose">×</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab">Contenido <span class="badge">4</span></button>
+      <button class="tab on">Asistencia <span class="badge">34/38</span></button>
+      <button class="tab" disabled>Validación</button>
+    </div>
+    <div class="mbody">
+      <div class="metrics">
+        <div class="metric"><div class="m1">Asistieron</div><div class="m2" style="color:var(--ok)">31</div></div>
+        <div class="metric"><div class="m1">Tardanza</div><div class="m2" style="color:var(--amber)">3</div></div>
+        <div class="metric"><div class="m1">Faltaron</div><div class="m2" style="color:var(--red)">2</div></div>
+        <div class="metric"><div class="m1">Sin marcar</div><div class="m2" style="color:var(--faint)">2</div></div>
+      </div>
+
+      <div class="asbar">
+        <div class="search grow" style="background:#fff">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input placeholder="Buscar colaborador…">
+        </div>
+        <select class="sel"><option>Todas las cuadrillas</option><option>Cuadrilla A</option><option>Cuadrilla B</option></select>
+        <select class="sel"><option>Todos los coordinadores</option><option>M. Torres</option></select>
+        <div class="mass">
+          <button>Marcar todos A</button><button>Limpiar</button>
+        </div>
+      </div>
+
+      <div class="roster">
+        <div class="rgrp">Cuadrilla A · 24 colaboradores</div>
+        <div class="rrow">
+          <span class="av">JP</span>
+          <div class="who"><div class="nm">Juan Pérez Quispe</div><div class="mt">Winchero · ST-001</div></div>
+          <div class="aft"><button class="on" data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rrow">
+          <span class="av">CM</span>
+          <div class="who"><div class="nm">Carlos Mendoza Lévano</div><div class="mt">Estibador · ST-002</div></div>
+          <div class="aft"><button data-v="A">A</button><button class="on" data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rrow">
+          <span class="av">LR</span>
+          <div class="who"><div class="nm">Luis Ramírez Saldaña</div><div class="mt">Señalero · ST-003</div></div>
+          <div class="aft"><button class="on" data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rrow">
+          <span class="av">PH</span>
+          <div class="who"><div class="nm">Pedro Huamán Castro</div><div class="mt">Tractorista · ST-004</div></div>
+          <div class="aft"><button data-v="A">A</button><button data-v="T">T</button><button class="on" data-v="F">F</button></div>
+        </div>
+        <div class="rrow pend">
+          <span class="av">MT</span>
+          <div class="who"><div class="nm">Miguel Ángel Torres</div><div class="mt">Capataz · ST-005</div></div>
+          <div class="aft"><button data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rrow">
+          <span class="av">JS</span>
+          <div class="who"><div class="nm">Jorge Salazar Núñez</div><div class="mt">Lashing · ST-006</div></div>
+          <div class="aft"><button class="on" data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rgrp">Cuadrilla B · 14 colaboradores</div>
+        <div class="rrow">
+          <span class="av">RV</span>
+          <div class="who"><div class="nm">Ricardo Villanueva Poma</div><div class="mt">Winchero · ST-009</div></div>
+          <div class="aft"><button class="on" data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+        <div class="rrow pend">
+          <span class="av">HZ</span>
+          <div class="who"><div class="nm">Héctor Zapata Quispe</div><div class="mt">Estibador · ST-010</div></div>
+          <div class="aft"><button data-v="A">A</button><button data-v="T">T</button><button data-v="F">F</button></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Nadie nace marcado como «asistió».</b> Las filas sin marcar salen en ámbar y se cuentan aparte.
+        Si el estado por defecto fuera «A», un coordinador que no abre la pestaña generaría un 100 % de
+        asistencia falso, y el administrador estaría validando un dato que nadie miró.
+      </div>
+    </div>
+    <div class="mfoot">
+      <span style="font-size:12px;color:var(--faint)">Faltan 2 por marcar</span>
+      <div class="right"><button class="btn ghost">Guardar borrador</button><button class="btn primary" disabled>Enviar a validación</button></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ══════════════════ 5 · VALIDACIÓN ══════════════════ -->
+<section class="screen" id="s5">
+  <h1 class="pg">Detalle · pestaña Validación <span style="font-size:13px;font-weight:600;color:var(--mute)">(vista del administrador)</span></h1>
+  <p class="pgsub">Todo en solo lectura menos el veredicto y el comentario.</p>
+  <div class="mwrap"><div class="modal wide">
+    <div class="mhead">
+      <div><h2>Uso correcto de arnés y línea de vida</h2>
+      <div class="sub">30/07/2026 · 14:00 · Muelle 2 · Enviada por M. Torres el 30/07 a las 16:04</div></div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="st val"><span class="dot"></span>Por validar</span><button class="mclose">×</button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab">Contenido <span class="badge">4</span></button>
+      <button class="tab">Asistencia <span class="badge">38/38</span></button>
+      <button class="tab on">Validación</button>
+    </div>
+    <div class="mbody">
+      <div class="ro">
+        <div class="rt">Lo que declaró el coordinador</div>
+        <ol>
+          <li>Tipos de arnés y cuándo usar cada uno<br><span>Arnés de cuerpo entero vs. cinturón de posicionamiento…</span></li>
+          <li>Puntos de anclaje certificados en muelle</li>
+          <li>Inspección previa al uso</li>
+          <li>Rescate en altura: primeros 15 minutos</li>
+        </ol>
+        <div class="metrics" style="margin-top:12px">
+          <div class="metric"><div class="m1">Asistieron</div><div class="m2" style="color:var(--ok)">31</div></div>
+          <div class="metric"><div class="m1">Tardanza</div><div class="m2" style="color:var(--amber)">3</div></div>
+          <div class="metric"><div class="m1">Faltaron</div><div class="m2" style="color:var(--red)">4</div></div>
+          <div class="metric"><div class="m1">Adjuntos</div><div class="m2">3</div></div>
+        </div>
+      </div>
+
+      <div class="step"><span class="n">1</span> ¿Se realizó la capacitación?</div>
+      <div class="verdict">
+        <button class="vopt ok on">
+          <div class="vt"><span class="ico">✓</span> Sí, se realizó</div>
+          <div class="vd">La capacitación ocurrió y el registro refleja lo que pasó. Cuenta para el cumplimiento del mes y la asistencia se consolida en el historial de cada colaborador.</div>
+        </button>
+        <button class="vopt no">
+          <div class="vt"><span class="ico">✕</span> No se realizó</div>
+          <div class="vd">No ocurrió, o lo registrado no la respalda. El registro se conserva con su motivo; la asistencia marcada se descarta del cómputo.</div>
+        </button>
+      </div>
+
+      <div class="step"><span class="n">2</span> Comentario del administrador</div>
+      <div class="f">
+        <textarea style="min-height:90px">Buen material de apoyo y los temas están bien desarrollados. A mejorar: 4 faltas en cuadrilla B sin justificación registrada — coordina una sesión de recuperación antes del 15/08.</textarea>
+        <span class="hint">Visible para el coordinador. Sirve tanto para felicitar como para señalar puntos a mejorar.</span>
+      </div>
+
+      <div class="step"><span class="n">3</span> Historial</div>
+      <div class="cmt">
+        <span class="av">MT</span>
+        <div class="cb"><div class="ch">M. Torres · Coordinador <span>30/07 16:04</span></div>
+        <div class="cx">Enviada a validación. La sesión se movió 20 min por descarga en muelle 2.</div></div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <span style="font-size:12px;color:var(--faint)">Al validar, el coordinador ya no podrá editar</span>
+      <div class="right"><button class="btn ghost">Cancelar</button><button class="btn primary">Validar capacitación</button></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- ══════════════════ 6 · SUPUESTOS ══════════════════ -->
+<section class="screen" id="s6">
+  <h1 class="pg">Lo que asumí sin preguntarte</h1>
+  <p class="pgsub">Está todo dibujado arriba. Corrige lo que no cuadre y lo cambio.</p>
+  <div class="assum">
+    <h3>Decisiones tomadas</h3>
+    <table>
+      <tr><td>Temas</td><td>Filas estructuradas con título + descripción opcional, reordenables. Tabla <code>capacitaciones_temas</code>. Un textarea corrido no permitiría contar temas en la tabla ni listarlos en el PDF.</td></tr>
+      <tr><td>Asistencia</td><td>A / T / F por colaborador, igual que Charlas. <b>Nadie viene marcado por defecto</b>: «sin marcar» es un cuarto estado visible que impide el 100 % falso.</td></tr>
+      <tr><td>Universo</td><td>Todos los <code>colaboradores</code> con <code>activo=1</code>, agrupados por cuadrilla, con filtro por cuadrilla y por coordinador (opción C que elegiste).</td></tr>
+      <tr><td>Adjuntos</td><td>Reutiliza <code>includes/drive_uploader.php</code> y el patrón de <code>asistencias_evidencias</code>: sube a Drive, guarda respaldo local si falla, límite 4 MB por archivo.</td></tr>
+      <tr><td>Campos extra</td><td>Lugar, duración estimada y expositor. Todos opcionales salvo título, fecha y hora.</td></tr>
+      <tr><td>Estados</td><td><code>programada → por_validar → realizada | no_realizada</code>. El coordinador edita solo en <code>programada</code>.</td></tr>
+      <tr><td>Permisos</td><td>Crear y llenar: Coordinador, Supervisor y Administrador. Validar: solo Administrador (<code>api_require_admin()</code>). Un coordinador no valida lo suyo.</td></tr>
+      <tr><td>Visibilidad</td><td>Cada coordinador ve todas las capacitaciones, no solo las suyas — el filtro por coordinador acota la vista. Es coherente con Incidencias y Sugerencias.</td></tr>
+      <tr><td>Sidebar</td><td>Entra en el grupo <b>Control de Campo</b>, debajo de Charlas.</td></tr>
+      <tr><td>Exportación</td><td>Excel y PDF sobre las filas visibles, mismo patrón que Sugerencias e Incidencias.</td></tr>
+    </table>
+  </div>
+  <div class="assum">
+    <h3>Lo que dejé fuera a propósito</h3>
+    <table>
+      <tr><td>Reapertura</td><td>El administrador no puede devolver una capacitación ya validada (era la opción C de estados, que descartaste).</td></tr>
+      <tr><td>Firma digital</td><td>Charlas la tiene en BD pero ya no la usa. No la reintroduzco.</td></tr>
+      <tr><td>Hilo de comentarios</td><td>Un solo comentario del administrador, no una conversación. El historial solo muestra los eventos del ciclo.</td></tr>
+      <tr><td>Google Sheets</td><td><code>includes/sheets.php</code> no toca este módulo.</td></tr>
+      <tr><td>Recurrencia</td><td>Nada de «repetir cada mes». Cada capacitación se crea una vez.</td></tr>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<script>
+  document.querySelectorAll('.mkbar button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('.mkbar button').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+      document.getElementById(b.dataset.s).classList.add('on');
+      window.scrollTo({top:0,behavior:'instant'});
+    });
+  });
+  // interactividad mínima para que se sienta real
+  document.querySelectorAll('.aft').forEach(g=>{
+    g.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      const was=b.classList.contains('on');
+      g.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+      if(!was) b.classList.add('on');
+      b.closest('.rrow').classList.toggle('pend', was || !b.classList.contains('on'));
+    }));
+  });
+  document.querySelectorAll('.verdict .vopt').forEach(v=>v.addEventListener('click',()=>{
+    document.querySelectorAll('.verdict .vopt').forEach(x=>x.classList.remove('on'));
+    v.classList.add('on');
+  }));
+  document.querySelectorAll('.modal .tab:not(:disabled)').forEach(t=>t.addEventListener('click',()=>{
+    t.parentElement.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+  }));
+</script>
+</body>
+</html>

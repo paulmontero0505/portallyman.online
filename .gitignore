@@ -1,0 +1,28 @@
+# ── Dependencias ────────────────────────────────────────────────
+operaciones-api/node_modules/
+node_modules/
+
+# ── Secretos y configuración local ──────────────────────────────
+operaciones-api/.env
+includes/sheets_config.php
+php.ini
+.user.ini
+
+# ── Logs y salidas de runtime ───────────────────────────────────
+error_log
+api/error_log
+logs/
+_srv.out
+_srv.out.err
+_boot.txt
+
+# ── Subidas de usuarios ─────────────────────────────────────────
+uploads/
+
+# ── Archivos pesados que no son código ──────────────────────────
+.well-known.zip
+
+# ── Sistema ─────────────────────────────────────────────────────
+Thumbs.db
+desktop.ini
+.DS_Store

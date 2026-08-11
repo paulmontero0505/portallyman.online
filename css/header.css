@@ -1,0 +1,240 @@
+/* ══════════════════════════════════════
+   HEADER — Puerto Chancay / COSCO
+══════════════════════════════════════ */
+
+.header {
+  height: var(--hh);
+  background: var(--blanco);
+  border-bottom: 1px solid var(--gris-borde);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 12px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: relative;
+  z-index: 50; /* Siempre por encima del contenido */
+}
+
+/* ── Botón hamburguesa / toggle ── */
+.btn-toggle {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--gris-borde); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--gris-texto); flex-shrink: 0;
+  transition: background var(--trans), color var(--trans), border-color var(--trans), transform 0.15s ease;
+  touch-action: manipulation; /* Elimina delay de 300ms en iOS */
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-toggle:hover {
+  background: var(--gris-fondo);
+  color: var(--azul-medio);
+  border-color: rgba(24,95,165,0.25);
+}
+.btn-toggle:active { transform: scale(0.92); }
+
+/* Líneas del hamburger */
+.hb { display: flex; flex-direction: column; gap: 4px; }
+.hb span {
+  display: block; width: 16px; height: 2px;
+  background: currentColor; border-radius: 2px;
+  transition: transform 0.25s ease, opacity 0.25s ease, width 0.25s ease;
+  transform-origin: center;
+}
+.btn-toggle.is-x .hb span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.btn-toggle.is-x .hb span:nth-child(2) { opacity: 0; width: 0; }
+.btn-toggle.is-x .hb span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* ── Logo en header ── */
+.header-logo {
+  height: 26px; object-fit: contain; flex-shrink: 0;
+}
+
+/* ── Divisor vertical ── */
+.v-div {
+  width: 1px; height: 22px;
+  background: var(--gris-borde); flex-shrink: 0;
+}
+
+/* ── Breadcrumb ── */
+.breadcrumb {
+  flex: 1; display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; color: var(--gris-texto);
+  min-width: 0; overflow: hidden;
+}
+.bc-sep    { color: #C0C8D2; font-size: 11px; flex-shrink: 0; }
+.bc-active { color: var(--texto-main); font-weight: 600; white-space: nowrap; }
+
+/* ── Buscador ── */
+.search-wrap { position: relative; flex-shrink: 0; }
+.search-wrap svg {
+  position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+  width: 14px; height: 14px; color: #B0B8C4; pointer-events: none;
+}
+.search-wrap input {
+  width: 200px; padding: 8px 12px 8px 32px;
+  border: 1px solid var(--gris-borde); border-radius: 10px;
+  font-size: 12.5px; font-family: var(--fuente);
+  color: var(--texto-main); background: var(--gris-fondo); outline: none;
+  transition: border var(--trans), box-shadow var(--trans), background var(--trans);
+}
+.search-wrap input::placeholder { color: #C0C8D2; }
+.search-wrap input:focus {
+  border-color: var(--azul-medio); background: var(--blanco);
+  box-shadow: 0 0 0 3px rgba(24,95,165,0.10);
+}
+
+/* ── Chip de estado ── */
+.status-chip {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 500; color: #047857;
+  background: rgba(4,120,87,0.08); border: 1px solid rgba(4,120,87,0.18);
+  border-radius: 20px; padding: 5px 12px; flex-shrink: 0;
+}
+.dot-green {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #047857;
+  animation: pg 2s infinite;
+}
+@keyframes pg {
+  0%,100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+/* ── Acciones del header ── */
+.h-actions {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+}
+
+.btn-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  border: 1px solid var(--gris-borde); background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--gris-texto); position: relative;
+  transition: background var(--trans), color var(--trans), border-color var(--trans);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-icon:hover {
+  background: var(--gris-fondo);
+  color: var(--azul-medio);
+  border-color: rgba(24,95,165,0.25);
+}
+.btn-icon .dot {
+  position: absolute; top: 7px; right: 7px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #EF4444; border: 1.5px solid #fff;
+}
+
+/* ── Reloj en tiempo real ── */
+.h-clock {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  color: #374151;
+  min-width: 70px;
+  text-align: right;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── Avatar del header ── */
+.h-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--azul-medio), var(--azul-claro));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #fff;
+  cursor: pointer; flex-shrink: 0;
+  border: 2px solid rgba(24,95,165,0.15);
+  transition: border-color var(--trans), box-shadow var(--trans);
+  box-shadow: 0 2px 8px rgba(24,95,165,0.22);
+}
+.h-avatar:hover {
+  border-color: var(--azul-medio);
+  box-shadow: 0 4px 14px rgba(24,95,165,0.32);
+}
+
+/* ══ RESPONSIVE HEADER ══ */
+@media (max-width: 1024px) {
+  .search-wrap,
+  .status-chip  { display: none; }
+  .header       { padding: 0 16px; }
+
+  /* Header sticky en móvil para que siempre sea visible al hacer scroll del body */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Ocultar elementos extra */
+  .v-div        { display: none; }
+  .btn-icon:not(:last-of-type) { display: none; }
+
+  /* Breadcrumb más compacto: ocultar intermedios */
+  .breadcrumb > span:not(.bc-active):not(.bc-sep:last-of-type) { display: none; }
+  .breadcrumb > .bc-sep:not(:last-of-type) { display: none; }
+
+  /* Header más compacto */
+  .header { gap: 8px; }
+
+  /* Botón hamburguesa más fácil de tocar */
+  .btn-toggle {
+    width: 42px;
+    height: 42px;
+  }
+
+  /* Avatar alineado al final */
+  .h-avatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  /* Reloj: más compacto en móvil */
+  .h-clock { font-size: 11px; min-width: 56px; }
+}
+
+/* ── Teléfono pequeño ── */
+@media (max-width: 390px) {
+  .h-clock { display: none; }
+  .breadcrumb .bc-active { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* ─── OVERRIDES BLANCO + VERDE FOR HEADER.CSS ─── */
+.header {
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(0, 135, 90, 0.15) !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+}
+.status-chip {
+  color: #00875A !important;
+  background: rgba(0, 135, 90, 0.08) !important;
+  border: 1px solid rgba(0, 135, 90, 0.22) !important;
+  box-shadow: none !important;
+}
+.dot-green {
+  background: #00875A !important;
+  box-shadow: none !important;
+}
+.v-div {
+  background: rgba(0, 135, 90, 0.15) !important;
+}
+.bc-active {
+  color: var(--azul-medio) !important;
+  text-shadow: none !important;
+}
+.btn-icon .dot {
+  background: #ef4444 !important;
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+}
+.btn-toggle, .btn-icon {
+  border-color: rgba(0, 135, 90, 0.18) !important;
+}
+.btn-toggle:hover, .btn-icon:hover {
+  background: rgba(0, 135, 90, 0.07) !important;
+  border-color: var(--azul-medio) !important;
+  color: var(--azul-medio) !important;
+}

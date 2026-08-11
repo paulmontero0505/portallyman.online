@@ -1,0 +1,106 @@
+<style>
+  .flow { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:10px 0; }
+  .step { border:1px solid rgba(128,128,128,.45); border-radius:8px; padding:6px 10px; font-size:13px; line-height:1.3; }
+  .step b { display:block; font-size:11px; text-transform:uppercase; letter-spacing:.06em; opacity:.65; }
+  .arrow { opacity:.5; font-size:15px; }
+  .fields { font-size:12.5px; line-height:1.7; opacity:.85; }
+  .tag { display:inline-block; border:1px solid rgba(128,128,128,.4); border-radius:999px; padding:1px 8px; font-size:11px; margin:0 3px 3px 0; }
+  .new { border-color:#12B76A; color:#12B76A; }
+  .dup { border-color:#F79009; color:#F79009; }
+  .lgd { font-size:12px; opacity:.7; margin-top:14px; }
+</style>
+
+<h2>¿Capacitaciones es un módulo nuevo o una extensión de «Charlas»?</h2>
+<p class="subtitle">El módulo de Charlas ya existe y su catálogo ya contempla el tipo «Capacitación». Esta decisión define todo lo demás.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">YA EXISTE · Charlas (asistencias_preoperativas)</div>
+    <div class="mockup-body">
+      <div class="flow">
+        <div class="step"><b>Coordinador</b>Registra lo ya ocurrido</div>
+        <span class="arrow">&rarr;</span>
+        <div class="step"><b>Fin</b>Queda el registro</div>
+      </div>
+      <div class="fields">
+        <span class="tag dup">tema</span><span class="tag dup">tipo_reunion</span>
+        <span class="tag dup">fecha</span><span class="tag dup">hora</span>
+        <span class="tag">lugar</span><span class="tag">capacitador</span>
+        <span class="tag">turno</span><span class="tag">zona</span>
+        <span class="tag">observaciones</span>
+        <span class="tag dup">evidencias &rarr; Drive</span>
+        <span class="tag">participantes + A/F/T</span>
+      </div>
+      <p style="font-size:12.5px;margin-top:10px;opacity:.8">
+        Es un <b>acta retrospectiva</b>: se llena cuando la charla ya pasó.
+        No se programa, no se valida, nadie comenta.
+      </p>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">LO QUE PEDISTE · Capacitaciones</div>
+    <div class="mockup-body">
+      <div class="flow">
+        <div class="step"><b>Coordinador</b>Programa: título + fecha/hora</div>
+        <span class="arrow">&rarr;</span>
+        <div class="step"><b>Coordinador</b>Entra y detalla temas + adjuntos</div>
+      </div>
+      <div class="flow">
+        <div class="step"><b>Administrador</b>Valida: ¿se realizó?</div>
+        <span class="arrow">&rarr;</span>
+        <div class="step"><b>Administrador</b>Comenta (mejoras / felicitación)</div>
+      </div>
+      <div class="fields">
+        <span class="tag dup">título</span><span class="tag dup">fecha</span><span class="tag dup">hora</span>
+        <span class="tag new">temas (varios)</span>
+        <span class="tag dup">contenido / archivos / imágenes</span>
+        <span class="tag new">estado: realizada / no realizada</span>
+        <span class="tag new">comentario del administrador</span>
+      </div>
+      <p style="font-size:12.5px;margin-top:10px;opacity:.8">
+        Es un <b>ciclo con seguimiento</b>: se planifica antes, se llena después
+        y un tercero lo cierra.
+      </p>
+    </div>
+  </div>
+</div>
+
+<p class="lgd">
+  <span class="tag dup">naranja</span> campo que ya existe en Charlas &nbsp;·&nbsp;
+  <span class="tag new">verde</span> concepto que hoy no existe en ningún módulo
+</p>
+
+<h3 style="margin-top:26px">¿Por dónde vamos?</h3>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Módulo nuevo e independiente</h3>
+      <p>Tabla <code>capacitaciones</code> propia, página propia, entrada propia en el sidebar.
+      Charlas se queda exactamente como está. Las dos cosas conviven porque responden a
+      preguntas distintas: «¿quién asistió a la charla de hoy?» vs. «¿el plan de capacitación
+      del mes se cumplió?».</p>
+    </div>
+  </div>
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Extender el módulo de Charlas</h3>
+      <p>Se le añaden a <code>asistencias_preoperativas</code> los temas, el estado de validación
+      y el comentario del administrador. Capacitaciones sería una vista filtrada por
+      <code>tipo_reunion = 'capacitacion'</code>. Cero duplicación de campos, pero el módulo
+      pasa a hacer dos trabajos a la vez.</p>
+    </div>
+  </div>
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Módulo nuevo, enlazado a Charlas</h3>
+      <p>Tabla <code>capacitaciones</code> propia para la planificación y validación, pero al
+      ejecutarla se engancha con un registro de Charlas que aporta la lista de asistentes
+      y sus firmas/estados. Lo más completo y lo más caro de construir.</p>
+    </div>
+  </div>
+</div>
