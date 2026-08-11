@@ -15,7 +15,7 @@ if ($id <= 0 || mb_strlen($respuesta) < 3 || mb_strlen($respuesta) > 800) {
 }
 
 $stmt = mysqli_prepare($conn,
-    "SELECT s.id, s.canal, s.colaborador_id, s.colaborador_nombre, s.detalle, s.puntaje, s.puntaje_comentario,
+    "SELECT s.id, s.canal, s.colaborador_id, s.colaborador_nombre, s.detalle, s.viabilidad, s.puntaje_comentario,
             c.celular
        FROM sugerencias_tallyman s
        LEFT JOIN colaboradores c ON c.id = s.colaborador_id
@@ -32,8 +32,8 @@ if ($sugerencia['colaborador_id'] === null || !$sugerencia['colaborador_nombre']
 
 $canales = sg_canales();
 $canal = $canales[$sugerencia['canal']]['label'] ?? 'sugerencia';
-$puntaje = $sugerencia['canal'] === sg_canal_puntuable() && $sugerencia['puntaje'] !== null
-    ? (int)$sugerencia['puntaje'] : null;
+$puntaje = $sugerencia['canal'] === sg_canal_puntuable() && $sugerencia['viabilidad'] !== null
+    ? (int)$sugerencia['viabilidad'] : null;
 [$enviado, $resultado, $error] = wa_enviar_respuesta_sugerencia(
     (string)($sugerencia['celular'] ?? ''),
     (string)$sugerencia['colaborador_nombre'],
