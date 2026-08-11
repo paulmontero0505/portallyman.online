@@ -30,10 +30,9 @@ while ($r = mysqli_fetch_assoc($q)) {
 
 $sql = "SELECT t.id, t.fecha, t.created_at, t.estado, j.codigo AS jornada_codigo, j.nombre AS jornada,
                u.id AS coordinador_id, u.nombre AS coordinador,
-               (SELECT COUNT(*)
-                  FROM turno_personal tp
-                  JOIN colaboradores tc ON tc.id=tp.colaborador_id
-                 WHERE tp.turno_id=t.id AND tc.coordinador_id=u.id) AS tallys_registrados
+                (SELECT COUNT(*)
+                   FROM turno_personal tp
+                  WHERE tp.turno_id=t.id) AS tallys_registrados
           FROM turnos t
           JOIN jornadas j ON j.id=t.jornada_id
           JOIN usuarios u ON u.id=t.abierto_por
@@ -71,8 +70,7 @@ if ($turnoIds) {
                 tp.ubicacion AS zona
            FROM turno_personal tp
            JOIN colaboradores c ON c.id=tp.colaborador_id
-           JOIN turnos t ON t.id=tp.turno_id
-          WHERE tp.turno_id IN ($idsSql) AND c.coordinador_id=t.abierto_por
+           WHERE tp.turno_id IN ($idsSql)
           ORDER BY tp.turno_id, c.nombre");
     while ($row = mysqli_fetch_assoc($tallyRes)) {
         $turnoId = (string)$row['turno_id'];
