@@ -1,0 +1,12 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/portally/portallyman.online/whatsapp-baileys-v2"
+PassengerBaseURI "/whatsapp-bridge-v2"
+PassengerNodejs "/home/portally/nodevenv/portallyman.online/whatsapp-baileys-v2/18/bin/node"
+PassengerAppType node
+PassengerStartupFile server.js
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+SetEnv BAILEYS_API_TOKEN 2a08ecf440f30bd25e55b28ff4bb6601d82bd200da0c4e136e76f3e04bcbff29
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END
