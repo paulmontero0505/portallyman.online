@@ -265,6 +265,14 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
     .sg-puntaje-grid button:hover { border-color:#00875A; color:#00875A; }
     .sg-puntaje-grid button.active { background:#00875A; border-color:#00875A; color:#fff; }
     .sg-puntaje-saved { font-size:11.5px; color:var(--co-mute, #4b5563); }
+    .sg-wa-box { border:1px solid rgba(0,135,90,.22); border-radius:12px; padding:14px; background:#fff; display:flex; flex-direction:column; gap:10px; }
+    .sg-wa-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+    .sg-wa-title { font-size:13px; font-weight:700; color:#075e54; }
+    .sg-wa-meta, .sg-wa-status { font-size:11.5px; color:var(--co-mute); }
+    .sg-wa-status.is-disabled { color:#b45309; }
+    .sg-wa-box textarea { font:inherit; font-size:13px; border:1.5px solid #cbd5e1; border-radius:8px; padding:9px 11px; min-height:76px; resize:vertical; outline:0; }
+    .sg-wa-box textarea:focus { border-color:#00875A; box-shadow:0 0 0 3px rgba(0,135,90,.15); }
+    .sg-wa-actions { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
 
     .sg-impacto-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
     .sg-impacto-grid button {
@@ -774,6 +782,19 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
         </div>`;
     }
 
+    const telefonoDisponible = /^\+51 9\d{8}$/.test(String(s.colaborador_celular || ''));
+    if (!esAnon) {
+      const estadoEnvio = s.respuesta_whatsapp_at
+        ? `Última respuesta: ${fmtFechaHora(s.respuesta_whatsapp_at)}.`
+        : 'Aún no se ha enviado una respuesta.';
+      html += `
+        <div class="sg-wa-box">
+          <div class="sg-wa-head"><span class="sg-wa-title">Respuesta por WhatsApp</span><span class="sg-wa-meta">${telefonoDisponible ? esc(s.colaborador_celular) : 'Celular no disponible'}</span></div>
+          <textarea id="sgWhatsappRespuesta" maxlength="800" placeholder="Escribe la respuesta para el colaborador..." ${telefonoDisponible ? '' : 'disabled'}>${esc(s.respuesta_whatsapp || '')}</textarea>
+          <div class="sg-wa-actions"><span class="sg-wa-status ${telefonoDisponible ? '' : 'is-disabled'}">${telefonoDisponible ? estadoEnvio : 'Registra un celular con formato +51 9XXXXXXXX para enviar.'}</span><button class="sg-btn primary" id="sgEnviarWhatsapp" ${telefonoDisponible ? '' : 'disabled'}>Enviar WhatsApp</button></div>
+        </div>`;
+    }
+
     $('sgViewBody').innerHTML = html;
 
     if (s.canal === PUNTUABLE) {
@@ -833,6 +854,25 @@ $FORM_URL       = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'ht
           if (data.success) { toast('Calificación guardada'); await cargar(); openView(s.id); }
           else { toast(data.error || 'Error al guardar', 'error'); }
         } catch (e) { toast('Error de red', 'error'); }
+      });
+    }
+
+    if (!esAnon && telefonoDisponible) {
+      $('sgEnviarWhatsapp').addEventListener('click', async () => {
+        const respuesta = $('sgWhatsappRespuesta').value.trim();
+        if (respuesta.length < 3) { toast('Escribe una respuesta de al menos 3 caracteres', 'error'); $('sgWhatsappRespuesta').focus(); return; }
+        const btn = $('sgEnviarWhatsapp'); const original = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Enviando...';
+        try {
+          const res = await fetch(`${BASE}/api/send_sugerencia_whatsapp.php`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: s.id, respuesta }),
+          });
+          const data = await res.json();
+          if (data.success) { toast('Respuesta enviada por WhatsApp'); await cargar(); openView(s.id); }
+          else toast(data.error || 'No se pudo enviar el mensaje', 'error');
+        } catch (e) { toast('Error de red al enviar WhatsApp', 'error'); }
+        finally { btn.disabled = false; btn.textContent = original; }
       });
     }
 

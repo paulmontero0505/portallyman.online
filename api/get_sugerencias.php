@@ -22,8 +22,10 @@ header('Content-Type: application/json');
 $r = mysqli_query(
     $conn,
     "SELECT s.id, s.canal, s.colaborador_id, s.colaborador_nombre, s.colaborador_cargo,
-            s.detalle, s.viabilidad, s.impacto,
+            s.detalle, s.viabilidad, s.impacto, s.puntaje,
             s.puntaje_comentario, s.puntaje_por, s.puntaje_at,
+            s.respuesta_whatsapp, s.respuesta_whatsapp_por, s.respuesta_whatsapp_at,
+            col.celular AS colaborador_celular,
             s.created_at, s.updated_at,
             col.coordinador_id AS coord_cargo_id,
             u.nombre           AS coord_cargo_nombre
@@ -43,6 +45,7 @@ while ($row = mysqli_fetch_assoc($r)) {
     $row['id']             = (int)$row['id'];
     $row['colaborador_id'] = $row['colaborador_id'] !== null ? (int)$row['colaborador_id'] : null;
     $row['viabilidad']     = $row['viabilidad']     !== null ? (int)$row['viabilidad']     : null;
+    $row['puntaje']        = $row['puntaje']        !== null ? (int)$row['puntaje']        : null;
     $row['coord_cargo_id'] = $row['coord_cargo_id'] !== null ? (int)$row['coord_cargo_id'] : null;
     $row['adjuntos']       = [];
     $out[$row['id']] = $row;

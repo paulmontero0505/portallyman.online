@@ -3,6 +3,7 @@ require_once(__DIR__ . '/../../includes/db.php');
 require_once(__DIR__ . '/../../includes/sugerencias_catalogo.php');
 require_once(__DIR__ . '/../../includes/sugerencias_adjuntos.php');
 require_once(__DIR__ . '/../../includes/drive_uploader.php');
+require_once(__DIR__ . '/../../includes/whatsapp_baileys.php');
 
 header('Content-Type: application/json');
 
@@ -52,7 +53,7 @@ foreach ($archivos as $a) {
 }
 
 $stmt = mysqli_prepare($conn,
-    "SELECT id, nombre, funcion_principal FROM colaboradores WHERE dni = ? AND activo = 1 LIMIT 1");
+    "SELECT id, nombre, celular, funcion_principal FROM colaboradores WHERE dni = ? AND activo = 1 LIMIT 1");
 mysqli_stmt_bind_param($stmt, 's', $dni);
 mysqli_stmt_execute($stmt);
 $colab = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
@@ -79,6 +80,18 @@ mysqli_stmt_close($stmt);
 
 if (!$ok) {
     echo json_encode(['success' => false, 'error' => $err ?: 'No se pudo enviar.']); exit;
+}
+
+// Las observaciones son anónimas por diseño. Las demás sugerencias reciben
+// una confirmación inmediata cuando el colaborador tiene WhatsApp registrado.
+$whatsappAutomatico = ['intentado' => false, 'enviado' => false];
+if (!$esAnonimo) {
+    $whatsappAutomatico['intentado'] = true;
+    [$enviadoWa, , $errorWa] = wa_enviar_confirmacion_sugerencia(
+        (string)($colab['celular'] ?? ''), (string)$colab['nombre'], $canal, $detalle
+    );
+    $whatsappAutomatico['enviado'] = $enviadoWa;
+    if (!$enviadoWa) $whatsappAutomatico['error'] = $errorWa;
 }
 
 $carpeta   = sg_carpeta_drive($canal);
@@ -110,4 +123,5 @@ echo json_encode([
     'id'                 => $newId,
     'adjuntos_subidos'   => $subidos,
     'adjuntos_pendientes'=> $pendiente,
+    'whatsapp_automatico'=> $whatsappAutomatico,
 ]);

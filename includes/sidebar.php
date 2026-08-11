@@ -30,6 +30,13 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
       <span class="nav-label">Turno Actual</span>
       <span class="tip">Turno Actual</span>
     </a>
+    <?php if ($rol === 'Administrador'): ?>
+    <a href="<?= $sb_base ?? '..' ?>/pages/reporte_puntualidad.php" class="nav-item<?= ($cur === 'reporte_puntualidad.php') ? ' active' : '' ?>">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+      <span class="nav-label">Reporte de turno</span>
+      <span class="tip">Reporte de turno</span>
+    </a>
+    <?php endif; ?>
 
     <?php if (in_array($rol, ['Administrador', 'Supervisor', 'Coordinador', 'Soporte'], true)): ?>
     <!-- TAREAS · primer nivel a propósito: es lo primero que abre un
