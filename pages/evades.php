@@ -250,6 +250,11 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       background-repeat:no-repeat; background-position:right 10px center; background-size:15px;
     }
     .ed-field select option { color:#111827; background:#ffffff; }
+    .ev-create-card .ed-field select {
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important;
+      background-repeat:no-repeat !important; background-position:right 11px center !important; background-size:15px !important;
+    }
+    .ev-create-card .ed-field select:focus { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300875A' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") !important; }
     .ed-field textarea { resize:vertical; min-height:70px; }
     .ed-field input:hover, .ed-field select:hover, .ed-field textarea:hover { border-color:#94d6bb; }
     .ed-field input:focus, .ed-field select:focus, .ed-field textarea:focus {
@@ -747,7 +752,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   <div class="ev-create-card">
     <div class="ev-create-head">
       <div><span class="ed-rail-kicker">NUEVO EXPEDIENTE</span><h3>Generar bloque EVADES</h3><p>Selecciona el coordinador y el trimestre pendiente del año actual. La nómina de tallyman quedará congelada al generar.</p></div>
-      <button class="ed-modal-close" id="evBlockCreateX" style="color:#fff;border-color:rgba(255,255,255,.35)">×</button>
+      <button class="ed-modal-close" id="evBlockCreateX" type="button" aria-label="Cerrar generación de bloque" style="color:#005c3d;border-color:#fff;background:#fff;font-size:25px;font-weight:500;line-height:1">×</button>
     </div>
     <div class="ev-create-body">
       <div class="ed-row2">
