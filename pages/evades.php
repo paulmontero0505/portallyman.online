@@ -563,9 +563,12 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
             <p>Revisa cada tallyman junto a su coordinador, documenta competencias y evidencias, y cierra el trimestre por bloque.</p>
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <?php if ($USER_ROL === 'Administrador'): ?>
+            <button class="ev-btn" id="btnReviewBlock" type="button">Revisar bloque</button>
+            <?php endif; ?>
             <button class="ev-btn primary" id="btnNew">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Generar bloque
+              Generar EVADES
             </button>
           </div>
         </section>
@@ -776,6 +779,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   </div>
 </div>
 
+<div class="ed-modal-back ev-create-back" id="evBlockReviewBack">
+  <div class="ev-create-card" style="width:min(540px,94vw)">
+    <div class="ev-create-head"><div><span class="ed-rail-kicker">REVISIÓN ADMINISTRATIVA</span><h3>Revisar bloque EVADES</h3><p>La revisión bloquea la edición del coordinador. Administración podrá editar hasta cerrar el bloque.</p></div><button class="ed-modal-close" id="evBlockReviewX" type="button" aria-label="Cerrar revisión" style="color:#005c3d;border-color:#fff;background:#fff;font-size:25px;font-weight:500;line-height:1">×</button></div>
+    <div class="ev-create-body"><div class="ed-row2"><div class="ed-field"><label>Coordinador</label><select id="evReviewCoordinator"><option value="">Selecciona…</option></select></div><div class="ed-field"><label>Período disponible</label><select id="evReviewPeriod" disabled><option value="">Selecciona un coordinador…</option></select></div></div><p class="ev-sub" id="evReviewHint" style="margin:14px 0 0">Selecciona el bloque que Administración revisará.</p></div>
+    <div class="ev-create-foot"><button class="ed-btn" id="evBlockReviewCancel" type="button">Cancelar</button><button class="ed-btn primary" id="evBlockReviewSave" type="button" disabled>Marcar bloque revisado</button></div>
+  </div>
+</div>
+
 <div class="ed-modal-back" id="evViewBack">
   <div class="ed-modal ed-modal--view">
     <div class="ed-modal-head" style="display:none">
@@ -864,6 +875,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       const block = blocksById[Number(e.bloque_id)];
       const estado = e.bloque_estado || 'generado';
       const revisado = Boolean(e.revisado_at);
+      const bloqueBloqueadoParaCoordinador = USER_ROL === 'Coordinador' && estado === 'revisado';
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><div class="ev-name">${esc(e.colaborador_nombre)}</div><div class="ev-sub">${esc(e.colaborador_codigo || 'Sin código')} · ${esc(e.colaborador_cargo || '—')}</div></td>
@@ -877,7 +889,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
             ${revisado ? '' : `<button class="ev-act-btn" data-action="review" data-id="${e.id}">Revisado</button>`}
             <button class="ev-act-btn" data-action="view" data-id="${e.id}">Ver informe</button>
             <button class="ev-act-btn" data-action="pdf" data-id="${e.id}">PDF</button>
-            ${e.bloque_id ? `<button class="ev-act-btn" data-action="edit" data-id="${e.id}">${estado === 'cerrado' ? 'Consultar' : 'Evaluar'}</button>` : ''}
+            ${e.bloque_id ? `<button class="ev-act-btn" data-action="edit" data-id="${e.id}">${estado === 'cerrado' || bloqueBloqueadoParaCoordinador ? 'Consultar' : 'Evaluar'}</button>` : ''}
             ${USER_ROL === 'Supervisor' && block && estado !== 'cerrado' ? `<button class="ev-act-btn danger" data-action="open-block" data-id="${e.bloque_id}">Cerrar bloque</button>` : ''}
           </div>
         </td>`;
@@ -1003,6 +1015,41 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     cargarCoordinadoresBloque().then(actualizarTrimestresPendientes).catch(e => toast(e.message, 'error'));
   }
   function closeBlockCreate() { $('evBlockCreateBack').classList.remove('open'); }
+  function openBlockReview() {
+    const available = bloques.filter(block => block.estado === 'generado' || block.estado === 'modificado');
+    const coordinators = Array.from(new Map(available.map(block => [Number(block.coordinador_id), block.coordinador_nombre])).entries());
+    $('evReviewCoordinator').innerHTML = '<option value="">Selecciona…</option>' + coordinators.map(([id, name]) => `<option value="${id}">${esc(name)}</option>`).join('');
+    $('evReviewPeriod').disabled = true;
+    $('evReviewPeriod').innerHTML = '<option value="">Selecciona un coordinador…</option>';
+    $('evReviewHint').textContent = available.length ? 'Selecciona el bloque que Administración revisará.' : 'No hay bloques pendientes de revisión.';
+    $('evBlockReviewSave').disabled = true;
+    $('evBlockReviewBack').classList.add('open');
+  }
+  function closeBlockReview() { $('evBlockReviewBack').classList.remove('open'); }
+  function updateReviewPeriods() {
+    const coordinatorId = Number($('evReviewCoordinator').value || 0);
+    const choices = bloques.filter(block => Number(block.coordinador_id) === coordinatorId && (block.estado === 'generado' || block.estado === 'modificado'));
+    $('evReviewPeriod').disabled = !choices.length;
+    $('evReviewPeriod').innerHTML = choices.length
+      ? '<option value="">Selecciona…</option>' + choices.map(block => `<option value="${block.id}">${esc(block.periodo)} · ${esc(block.puesto)}</option>`).join('')
+      : '<option value="">Sin bloques pendientes</option>';
+    $('evReviewHint').textContent = choices.length ? `${choices.length} bloque(s) pendiente(s) de revisión.` : 'No hay bloques pendientes para este coordinador.';
+    $('evBlockReviewSave').disabled = true;
+  }
+  async function reviewBlock() {
+    const id = Number($('evReviewPeriod').value || 0);
+    if (!id) return;
+    const block = bloques.find(item => Number(item.id) === id);
+    if (!confirm(`¿Marcar como revisado el bloque ${block?.periodo || ''} de ${block?.coordinador_nombre || ''}? El coordinador ya no podrá editar sus evaluaciones.`)) return;
+    const button = $('evBlockReviewSave'); button.disabled = true; button.textContent = 'Revisando…';
+    try {
+      const response = await fetch(`${BASE}/api/revisar_evades_bloque.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id }) });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'No se pudo revisar el bloque');
+      closeBlockReview(); await cargarEvaluaciones(); toast('Bloque revisado. El coordinador quedó bloqueado para editar.');
+    } catch (error) { toast(error.message, 'error'); }
+    finally { button.disabled = false; button.textContent = 'Marcar bloque revisado'; }
+  }
   function renderCoveragePreview(data) {
     const summary = EvadesBloquesModel.coverageSummary(data.cobertura);
     $('evCoverageMetrics').style.display = '';
@@ -1109,6 +1156,11 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   $('evBlockCoordinador').addEventListener('change', () => { actualizarTrimestresPendientes(); previewBlock(); });
   $('evBlockCreateX').addEventListener('click', closeBlockCreate); $('evBlockCreateCancel').addEventListener('click', closeBlockCreate); $('evBlockGenerate').addEventListener('click', generateBlock);
   $('evBlockCreateBack').addEventListener('click', e => { if (e.target === $('evBlockCreateBack')) closeBlockCreate(); });
+  $('btnReviewBlock')?.addEventListener('click', openBlockReview);
+  $('evBlockReviewX').addEventListener('click', closeBlockReview); $('evBlockReviewCancel').addEventListener('click', closeBlockReview); $('evBlockReviewBack').addEventListener('click', e => { if (e.target === $('evBlockReviewBack')) closeBlockReview(); });
+  $('evReviewCoordinator').addEventListener('change', updateReviewPeriods);
+  $('evReviewPeriod').addEventListener('change', e => { $('evBlockReviewSave').disabled = !e.target.value; });
+  $('evBlockReviewSave').addEventListener('click', reviewBlock);
 
   // ════════════════ MODAL: nueva evaluación ════════════════
   let sugerenciaActual = null; // respuesta cruda de calcular_evades.php
@@ -1565,7 +1617,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       $('evModalTitle').textContent = `${currentBlock.puesto} · ${currentBlock.periodo}`;
       $('evRailFolio').textContent = currentBlock.estado.toUpperCase();
       if (!individual) renderBlockRail();
-      const locked = currentBlock.estado === 'cerrado';
+       const locked = currentBlock.estado === 'cerrado' || (USER_ROL === 'Coordinador' && currentBlock.estado === 'revisado');
       document.querySelectorAll('#evModalBack .ed-form-body select,#evModalBack .ed-form-body input,#evModalBack .ed-form-body textarea').forEach(el => { el.disabled = locked; });
       $('evModalSave').style.display = locked ? 'none' : '';
       $('evModalCancel').textContent = 'Cerrar vista';

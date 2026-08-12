@@ -376,7 +376,7 @@ function evades_generar_bloque($conn, $coordinadorId, $puesto, $periodo, $actorI
     }
 }
 
-/** Primera apertura: generado -> revisado. Repetirla no crea historial ni versión. */
+/** La revisión administrativa bloquea la edición del coordinador. */
 function evades_marcar_revisado($conn, $bloqueId, $actorId) {
     $bloqueId = (int)$bloqueId;
     $actorId = (int)$actorId;
@@ -397,9 +397,8 @@ function evades_marcar_revisado($conn, $bloqueId, $actorId) {
         mysqli_stmt_close($stmt);
         if (!$bloque) throw new RuntimeException('Bloque EVADES no encontrado.');
 
-        $esGlobal = in_array($bloque['actor_rol'], ['Administrador', 'Supervisor'], true);
-        if (!$esGlobal && (int)$bloque['coordinador_id'] !== $actorId) {
-            throw new RuntimeException('No tienes acceso a este bloque EVADES.');
+        if ($bloque['actor_rol'] !== 'Administrador') {
+            throw new RuntimeException('Solo un administrador puede revisar el bloque EVADES.');
         }
 
         if ($bloque['estado'] === 'generado') {
@@ -410,7 +409,7 @@ function evades_marcar_revisado($conn, $bloqueId, $actorId) {
 
             $anterior = 'generado';
             $nuevo = 'revisado';
-            $contexto = 'Primera apertura del bloque';
+            $contexto = 'Bloque revisado por Administración; coordinador bloqueado para edición';
             $stmt = mysqli_prepare($conn, 'INSERT INTO evades_bloques_estados (bloque_id,estado_anterior,estado_nuevo,usuario_id,contexto) VALUES (?,?,?,?,?)');
             mysqli_stmt_bind_param($stmt, 'issis', $bloqueId, $anterior, $nuevo, $actorId, $contexto);
             if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
@@ -468,6 +467,9 @@ function evades_guardar_evaluacion_bloque($conn, $payload, $actorId) {
         $esGlobal = in_array($bloque['actor_rol'], ['Administrador', 'Supervisor'], true);
         if (!$esGlobal && (int)$bloque['coordinador_id'] !== $actorId) {
             throw new RuntimeException('No tienes acceso a este bloque EVADES.');
+        }
+        if ($bloque['estado'] === 'revisado' && $bloque['actor_rol'] === 'Coordinador') {
+            throw new RuntimeException('El bloque fue revisado por Administración y ya no admite edición del coordinador.');
         }
         if (!evades_bloque_editable($bloque['estado'])) {
             throw new RuntimeException('El bloque está cerrado y no admite cambios.');
