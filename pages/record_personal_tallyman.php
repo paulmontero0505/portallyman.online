@@ -68,7 +68,7 @@ async function cargar(){try{let r=await fetch('../api/get_record_personal_tallym
     const evaluaciones = data.historial.evaluacionesDesempeno || [];
     $('c-evaluacionesDesempeno').textContent = evaluaciones.length;
     $('l-evaluacionesDesempeno').innerHTML = evaluaciones.length ? evaluaciones.map(x =>
-      '<li><div class="rp-line"><span>' + esc(x.periodo || 'Sin trimestre') + '</span>' + chip((x.puntaje_total ?? '—') + ' / 100', 'estado-aprobado') + '</div>' +
+      '<li><div class="rp-line"><span>' + esc(x.periodo || 'Sin trimestre') + '</span>' + chip(x.puntaje_total ?? '—', 'estado-aprobado') + '</div>' +
       '<div class="rp-sub"><b>Coordinador evaluador:</b> ' + esc(x.coordinador_nombre || 'Sin registrar') + ' · ' + dt(x.fecha_evaluacion) + '</div>' +
       '<div class="rp-sub"><b>Aspectos a mejorar:</b> ' + esc(x.aspectos_mejora || 'Sin observaciones registradas.') + '</div></li>'
     ).join('') : '<li class="rp-none">No hay evaluaciones de desempeño registradas.</li>';
