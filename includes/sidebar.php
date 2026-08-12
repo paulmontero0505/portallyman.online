@@ -111,7 +111,7 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
             <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/>
           </svg>
         </span>
-        <span class="sub-label">EVADES</span>
+        <span class="sub-label">Evaluación de Desempeño</span>
       </a>
       <a href="<?= $sb_base ?? '..' ?>/pages/asistencias.php" class="sub-item sub-item--icon<?= ($cur === 'asistencias.php') ? ' active' : '' ?>">
         <span class="sub-icon">

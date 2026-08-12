@@ -28,7 +28,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>EVADES · Estiba Shift Command Deck</title>
+  <title>Evaluación de Desempeño · Estiba Shift Command Deck</title>
   <link rel="icon" type="image/png" href="../img/logo.jpg">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -559,7 +559,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
         <section class="ev-hero">
           <div>
             <span class="tag">EVALUACIÓN TRIMESTRAL · POR TALLYMAN</span>
-            <h1>EVADES</h1>
+            <h1>Evaluación de Desempeño</h1>
             <p>Revisa cada tallyman junto a su coordinador, documenta competencias y evidencias, y cierra el trimestre por bloque.</p>
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
@@ -593,6 +593,9 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
             <button class="ev-act-btn" id="evPeriodoNext" type="button" aria-label="Trimestre siguiente">→</button>
           </div>
           <div class="ev-filter">
+            <select id="evFiltroCoordinador" aria-label="Filtrar por coordinador"><option value="">Todos los coordinadores</option></select>
+          </div>
+          <div class="ev-filter">
             <select id="evFiltroClas">
               <option value="">Todos los estados</option>
               <option value="generado">Generado</option><option value="revisado">Revisado</option>
@@ -608,6 +611,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
               <tr>
                 <th>Tallyman</th>
                 <th>Coordinador</th>
+                <th>Fecha ingreso</th>
+                <th>Tiempo de servicio</th>
                 <th>Período</th>
                 <th>Revisión</th>
                 <th>Bloque</th>
@@ -616,7 +621,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
               </tr>
             </thead>
             <tbody id="evTbody">
-              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -830,6 +835,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   let query = '';
   let filtroPeriodo = `${new Date().getFullYear()}-T${Math.floor(new Date().getMonth() / 3) + 1}`;
   let filtroClas = '';
+  let filtroCoordinador = '';
 
   function toast(msg, type) {
     const t = $('evToast');
@@ -862,13 +868,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     const list = evaluaciones.filter(e => {
       if (filtroPeriodo && e.periodo !== filtroPeriodo) return false;
       if (filtroClas && (e.bloque_estado || 'generado') !== filtroClas) return false;
+      if (filtroCoordinador && Number(e.coordinador_id) !== Number(filtroCoordinador)) return false;
       if (!q) return true;
       return [e.colaborador_nombre, e.colaborador_codigo, e.coordinador_nombre].some(v => String(v ?? '').toLowerCase().includes(q));
     });
     const tb = $('evTbody');
     tb.innerHTML = '';
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">No hay evaluaciones para este trimestre.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--co-faint)">No hay evaluaciones para estos filtros.</td></tr>`;
       return;
     }
     list.forEach(e => {
@@ -881,6 +888,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       tr.innerHTML = `
         <td><div class="ev-name">${esc(e.colaborador_nombre)}</div><div class="ev-sub">${esc(e.colaborador_codigo || 'Sin código')} · ${esc(e.colaborador_cargo || '—')}</div></td>
         <td>${esc(e.coordinador_nombre)}</td>
+        <td>${formatDate(e.fecha_ingreso)}</td>
+        <td>${serviceTime(e.fecha_ingreso)}</td>
         <td>${esc(e.periodo)}</td>
         <td><span class="ev-status ${revisado ? 'revisado' : 'generado'}">${revisado ? 'Revisado' : 'Pendiente'}</span></td>
         <td><span class="ev-status ${esc(estadoVisible)}">${esc(estadoVisible)}</span>${block ? `<div class="ev-sub">${esc(block.puesto)}</div>` : ''}</td>
@@ -908,7 +917,27 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (!blockData.success || !evaluationData.success) { toast(blockData.error || evaluationData.error || 'Error al cargar', 'error'); return; }
     bloques = blockData.data || [];
     evaluaciones = evaluationData.data || [];
+    const coordinators = Array.from(new Map(bloques.map(block => [Number(block.coordinador_id), block.coordinador_nombre])).entries());
+    $('evFiltroCoordinador').innerHTML = '<option value="">Todos los coordinadores</option>' + coordinators.map(([id, name]) => `<option value="${id}">${esc(name)}</option>`).join('');
+    $('evFiltroCoordinador').value = filtroCoordinador;
     renderKpis(); render();
+  }
+
+  function formatDate(value) {
+    if (!value || value === '0000-00-00') return '—';
+    const parts = String(value).slice(0, 10).split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : esc(value);
+  }
+  function serviceTime(value) {
+    if (!value || value === '0000-00-00') return '—';
+    const start = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+    const today = new Date();
+    if (Number.isNaN(start.getTime()) || start > today) return '—';
+    let months = (today.getFullYear() - start.getFullYear()) * 12 + today.getMonth() - start.getMonth();
+    if (today.getDate() < start.getDate()) months--;
+    const years = Math.floor(Math.max(0, months) / 12);
+    const rest = Math.max(0, months) % 12;
+    return years ? `${years} a ${rest} m` : `${rest} m`;
   }
 
   // Se carga aquí (aunque este task todavía no la usa en el render) porque
@@ -925,6 +954,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
 
   $('evSearch').addEventListener('input', e => { query = e.target.value; render(); });
+  $('evFiltroCoordinador').addEventListener('change', e => { filtroCoordinador = e.target.value; render(); });
   $('evFiltroClas').addEventListener('change', e => { filtroClas = e.target.value; render(); });
   $('evTbody').addEventListener('click', e => {
     const b = e.target.closest('[data-action]'); if (!b) return;

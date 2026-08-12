@@ -63,7 +63,7 @@ function evades_obtener_bloque($conn, $bloqueId, $actorId, $rol) {
     foreach (['id','coordinador_id','total_colaboradores','version'] as $campo) $bloque[$campo] = (int)$bloque[$campo];
     $stmt = mysqli_prepare(
         $conn,
-        "SELECT id,bloque_id,version,colaborador_id,colaborador_nombre,colaborador_codigo,colaborador_cargo,
+        "SELECT id,bloque_id,version,colaborador_id,colaborador_nombre,colaborador_codigo,colaborador_cargo,fecha_ingreso,
                 fecha_evaluacion,puntaje_total,clasificacion,puntaje_anterior,variacion_pct,
                 fortalezas,aspectos_mejora,plan_accion,updated_at
            FROM evades_evaluaciones WHERE bloque_id=? ORDER BY colaborador_nombre,id"
