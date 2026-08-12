@@ -149,7 +149,7 @@ if ($id > 0) {
 
 $sql = "SELECT ev.id,ev.bloque_id,ev.version, ev.colaborador_id, ev.colaborador_nombre, ev.colaborador_codigo,
                ev.colaborador_cargo, ev.coordinador_id, ev.coordinador_nombre,
-               ev.periodo, ev.fecha_evaluacion, ev.puntaje_total, ev.clasificacion,
+                ev.periodo, ev.fecha_evaluacion, ev.puntaje_total, ev.clasificacion,ev.revisado_at,ev.revisado_por,
                ev.puntaje_anterior, ev.variacion_pct,b.estado AS bloque_estado,b.version AS bloque_version,
                ev.created_at, ev.updated_at
           FROM evades_evaluaciones ev

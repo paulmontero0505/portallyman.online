@@ -681,9 +681,8 @@ function evades_cerrar_bloque($conn, $bloqueId, $versionEsperada, $actorId) {
         $bloque = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
         mysqli_stmt_close($stmt);
         if (!$bloque) throw new RuntimeException('Bloque EVADES no encontrado.');
-        $esGlobal = in_array($bloque['actor_rol'], ['Administrador', 'Supervisor'], true);
-        if (!$esGlobal && (int)$bloque['coordinador_id'] !== $actorId) {
-            throw new RuntimeException('No tienes acceso a este bloque EVADES.');
+        if (!in_array($bloque['actor_rol'], ['Administrador', 'Supervisor'], true)) {
+            throw new RuntimeException('Solo un supervisor puede cerrar el bloque EVADES.');
         }
         if ($bloque['estado'] === 'cerrado') {
             mysqli_commit($conn);

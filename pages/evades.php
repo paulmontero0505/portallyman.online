@@ -524,7 +524,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     .ev-section-intro { display:flex;justify-content:space-between;gap:12px;align-items:center;margin:-2px 0 12px;color:var(--ev-muted);font-size:11px; }.ev-coverage-badge { display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:850;letter-spacing:.04em;text-transform:uppercase; }.ev-coverage-badge.suficiente { color:#08734f;background:#e2f5ed; }.ev-coverage-badge.parcial { color:#8a5b00;background:#fff3d6; }.ev-coverage-badge.sin_fuente { color:#a52a20;background:#fdebe8; }
     .ed-crit-row.ev-competency-card { display:grid;grid-template-columns:minmax(220px,1fr) 92px 92px 76px;gap:10px;padding:15px;margin-bottom:10px;border:1px solid #dfe9e4;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(15,41,64,.045); }
     .ev-competency-top { display:flex;align-items:flex-start;justify-content:space-between;gap:10px; }.ev-competency-copy { color:var(--ev-muted);font-size:11px;line-height:1.45;margin-top:4px; }.ev-score-formula { display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin:9px 0 7px;font-size:10px;color:var(--ev-muted); }.ev-score-formula b { min-width:28px;padding:4px 6px;border-radius:7px;text-align:center;background:#edf4f1;color:var(--ev-ink); }.ev-score-formula b.positive { color:#08734f;background:#e2f5ed; }.ev-score-formula b.negative { color:#b42318;background:#fdebe8; }.ev-score-formula b.result { color:#fff;background:var(--ev-emerald-700); }
-    .ev-engine-why { padding:8px 10px;border-left:3px solid #78c7a9;background:#f2faf6;border-radius:0 8px 8px 0;color:#355469;font-size:10.5px;line-height:1.45; }.ev-evidence-list { margin-top:7px;display:flex;flex-direction:column;gap:5px; }.ev-evidence-item { display:flex;gap:7px;align-items:flex-start;color:#526578;font-size:10.5px;line-height:1.4; }.ev-evidence-item::before { content:'';width:6px;height:6px;border-radius:50%;margin-top:4px;flex:0 0 auto;background:#78c7a9; }.ev-evidence-item.cross::before { background:#f5a524; }
+    .ev-engine-why { padding:8px 10px;border:1px solid #cfe8dc;background:#f2faf6;border-radius:8px;color:#355469;font-size:10.5px;line-height:1.45; }.ev-evidence-list { margin-top:7px;display:flex;flex-direction:column;gap:5px; }.ev-evidence-item { display:flex;gap:7px;align-items:flex-start;color:#526578;font-size:10.5px;line-height:1.4; }.ev-evidence-item::before { content:'';width:6px;height:6px;border-radius:50%;margin-top:4px;flex:0 0 auto;background:#78c7a9; }.ev-evidence-item.cross::before { background:#f5a524; }
     .ev-appreciation-panel { padding:16px;border:1px solid #d9e7e1;border-radius:14px;background:linear-gradient(145deg,#f7fbf9,#eef8f3); }.ev-appreciation-head { display:flex;justify-content:space-between;gap:12px;margin-bottom:12px; }.ev-appreciation-head h4 { margin:0;color:var(--ev-ink);font-size:14px; }.ev-appreciation-head p { margin:3px 0 0;color:var(--ev-muted);font-size:11px; }.ev-appreciation-grid { display:grid;grid-template-columns:1.1fr .8fr .8fr;gap:9px; }.ev-appreciation-list { display:flex;flex-direction:column;gap:6px;margin-top:12px; }.ev-appreciation-item { padding:9px 10px;background:#fff;border:1px solid #deebe5;border-radius:9px;font-size:10.5px;color:#4b6070; }.ev-appreciation-item b { color:var(--ev-ink); }
     .ev-view-report-head { padding:22px 24px;background:linear-gradient(135deg,var(--ev-emerald-700),var(--ev-emerald-600));color:#fff;display:flex;justify-content:space-between;gap:16px;align-items:flex-start; }.ev-view-report-head h3 { margin:4px 0;font-size:20px; }.ev-view-report-head p { margin:0;color:rgba(255,255,255,.76);font-size:11px; }.ev-report-score { min-width:92px;text-align:center;padding:10px;border:1px solid rgba(255,255,255,.25);border-radius:13px;background:rgba(255,255,255,.1); }.ev-report-score b { display:block;font-size:28px; }.ev-report-score span { font-size:9px;text-transform:uppercase;letter-spacing:.08em; }.ev-report-timeline { display:flex;gap:7px;flex-wrap:wrap;margin-top:8px; }.ev-report-event { padding:7px 9px;border-radius:8px;background:#f3f7f5;color:#526578;font-size:10px; }.ev-report-event b { color:var(--ev-emerald-700);text-transform:uppercase; }
     @media (max-width:760px) { .ev-block-route { grid-template-columns:repeat(2,1fr); }.ed-modal.ed-create .ev-roster { max-height:180px; }.ev-hide-mobile { display:none; }.ev-roster-mobile { display:block;flex:1 0 100%; }.ed-form-head { flex-wrap:wrap; }.ev-coverage-metrics { grid-template-columns:repeat(2,1fr); }.ed-crit-row.ev-competency-card { grid-template-columns:1fr 1fr; }.ed-crit-row.ev-competency-card > div:first-child { grid-column:1/-1; }.ev-appreciation-grid { grid-template-columns:1fr; } }
@@ -546,9 +546,9 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
         <!-- HERO -->
         <section class="ev-hero">
           <div>
-            <span class="tag">EVALUACIÓN TRIMESTRAL · POR COORDINADOR Y PUESTO</span>
+            <span class="tag">EVALUACIÓN TRIMESTRAL · POR TALLYMAN</span>
             <h1>EVADES</h1>
-            <p>Genera la nómina completa, revisa las diez competencias con evidencia automática y cierra el trimestre como un solo expediente.</p>
+            <p>Revisa cada tallyman junto a su coordinador, documenta competencias y evidencias, y cierra el trimestre por bloque.</p>
           </div>
           <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
             <button class="ev-btn primary" id="btnNew">
@@ -560,8 +560,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 
         <!-- KPIS -->
         <section class="ev-kpis">
-          <div class="ev-kpi"><div class="lbl">Bloques</div><div class="val" id="kpiTotal">0</div></div>
-          <div class="ev-kpi"><div class="lbl">Personas</div><div class="val" id="kpiProm">0</div></div>
+          <div class="ev-kpi"><div class="lbl">Evaluaciones</div><div class="val" id="kpiTotal">0</div></div>
+          <div class="ev-kpi"><div class="lbl">Tallyman revisados</div><div class="val" id="kpiProm">0</div></div>
           <div class="ev-kpi"><div class="lbl">Promedio general</div><div class="val" id="kpiPct">0</div></div>
           <div class="ev-kpi"><div class="lbl">Bloques cerrados</div><div class="val" id="kpiVar">0</div></div>
         </section>
@@ -570,15 +570,12 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
         <div class="ev-toolbar">
           <div class="ev-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input id="evSearch" type="text" placeholder="Buscar por puesto o coordinador…">
+            <input id="evSearch" type="text" placeholder="Buscar tallyman o coordinador…">
           </div>
-          <div class="ev-filter">
-            <select id="evFiltroPeriodo">
-              <option value="">Todos los períodos</option>
-              <?php foreach ($PERIODOS as $p): ?>
-                <option value="<?= htmlspecialchars($p) ?>"><?= htmlspecialchars($p) ?></option>
-              <?php endforeach; ?>
-            </select>
+          <div class="ev-filter" aria-label="Navegación trimestral">
+            <button class="ev-act-btn" id="evPeriodoPrev" type="button" aria-label="Trimestre anterior">←</button>
+            <strong id="evPeriodoLabel" style="padding:6px 7px;font-size:12px;color:var(--co-ink)"></strong>
+            <button class="ev-act-btn" id="evPeriodoNext" type="button" aria-label="Trimestre siguiente">→</button>
           </div>
           <div class="ev-filter">
             <select id="evFiltroClas">
@@ -594,11 +591,11 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
           <table class="ev-table">
             <thead>
               <tr>
-                <th>Puesto</th>
+                <th>Tallyman</th>
                 <th>Coordinador</th>
                 <th>Período</th>
-                <th>Estado</th>
-                <th>Avance</th>
+                <th>Revisión</th>
+                <th>Bloque</th>
                 <th>Promedio</th>
                 <th style="text-align:right">Acciones</th>
               </tr>
@@ -809,7 +806,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   let currentBlock = null;
   let workspaceState = null;
   let query = '';
-  let filtroPeriodo = '';
+  let filtroPeriodo = `${new Date().getFullYear()}-T${Math.floor(new Date().getMonth() / 3) + 1}`;
   let filtroClas = '';
 
   function toast(msg, type) {
@@ -829,44 +826,48 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
 
   function renderKpis() {
-    $('kpiTotal').textContent = bloques.length;
-    const personas = bloques.reduce((s, b) => s + Number(b.total_colaboradores || 0), 0);
-    $('kpiProm').textContent = personas;
-    const ponderado = bloques.reduce((s, b) => s + Number(b.promedio || 0) * Number(b.evaluaciones_total || 0), 0);
-    const evaluados = bloques.reduce((s, b) => s + Number(b.evaluaciones_total || 0), 0);
-    $('kpiPct').textContent = evaluados ? (ponderado / evaluados).toFixed(1) : '0';
+    $('kpiTotal').textContent = evaluaciones.length;
+    $('kpiProm').textContent = evaluaciones.filter(e => e.revisado_at).length;
+    const total = evaluaciones.reduce((s, e) => s + Number(e.puntaje_total || 0), 0);
+    $('kpiPct').textContent = evaluaciones.length ? (total / evaluaciones.length).toFixed(1) : '0';
     $('kpiVar').textContent = bloques.filter(b => b.estado === 'cerrado').length;
   }
 
   function render() {
     const q = query.trim().toLowerCase();
-    const list = bloques.filter(e => {
+    $('evPeriodoLabel').textContent = filtroPeriodo;
+    const blocksById = Object.fromEntries(bloques.map(block => [Number(block.id), block]));
+    const list = evaluaciones.filter(e => {
       if (filtroPeriodo && e.periodo !== filtroPeriodo) return false;
-      if (filtroClas && e.estado !== filtroClas) return false;
+      if (filtroClas && (e.bloque_estado || 'generado') !== filtroClas) return false;
       if (!q) return true;
-      return [e.puesto, e.coordinador_nombre].some(v => String(v ?? '').toLowerCase().includes(q));
+      return [e.colaborador_nombre, e.colaborador_codigo, e.coordinador_nombre].some(v => String(v ?? '').toLowerCase().includes(q));
     });
     const tb = $('evTbody');
     tb.innerHTML = '';
     if (!list.length) {
-      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">No hay bloques para estos filtros.</td></tr>`;
+      tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">No hay evaluaciones para este trimestre.</td></tr>`;
       return;
     }
     list.forEach(e => {
-      const total = Number(e.total_colaboradores || 0);
-      const completas = Number(e.completas || 0);
-      const pct = total ? Math.round(completas / total * 100) : 0;
+      const block = blocksById[Number(e.bloque_id)];
+      const estado = e.bloque_estado || 'generado';
+      const revisado = Boolean(e.revisado_at);
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><div class="ev-name">${esc(e.puesto)}</div><div class="ev-sub">${total} personas en nómina</div></td>
+        <td><div class="ev-name">${esc(e.colaborador_nombre)}</div><div class="ev-sub">${esc(e.colaborador_codigo || 'Sin código')} · ${esc(e.colaborador_cargo || '—')}</div></td>
         <td>${esc(e.coordinador_nombre)}</td>
         <td>${esc(e.periodo)}</td>
-        <td><span class="ev-status ${esc(e.estado)}">${esc(e.estado)}</span></td>
-        <td><div class="ev-progress"><div class="ev-progress-label"><span>${completas}/${total} completas</span><strong>${pct}%</strong></div><div class="ev-progress-track"><span style="width:${pct}%"></span></div></div></td>
-        <td><strong>${Number(e.promedio || 0).toFixed(1)}</strong><div class="ev-sub">de 100</div></td>
+        <td><span class="ev-status ${revisado ? 'revisado' : 'generado'}">${revisado ? 'Revisado' : 'Pendiente'}</span></td>
+        <td><span class="ev-status ${esc(estado)}">${esc(estado)}</span>${block ? `<div class="ev-sub">${esc(block.puesto)}</div>` : ''}</td>
+        <td><strong>${Number(e.puntaje_total || 0).toFixed(1)}</strong><div class="ev-sub">de 100</div></td>
         <td>
           <div class="ev-cell-actions">
-            <button class="ev-act-btn" data-action="open-block" data-id="${e.id}">${e.estado === 'cerrado' ? 'Consultar' : 'Abrir bloque'}</button>
+            ${revisado ? '' : `<button class="ev-act-btn" data-action="review" data-id="${e.id}">Revisado</button>`}
+            <button class="ev-act-btn" data-action="view" data-id="${e.id}">Ver informe</button>
+            <button class="ev-act-btn" data-action="pdf" data-id="${e.id}">PDF</button>
+            ${e.bloque_id ? `<button class="ev-act-btn" data-action="edit" data-id="${e.id}">${estado === 'cerrado' ? 'Consultar' : 'Evaluar'}</button>` : ''}
+            ${USER_ROL === 'Supervisor' && block && estado !== 'cerrado' ? `<button class="ev-act-btn danger" data-action="open-block" data-id="${e.bloque_id}">Cerrar bloque</button>` : ''}
           </div>
         </td>`;
       tb.append(tr);
@@ -874,10 +875,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
 
   async function cargarEvaluaciones() {
-    const res = await fetch(`${BASE}/api/get_evades_bloques.php`, { cache: 'no-store' });
-    const data = await res.json();
-    if (!data.success) { toast(data.error || 'Error al cargar', 'error'); return; }
-    bloques = data.data || [];
+    const [blockRes, evaluationRes] = await Promise.all([
+      fetch(`${BASE}/api/get_evades_bloques.php`, { cache: 'no-store' }),
+      fetch(`${BASE}/api/get_evades.php`, { cache: 'no-store' }),
+    ]);
+    const [blockData, evaluationData] = await Promise.all([blockRes.json(), evaluationRes.json()]);
+    if (!blockData.success || !evaluationData.success) { toast(blockData.error || evaluationData.error || 'Error al cargar', 'error'); return; }
+    bloques = blockData.data || [];
+    evaluaciones = evaluationData.data || [];
     renderKpis(); render();
   }
 
@@ -895,12 +900,33 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
 
   $('evSearch').addEventListener('input', e => { query = e.target.value; render(); });
-  $('evFiltroPeriodo').addEventListener('change', e => { filtroPeriodo = e.target.value; render(); });
   $('evFiltroClas').addEventListener('change', e => { filtroClas = e.target.value; render(); });
   $('evTbody').addEventListener('click', e => {
     const b = e.target.closest('[data-action]'); if (!b) return;
     if (b.dataset.action === 'open-block') openBlock(b.dataset.id);
+    if (b.dataset.action === 'edit') openIndividualEvaluation(b.dataset.id);
+    if (b.dataset.action === 'view') openView(b.dataset.id);
+    if (b.dataset.action === 'pdf') exportarPDF(b.dataset.id);
+    if (b.dataset.action === 'review') markReviewed(b.dataset.id);
   });
+  function shiftQuarter(offset) {
+    const match = /^(\d{4})-T([1-4])$/.exec(filtroPeriodo);
+    let year = Number(match ? match[1] : new Date().getFullYear());
+    let quarter = Number(match ? match[2] : 1) + offset;
+    if (quarter === 0) { year--; quarter = 4; }
+    if (quarter === 5) { year++; quarter = 1; }
+    filtroPeriodo = `${year}-T${quarter}`; render();
+  }
+  $('evPeriodoPrev').addEventListener('click', () => shiftQuarter(-1));
+  $('evPeriodoNext').addEventListener('click', () => shiftQuarter(1));
+  async function markReviewed(id) {
+    try {
+      const response = await fetch(`${BASE}/api/revisar_evades.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:Number(id) }) });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'No se pudo marcar la evaluación');
+      await cargarEvaluaciones(); toast('Evaluación marcada como revisada');
+    } catch (error) { toast(error.message, 'error'); }
+  }
 
   async function eliminar(id) {
     const ev = evaluaciones.find(x => Number(x.id) === Number(id));
@@ -1023,6 +1049,17 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       if (!currentBlock.evaluaciones.length) throw new Error('El bloque no contiene evaluaciones');
       await openEdit(workspaceState.selectedId, true);
     } catch (e) { toast(e.message, 'error'); }
+  }
+  async function openIndividualEvaluation(id) {
+    const row = evaluaciones.find(item => Number(item.id) === Number(id));
+    try {
+      if (row?.bloque_id) {
+        await loadBlockDetail(row.bloque_id);
+        workspaceState = EvadesBloquesModel.createWorkspace(currentBlock);
+        workspaceState.selectedId = Number(id);
+      }
+      await openEdit(id, Boolean(row?.bloque_id), true);
+    } catch (error) { toast(error.message, 'error'); }
   }
   async function selectBlockEvaluation(id) {
     if (!workspaceState) return;
@@ -1407,7 +1444,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     finally { btn.disabled = false; btn.textContent = 'Cerrar bloque'; }
   });
 
-  async function openEdit(id, fromBlock = false) {
+  async function openEdit(id, fromBlock = false, individual = false) {
     openModal(fromBlock);
     editingId = Number(id);
     $('evModalTitle').textContent = 'Editar evaluación EVADES';
@@ -1425,6 +1462,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (!data.success) { toast(data.error || 'No se pudo cargar', 'error'); closeModal(); return; }
     const ev = data.data;
     currentEvaluation = ev;
+
+    if (fromBlock && !currentBlock && ev.bloque_id) {
+      try {
+        await loadBlockDetail(ev.bloque_id);
+        workspaceState = EvadesBloquesModel.createWorkspace(currentBlock);
+        workspaceState.selectedId = Number(id);
+      } catch (error) { toast(error.message, 'error'); closeModal(); return; }
+    }
 
     // Igual que en calcularSugerencias(): las 10 filas cargadas son de este
     // colaborador/período puntual, cambiar el select los desincronizaría.
@@ -1481,11 +1526,22 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (fromBlock && currentBlock) {
       $('evModalTitle').textContent = `${currentBlock.puesto} · ${currentBlock.periodo}`;
       $('evRailFolio').textContent = currentBlock.estado.toUpperCase();
-      renderBlockRail();
+      if (!individual) renderBlockRail();
       const locked = currentBlock.estado === 'cerrado';
       document.querySelectorAll('#evModalBack .ed-form-body select,#evModalBack .ed-form-body input,#evModalBack .ed-form-body textarea').forEach(el => { el.disabled = locked; });
       $('evModalSave').style.display = locked ? 'none' : '';
       $('evModalCancel').textContent = 'Cerrar vista';
+      if (individual) {
+        $('evBlockContext').style.display = 'none';
+        $('evBlockRoster').style.display = 'none';
+        $('evBlockRosterMobile').style.display = 'none';
+        $('evBlockClose').style.display = 'none';
+        $('evBlockPdf').style.display = 'none';
+        $('evBlockReport').style.display = 'none';
+        $('evBlockPrev').style.display = 'none';
+        $('evBlockNext').style.display = 'none';
+        $('evModalTitle').textContent = `${ev.colaborador_nombre} · ${ev.periodo}`;
+      }
     }
   }
 
