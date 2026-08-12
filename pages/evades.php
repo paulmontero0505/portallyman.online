@@ -746,15 +746,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 <div class="ed-modal-back ev-create-back" id="evBlockCreateBack">
   <div class="ev-create-card">
     <div class="ev-create-head">
-      <div><span class="ed-rail-kicker">NUEVO EXPEDIENTE</span><h3>Generar bloque EVADES</h3><p>Selecciona puesto y trimestre. La nómina quedará congelada al generar.</p></div>
+      <div><span class="ed-rail-kicker">NUEVO EXPEDIENTE</span><h3>Generar bloque EVADES</h3><p>Selecciona el coordinador y el trimestre pendiente del año actual. La nómina de tallyman quedará congelada al generar.</p></div>
       <button class="ed-modal-close" id="evBlockCreateX" style="color:#fff;border-color:rgba(255,255,255,.35)">×</button>
     </div>
     <div class="ev-create-body">
       <div class="ed-row2">
-        <div class="ed-field"><label>Puesto</label><select id="evBlockPuesto"><option value="">Selecciona…</option><option value="ASISTENTE DE ESTIBA">Asistente de Estiba</option><option value="ANALISTA DE TROUBLE DESK">Analista de Trouble Desk</option></select></div>
-        <div class="ed-field"><label>Trimestre</label><select id="evBlockPeriodo"><option value="">Selecciona…</option></select></div>
+        <div class="ed-field" id="evBlockCoordField"><label>Coordinador responsable</label><select id="evBlockCoordinador"><option value="">Selecciona…</option></select></div>
+        <div class="ed-field"><label>Trimestre pendiente</label><select id="evBlockPeriodo" disabled><option value="">Selecciona un coordinador…</option></select></div>
       </div>
-      <div class="ed-field" id="evBlockCoordField" style="margin-top:12px;display:none"><label>Coordinador responsable</label><select id="evBlockCoordinador"><option value="">Selecciona…</option></select></div>
       <div class="ev-preview">
         <div class="ev-preview-head"><span>Personal que se incluirá</span><strong class="ev-preview-count" id="evBlockPreviewCount">—</strong></div>
         <div class="ev-coverage-metrics" id="evCoverageMetrics" style="display:none"></div>
@@ -948,25 +947,48 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   // ════════════════ GENERACIÓN Y APERTURA DE BLOQUES ════════════════
   let blockPreview = null;
   async function cargarCoordinadoresBloque() {
-    if (USER_ROL === 'Coordinador') return;
+    if (USER_ROL === 'Coordinador') {
+      $('evBlockCoordinador').innerHTML = `<option value="${USER_ID}">${esc(EVALUADOR)}</option>`;
+      $('evBlockCoordinador').value = String(USER_ID);
+      $('evBlockCoordinador').disabled = true;
+      return;
+    }
     const res = await fetch(`${BASE}/api/get_coordinadores.php`, { cache:'no-store' });
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'No se pudieron cargar coordinadores');
-    $('evBlockCoordField').style.display = '';
     $('evBlockCoordinador').innerHTML = '<option value="">Selecciona…</option>' +
       (data.data || []).map(c => `<option value="${c.id}">${esc(c.nombre)}</option>`).join('');
+    $('evBlockCoordinador').disabled = false;
+  }
+  function actualizarTrimestresPendientes() {
+    const coordinadorId = Number($('evBlockCoordinador').value || 0);
+    const select = $('evBlockPeriodo');
+    const year = new Date().getFullYear();
+    if (!coordinadorId) {
+      select.disabled = true;
+      select.innerHTML = '<option value="">Selecciona un coordinador…</option>';
+      return;
+    }
+    const generados = new Set(bloques
+      .filter(b => Number(b.coordinador_id) === coordinadorId && b.puesto === 'ASISTENTE DE ESTIBA' && String(b.periodo || '').startsWith(`${year}-`))
+      .map(b => b.periodo));
+    const pendientes = [1, 2, 3, 4].map(t => `${year}-T${t}`).filter(periodo => !generados.has(periodo));
+    select.disabled = pendientes.length === 0;
+    select.innerHTML = pendientes.length
+      ? '<option value="">Selecciona…</option>' + pendientes.map(p => `<option value="${p}">${p}</option>`).join('')
+      : '<option value="">Todos los trimestres ya fueron generados</option>';
   }
   function openBlockCreate() {
     blockPreview = null;
-    $('evBlockPuesto').value = '';
-    $('evBlockPeriodo').innerHTML = '<option value="">Selecciona…</option>' + PERIODOS.map(p => `<option value="${p}">${p}</option>`).join('');
+    $('evBlockPeriodo').innerHTML = '<option value="">Selecciona un coordinador…</option>';
+    $('evBlockPeriodo').disabled = true;
     $('evBlockCoordinador').value = '';
     $('evBlockPreviewCount').textContent = '—';
     $('evCoverageMetrics').style.display = 'none';
     $('evBlockPreviewList').innerHTML = '<div class="ev-sub" style="padding:14px">Selecciona los datos para consultar la nómina.</div>';
     $('evBlockGenerate').disabled = true;
     $('evBlockCreateBack').classList.add('open');
-    cargarCoordinadoresBloque().catch(e => toast(e.message, 'error'));
+    cargarCoordinadoresBloque().then(actualizarTrimestresPendientes).catch(e => toast(e.message, 'error'));
   }
   function closeBlockCreate() { $('evBlockCreateBack').classList.remove('open'); }
   function renderCoveragePreview(data) {
@@ -985,10 +1007,10 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       : '<div class="ev-sub" style="padding:14px">No hay personal activo asignado a este coordinador y puesto.</div>';
   }
   async function previewBlock() {
-    const puesto = $('evBlockPuesto').value;
+    const puesto = 'ASISTENTE DE ESTIBA';
     const periodo = $('evBlockPeriodo').value;
-    const coordinador_id = USER_ROL === 'Coordinador' ? 0 : Number($('evBlockCoordinador').value || 0);
-    if (!puesto || !periodo || (USER_ROL !== 'Coordinador' && !coordinador_id)) return;
+    const coordinador_id = Number($('evBlockCoordinador').value || 0);
+    if (!periodo || !coordinador_id) return;
     $('evBlockPreviewCount').textContent = '…';
     try {
       const res = await fetch(`${BASE}/api/preview_evades_bloque.php`, { method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ puesto,periodo,coordinador_id }) });
@@ -1070,7 +1092,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
   $('evBlockRoster').addEventListener('click', e => { const b=e.target.closest('[data-eval-id]'); if (b) selectBlockEvaluation(b.dataset.evalId); });
   $('evBlockRosterMobile').addEventListener('change', e => selectBlockEvaluation(e.target.value));
-  $('evBlockPuesto').addEventListener('change', previewBlock); $('evBlockPeriodo').addEventListener('change', previewBlock); $('evBlockCoordinador').addEventListener('change', previewBlock);
+  $('evBlockPeriodo').addEventListener('change', previewBlock);
+  $('evBlockCoordinador').addEventListener('change', () => { actualizarTrimestresPendientes(); previewBlock(); });
   $('evBlockCreateX').addEventListener('click', closeBlockCreate); $('evBlockCreateCancel').addEventListener('click', closeBlockCreate); $('evBlockGenerate').addEventListener('click', generateBlock);
   $('evBlockCreateBack').addEventListener('click', e => { if (e.target === $('evBlockCreateBack')) closeBlockCreate(); });
 

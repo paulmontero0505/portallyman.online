@@ -173,6 +173,9 @@ require_admin();
     }
     body .col-coord-filter.is-on svg,
     body .col-coord-filter.is-on select { color:#00875A !important; }
+    .col-bulk-bar { display:none;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;background:#eff9f4;border:1px solid #b8dfcd;border-radius:12px;color:#164e3b; }
+    .col-bulk-bar.is-visible { display:flex; }.col-bulk-bar strong { font-size:13px; }.col-bulk-bar select { min-width:240px;flex:1;padding:8px 10px;border:1px solid #8bc9ad;border-radius:8px;background:#fff;font:inherit;font-size:12.5px;color:#173b2d; }
+    .col-select { width:16px;height:16px;accent-color:#00875A;cursor:pointer;vertical-align:middle; }
 
     /* Table Wrap and Grid */
     body .col-table-wrap {
@@ -638,8 +641,9 @@ require_admin();
       body .col-search  { flex: 1 1 100%; min-width: 0; }
       body .col-filter  { flex-wrap: wrap; gap: 4px; }
       body .col-filter button { flex: 1 1 auto; padding: 6px 10px; min-height: 36px; }
-      body .col-coord-filter  { flex: 1 1 100%; min-width: 0; }
-      body .col-coord-filter select { flex: 1; max-width: none; }
+       body .col-coord-filter  { flex: 1 1 100%; min-width: 0; }
+       body .col-coord-filter select { flex: 1; max-width: none; }
+       .col-bulk-bar select { min-width:0;flex:1 1 100%; }
 
       /* Tabla: scroll horizontal */
       body .col-table-wrap { overflow-x: auto; overscroll-behavior-x: contain; }
@@ -690,6 +694,7 @@ require_admin();
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Importar Excel
             </button>
+            <button class="col-btn ghost-light" id="btnBulkAssign">Asignar coordinador</button>
             <button class="col-btn primary" id="btnNew">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Nuevo colaborador
@@ -727,12 +732,19 @@ require_admin();
             <button data-f="inactivo">Inactivos</button>
           </div>
         </div>
+        <div class="col-bulk-bar" id="colBulkBar" aria-live="polite">
+          <strong id="colBulkCount">0 colaboradores seleccionados</strong>
+          <select id="colBulkCoordinator" aria-label="Coordinador a asignar"><option value="">Selecciona un coordinador…</option></select>
+          <button class="col-btn" type="button" id="colBulkClear">Limpiar</button>
+          <button class="col-btn primary" type="button" id="colBulkSave">Asignar seleccionados</button>
+        </div>
 
         <!-- TABLA -->
         <div class="col-table-wrap">
           <table class="col-table">
             <thead>
               <tr>
+                <th style="width:38px"><input class="col-select" type="checkbox" id="colSelectAll" aria-label="Seleccionar todos los colaboradores visibles"></th>
                 <th>Colaborador</th>
                 <th>Puesto</th>
                 <th>Coordinador</th>
@@ -743,7 +755,7 @@ require_admin();
               </tr>
             </thead>
             <tbody id="colTbody">
-              <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
+              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -911,6 +923,7 @@ require_admin();
   let filtro = 'todos';
   let coordFiltro = 'todos';  // 'todos' | 'sin' | id del coordinador
   let editingId = null;
+  const selectedIds = new Set();
 
   function toast(msg, type) {
     const t = $('colToast');
@@ -994,13 +1007,15 @@ require_admin();
     const tbody = $('colTbody');
     tbody.innerHTML = '';
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--co-faint)">Sin resultados.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Sin resultados.</td></tr>`;
+      updateBulkBar();
       return;
     }
     list.forEach(c => {
       const tr = document.createElement('tr');
       const waNumero = whatsappNumero(c.celular);
       tr.innerHTML = `
+        <td><input class="col-select" type="checkbox" data-select-id="${c.id}" ${selectedIds.has(Number(c.id)) ? 'checked' : ''} aria-label="Seleccionar ${esc(c.nombre)}"></td>
         <td>
           <div class="col-cell-name">
             <div class="col-avatar ${c.activo ? '' : 'inact'}">${esc(initials(c.nombre))}</div>
@@ -1026,6 +1041,16 @@ require_admin();
         </td>`;
       tbody.append(tr);
     });
+    const selectAll = $('colSelectAll');
+    selectAll.checked = list.length > 0 && list.every(c => selectedIds.has(Number(c.id)));
+    selectAll.indeterminate = list.some(c => selectedIds.has(Number(c.id))) && !selectAll.checked;
+    updateBulkBar();
+  }
+
+  function updateBulkBar() {
+    const total = selectedIds.size;
+    $('colBulkCount').textContent = `${total} colaborador${total === 1 ? '' : 'es'} seleccionado${total === 1 ? '' : 's'}`;
+    $('colBulkBar').classList.toggle('is-visible', total > 0);
   }
 
   async function cargar() {
@@ -1065,6 +1090,10 @@ require_admin();
                 + '<option value="sin">Sin asignar</option>';
     f.value = coordFiltro;
   }
+  function fillBulkCoordinators() {
+    const select = $('colBulkCoordinator');
+    select.innerHTML = '<option value="">Selecciona un coordinador…</option>' + coordinadores.map(c => `<option value="${c.id}">${esc(c.nombre)}</option>`).join('');
+  }
 
   async function cargarCoordinadores() {
     try {
@@ -1073,6 +1102,7 @@ require_admin();
       if (!data.success) { toast(data.error || 'No se pudo cargar los coordinadores', 'error'); return; }
       coordinadores = data.data || [];
       fillCoordFilter();
+      fillBulkCoordinators();
       fillModalCoord(null, null);
     } catch (e) {
       console.error('[colaboradores] coordinadores:', e);
@@ -1168,6 +1198,24 @@ require_admin();
       console.error('[colaboradores] eliminar:', e);
       toast('Error de red', 'error');
     }
+  }
+  async function asignarMasivamente() {
+    const coordinadorId = Number($('colBulkCoordinator').value || 0);
+    const ids = Array.from(selectedIds);
+    if (!coordinadorId) { toast('Selecciona el coordinador responsable', 'error'); return; }
+    if (!ids.length) { toast('Selecciona al menos un colaborador', 'error'); return; }
+    const coordinador = coordinadores.find(c => Number(c.id) === coordinadorId);
+    if (!confirm(`¿Asignar ${ids.length} colaborador(es) a ${coordinador?.nombre || 'este coordinador'}?`)) return;
+    const button = $('colBulkSave'); const original = button.textContent;
+    button.disabled = true; button.textContent = 'Asignando…';
+    try {
+      const response = await fetch('../api/asignar_coordinador_colaboradores.php', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ coordinador_id:coordinadorId, colaborador_ids:ids }) });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'No se pudo completar la asignación');
+      selectedIds.clear(); $('colBulkCoordinator').value = ''; await cargar();
+      toast(`${data.updated} colaborador(es) asignado(s) a ${coordinador?.nombre || 'su coordinador'}`);
+    } catch (error) { toast(error.message, 'error'); }
+    finally { button.disabled = false; button.textContent = original; }
   }
 
   // ════════════════════════════════════════════════════════════════════
@@ -1343,6 +1391,7 @@ require_admin();
   // ─── Eventos ───
   $('btnNew').addEventListener('click', () => openModal(null));
   $('btnImport').addEventListener('click', impOpen);
+  $('btnBulkAssign').addEventListener('click', () => { $('colBulkBar').scrollIntoView({ behavior:'smooth', block:'nearest' }); $('colBulkCoordinator').focus(); });
   $('cm-celular').addEventListener('input', e => {
     let digits = e.target.value.replace(/\D/g, '');
     if (digits.startsWith('51')) digits = digits.slice(2);
@@ -1366,6 +1415,25 @@ require_admin();
     if (b.dataset.action === 'edit') openModal(b.dataset.id);
     if (b.dataset.action === 'del')  eliminar(b.dataset.id);
   });
+  $('colTbody').addEventListener('change', e => {
+    const checkbox = e.target.closest('[data-select-id]'); if (!checkbox) return;
+    const id = Number(checkbox.dataset.selectId);
+    if (checkbox.checked) selectedIds.add(id); else selectedIds.delete(id);
+    render();
+  });
+  $('colSelectAll').addEventListener('change', e => {
+    const visible = colaboradores.filter(c => {
+      const q = query.trim().toLowerCase();
+      return !(filtro === 'activo' && c.activo !== 1) && !(filtro === 'inactivo' && c.activo !== 0)
+        && !(coordFiltro === 'sin' && c.coordinador_id)
+        && !(coordFiltro !== 'todos' && coordFiltro !== 'sin' && Number(c.coordinador_id) !== Number(coordFiltro))
+        && (!q || [c.nombre, c.codigo, c.funcion_principal, c.cuadrilla, c.coordinador_nombre].some(v => String(v ?? '').toLowerCase().includes(q)));
+    });
+    visible.forEach(c => e.target.checked ? selectedIds.add(Number(c.id)) : selectedIds.delete(Number(c.id)));
+    render();
+  });
+  $('colBulkClear').addEventListener('click', () => { selectedIds.clear(); $('colBulkCoordinator').value = ''; render(); });
+  $('colBulkSave').addEventListener('click', asignarMasivamente);
   $('colModalClose').addEventListener('click', closeModal);
   $('colModalCancel').addEventListener('click', closeModal);
   $('colModalBack').addEventListener('click', e => { if (e.target === $('colModalBack')) closeModal(); });
