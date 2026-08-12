@@ -69,11 +69,12 @@ async function cargar(){try{let r=await fetch('../api/get_record_personal_tallym
     const tardanza = data.resumen.tardanzas_charlas || 0;
     const falta = data.resumen.faltas_charlas || 0;
     $('kpis').insertAdjacentHTML('beforeend', '<div class="rp-kpi"><div class="rp-n">' + asistio + '</div><div class="rp-l">Charlas asistidas</div></div><div class="rp-kpi"><div class="rp-n">' + tardanza + '</div><div class="rp-l">Tardanzas en charlas</div></div><div class="rp-kpi"><div class="rp-n">' + falta + '</div><div class="rp-l">Faltas en charlas</div></div>');
-    $('c-charlas').textContent = data.historial.charlas.length;
-    $('l-charlas').innerHTML = data.historial.charlas.length ? data.historial.charlas.map(x => {
+    const incidenciasCharlas = data.historial.charlas.filter(x => x.estado === 'tardanza' || x.estado === 'falta');
+    $('c-charlas').textContent = asistio + tardanza;
+    $('l-charlas').innerHTML = incidenciasCharlas.length ? incidenciasCharlas.map(x => {
       const estado = x.estado === 'tardanza' ? 'Tardanza' : x.estado === 'falta' ? 'Falta' : 'Asistió';
       const clase = x.estado === 'falta' ? 'impacto-critico' : x.estado === 'tardanza' ? 'estado-pendiente' : 'estado-aprobado';
       return '<li><div class="rp-line"><span>' + esc(x.tema) + '</span>' + chip(estado, clase) + '</div><div class="rp-sub">' + dt(x.fecha) + ' · ' + esc(x.tipo_reunion.replaceAll('_',' ')) + (x.capacitador ? ' · ' + esc(x.capacitador) : '') + '</div></li>';
-    }).join('') : '<li class="rp-none">No hay registros para este tallyman.</li>';
+    }).join('') : '<li class="rp-none">Asistió a ' + (asistio + tardanza) + ' charla(s). No registra tardanzas ni faltas.</li>';
   };
 </script></body></html>
