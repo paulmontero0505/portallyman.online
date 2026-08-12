@@ -510,7 +510,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     :root { --ev-emerald-700:#006b49;--ev-emerald-600:#00875a;--ev-emerald-050:#e8f5ef;--ev-ink:#0f2940;--ev-muted:#64748b;--ev-amber:#f5a524; }
     .ev-status { display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.055em;white-space:nowrap; }
     .ev-status::before { content:'';width:7px;height:7px;border-radius:50%;background:currentColor; }
-    .ev-status.generado { color:#42627a;background:#edf3f7; }.ev-status.revisado { color:var(--ev-emerald-700);background:var(--ev-emerald-050); }
+    .ev-status.generado { color:#42627a;background:#edf3f7; }.ev-status.abierto { color:#08734f;background:#e2f5ed; }.ev-status.revisado { color:var(--ev-emerald-700);background:var(--ev-emerald-050); }
     .ev-status.modificado { color:#915d05;background:#fff4d8; }.ev-status.cerrado { color:#fff;background:var(--ev-emerald-700); }
     .ev-progress { min-width:130px; }.ev-progress-label { display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--ev-muted);margin-bottom:6px; }
     .ev-progress-track { height:6px;border-radius:99px;background:#e7edf1;overflow:hidden; }.ev-progress-track span { display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--ev-emerald-600),#30b981); }
@@ -782,7 +782,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 <div class="ed-modal-back ev-create-back" id="evBlockReviewBack">
   <div class="ev-create-card" style="width:min(540px,94vw)">
     <div class="ev-create-head"><div><span class="ed-rail-kicker">REVISIÓN ADMINISTRATIVA</span><h3>Revisar y cerrar bloque EVADES</h3><p>Marca como revisada a toda la nómina y bloquea definitivamente las evaluaciones.</p></div><button class="ed-modal-close" id="evBlockReviewX" type="button" aria-label="Cerrar revisión" style="color:#005c3d;border-color:#fff;background:#fff;font-size:25px;font-weight:500;line-height:1">×</button></div>
-    <div class="ev-create-body"><div class="ed-row2"><div class="ed-field"><label>Coordinador</label><select id="evReviewCoordinator"><option value="">Selecciona…</option></select></div><div class="ed-field"><label>Período disponible</label><select id="evReviewPeriod" disabled><option value="">Selecciona un coordinador…</option></select></div></div><p class="ev-sub" id="evReviewHint" style="margin:14px 0 0">Selecciona el bloque que Administración revisará.</p></div>
+    <div class="ev-create-body"><div class="ed-row2"><div class="ed-field"><label>Coordinador</label><select id="evReviewCoordinator"><option value="">Selecciona…</option></select></div><div class="ed-field"><label>Período disponible</label><select id="evReviewPeriod" disabled><option value="">Selecciona un coordinador…</option></select></div></div><p class="ev-sub" id="evReviewHint" style="margin:14px 0 0">Selecciona el bloque que Administración revisará.</p><div id="evReviewHistory" class="ev-appreciation-list" style="margin-top:14px"></div></div>
     <div class="ev-create-foot"><button class="ed-btn" id="evBlockReviewCancel" type="button">Cancelar</button><button class="ed-btn primary" id="evBlockReviewSave" type="button" disabled>Revisar y cerrar bloque</button></div>
   </div>
 </div>
@@ -874,6 +874,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     list.forEach(e => {
       const block = blocksById[Number(e.bloque_id)];
       const estado = e.bloque_estado || 'generado';
+      const estadoVisible = estado === 'cerrado' ? 'cerrado' : 'abierto';
       const revisado = Boolean(e.revisado_at);
       const bloqueBloqueadoParaCoordinador = USER_ROL === 'Coordinador' && estado === 'revisado';
       const tr = document.createElement('tr');
@@ -882,11 +883,12 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
         <td>${esc(e.coordinador_nombre)}</td>
         <td>${esc(e.periodo)}</td>
         <td><span class="ev-status ${revisado ? 'revisado' : 'generado'}">${revisado ? 'Revisado' : 'Pendiente'}</span></td>
-        <td><span class="ev-status ${esc(estado)}">${esc(estado)}</span>${block ? `<div class="ev-sub">${esc(block.puesto)}</div>` : ''}</td>
+        <td><span class="ev-status ${esc(estadoVisible)}">${esc(estadoVisible)}</span>${block ? `<div class="ev-sub">${esc(block.puesto)}</div>` : ''}</td>
         <td><strong>${Number(e.puntaje_total || 0).toFixed(1)}</strong><div class="ev-sub">de 100</div></td>
         <td>
           <div class="ev-cell-actions">
             ${revisado ? '' : `<button class="ev-act-btn" data-action="review" data-id="${e.id}">Revisado</button>`}
+            ${USER_ROL === 'Administrador' && revisado && estado !== 'cerrado' ? `<button class="ev-act-btn" data-action="reopen-review" data-id="${e.id}">Abrir revisión</button>` : ''}
             <button class="ev-act-btn" data-action="view" data-id="${e.id}">Ver informe</button>
             <button class="ev-act-btn" data-action="pdf" data-id="${e.id}">PDF</button>
             ${e.bloque_id ? `<button class="ev-act-btn" data-action="edit" data-id="${e.id}">${estado === 'cerrado' || bloqueBloqueadoParaCoordinador ? 'Consultar' : 'Evaluar'}</button>` : ''}
@@ -931,6 +933,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (b.dataset.action === 'view') openView(b.dataset.id);
     if (b.dataset.action === 'pdf') exportarPDF(b.dataset.id);
     if (b.dataset.action === 'review') markReviewed(b.dataset.id);
+    if (b.dataset.action === 'reopen-review') reopenReview(b.dataset.id);
   });
   function shiftQuarter(offset) {
     const match = /^(\d{4})-T([1-4])$/.exec(filtroPeriodo);
@@ -948,6 +951,14 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'No se pudo marcar la evaluación');
       await cargarEvaluaciones(); toast('Evaluación marcada como revisada');
+    } catch (error) { toast(error.message, 'error'); }
+  }
+  async function reopenReview(id) {
+    try {
+      const response = await fetch(`${BASE}/api/abrir_revision_evades.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id:Number(id) }) });
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'No se pudo abrir la revisión');
+      await cargarEvaluaciones(); toast('Revisión abierta para continuar la edición administrativa');
     } catch (error) { toast(error.message, 'error'); }
   }
 
@@ -1022,6 +1033,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     $('evReviewPeriod').disabled = true;
     $('evReviewPeriod').innerHTML = '<option value="">Selecciona un coordinador…</option>';
     $('evReviewHint').textContent = available.length ? 'Selecciona el bloque que Administración revisará.' : 'No hay bloques pendientes de revisión.';
+    $('evReviewHistory').innerHTML = '';
     $('evBlockReviewSave').disabled = true;
     $('evBlockReviewBack').classList.add('open');
   }
@@ -1034,6 +1046,10 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       ? '<option value="">Selecciona…</option>' + choices.map(block => `<option value="${block.id}">${esc(block.periodo)} · ${esc(block.puesto)}</option>`).join('')
       : '<option value="">Sin bloques pendientes</option>';
     $('evReviewHint').textContent = choices.length ? `${choices.length} bloque(s) pendiente(s) de revisión.` : 'No hay bloques pendientes para este coordinador.';
+    const closed = bloques.filter(block => Number(block.coordinador_id) === coordinatorId && block.estado === 'cerrado');
+    $('evReviewHistory').innerHTML = closed.length
+      ? `<div class="ev-appreciation-item"><b>Histórico de bloques cerrados</b><br>${closed.map(block => `${esc(block.periodo)} · ${esc(block.puesto)} · ${Number(block.promedio || 0).toFixed(1)}/100`).join('<br>')}</div>`
+      : '<div class="ev-sub">Este coordinador aún no tiene bloques cerrados.</div>';
     $('evBlockReviewSave').disabled = true;
   }
   async function reviewBlock() {
