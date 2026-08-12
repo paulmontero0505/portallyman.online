@@ -192,6 +192,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     .ed-view-notes { background:#f9fafb; border:1px solid var(--co-line); border-radius:8px; padding:10px 12px; }
     .ed-view-notes .iv-k { font-size:9px; color:var(--co-mute); text-transform:uppercase; letter-spacing:.5px; font-weight:600; display:block; margin-bottom:3px; }
     .ed-view-notes .iv-v { font-size:13px; color:#4b5563; font-weight:400; line-height:1.5; }
+    .ed-modal--view { width:min(980px,96vw); }.ed-modal--view .ed-modal-body { overflow:auto;background:#eef3f5; }
+    .ev-sheet { padding:18px;background:#fff;color:#172033;font-size:11px;line-height:1.25; }.ev-sheet-title { background:#075c3d;color:#fff;text-align:center;padding:10px;font-size:16px;font-weight:800; }.ev-sheet-section { margin-top:10px;background:#0a7a52;color:#fff;padding:6px 10px;font-weight:800;font-size:12px;text-transform:uppercase; }.ev-sheet table { width:100%;border-collapse:collapse; }.ev-sheet th,.ev-sheet td { border:1px solid #cbd5dc;padding:6px 7px;vertical-align:middle; }.ev-sheet th { background:#dce7ed;font-size:10px;font-weight:800;text-align:center; }.ev-sheet .ev-sheet-label { background:#dce7ed;font-weight:800;width:18%; }.ev-sheet .conductual td:first-child { background:#edf8e7; }.ev-sheet .operativa td:first-child { background:#fff0e7; }.ev-sheet .score { background:#fff7d6;text-align:center;font-weight:800; }.ev-sheet .center { text-align:center; }.ev-sheet .subtotal { background:#d6e6f1;font-weight:800; }.ev-sheet-summary { display:grid;grid-template-columns:1.5fr .75fr;gap:10px;margin-top:10px; }.ev-sheet-total { background:#075c3d;color:#fff;padding:11px;font-weight:800;font-size:16px;display:flex;justify-content:space-between;align-items:center; }.ev-sheet-note { margin-top:10px; }.ev-sheet-note strong { display:block;background:#0a7a52;color:#fff;padding:6px 10px;text-transform:uppercase; }.ev-sheet-note p { min-height:46px;margin:0;border:1px solid #cbd5dc;padding:8px;white-space:pre-wrap; }.ev-sheet-evidence { font-size:9.5px;color:#475569; }.ev-sheet-evidence b { color:#172033; } @media (max-width:680px) { .ev-sheet { padding:10px;min-width:720px; }.ed-modal--view .ed-modal-body { overflow:auto; }.ev-sheet-summary { grid-template-columns:1fr; } }
 
     .ev-toast {
       position:fixed; bottom:24px; right:24px; z-index:999;
@@ -1598,56 +1600,29 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (!data.success) { toast(data.error || 'No se pudo cargar', 'error'); return; }
     const ev = data.data;
 
-    const filaVista = (c) => {
+    const filaVista = (c, index, section) => {
       const meta = COMPETENCIAS[c.competencia_key] || { label: c.competencia_key };
-      const evid = (c.evidencia || []).map(e => `<div class="ev-sub">• ${esc(labelEvidencia(e))}</div>`).join('') || '<div class="ev-sub">Sin evidencia automática.</div>';
+      const evid = (c.evidencia || []).map(e => esc(labelEvidencia(e))).join(' · ') || 'Sin evidencia automática.';
+      const nivel = evNivelLabel(c.puntaje_final);
       return `
-        <div class="ed-view-crit-row">
-          <div>
-            <span class="ed-crit-item">${esc(meta.label)}</span>
-            ${evid}
-            ${c.motivo_ajuste ? `<div class="ev-sub"><b>Motivo del ajuste:</b> ${esc(c.motivo_ajuste)}</div>` : ''}
-          </div>
-          <div class="ed-resumen-score">${c.puntaje_final} / 10</div>
-        </div>`;
+        <tr class="${section}"><td class="center">${index}</td><td>${esc(meta.label)}</td><td class="score">${c.base}</td><td class="center">${c.incremento_final ? '+' + c.incremento_final : '—'}</td><td class="center">${c.descuento_final ? '-' + c.descuento_final : '—'}</td><td class="score">${c.puntaje_final}</td><td class="center">${esc(nivel)}</td><td class="ev-sheet-evidence">${c.motivo_ajuste ? `<b>Ajuste:</b> ${esc(c.motivo_ajuste)}<br>` : ''}${evid}</td></tr>`;
     };
-    const seccionA = ev.competencias.filter(c => c.tipo === 'conductual').map(filaVista).join('');
-    const seccionB = ev.competencias.filter(c => c.tipo === 'operativa').map(filaVista).join('');
-
-    const timeline = currentBlock && Array.isArray(currentBlock.historial_estados)
-      ? currentBlock.historial_estados.map(item => `<div class="ev-report-event"><b>${esc(item.estado_nuevo)}</b> · ${esc(item.contexto || '')}<br>${esc(item.created_at || '')}</div>`).join('')
-      : '<div class="ev-report-event">Sin historial de bloque disponible.</div>';
+    const conductuales = ev.competencias.filter(c => c.tipo === 'conductual');
+    const operativas = ev.competencias.filter(c => c.tipo === 'operativa');
+    const subtotalA = conductuales.reduce((total, c) => total + Number(c.puntaje_final || 0), 0);
+    const subtotalB = operativas.reduce((total, c) => total + Number(c.puntaje_final || 0), 0);
+    const tableHead = '<thead><tr><th>N°</th><th>Competencia</th><th>Puntaje inicial</th><th>Incremento</th><th>Reducción</th><th>Puntaje final</th><th>Nivel final</th><th>Comentario / evidencia observada</th></tr></thead>';
     $('evViewBody').innerHTML = `
-      <div class="ev-view-report-head">
-        <div><span class="ed-rail-kicker">INFORME INDIVIDUAL · ${esc(ev.periodo)}</span><h3>${esc(ev.colaborador_nombre)}</h3><p>${esc(ev.colaborador_cargo || '—')} · Coordinador: ${esc(ev.coordinador_nombre)}</p></div>
-        <div class="ev-report-score"><b>${ev.puntaje_total}</b><span>${esc(ev.clasificacion)}</span></div>
-      </div>
-      <div class="ed-view-layout" style="grid-template-columns:150px 1fr">
-        <div class="ed-view-sidebar">
-          <div class="ed-rail-count">${ev.puntaje_total}</div>
-          <span class="ed-rail-lbl" style="color:rgba(255,255,255,.7)">de 100</span>
-          <hr class="iv-divider">
-          <div class="iv-stat"><span class="iv-stat-k">Período</span><span class="iv-stat-v">${esc(ev.periodo)}</span></div>
-          <div class="iv-stat"><span class="iv-stat-k">Clasificación</span><span class="iv-stat-v">${esc(ev.clasificacion)}</span></div>
-          <div class="iv-stat"><span class="iv-stat-k">Variación</span><span class="iv-stat-v">${ev.variacion_pct == null ? '—' : (ev.variacion_pct >= 0 ? '+' : '') + ev.variacion_pct + '%'}</span></div>
-          <div class="iv-eval"><span class="iv-stat-k">Coordinador</span><span class="iv-stat-v">${esc(ev.coordinador_nombre)}</span></div>
-        </div>
-        <div class="ed-view-main">
-          <div>
-            <p class="ed-view-name">${esc(ev.colaborador_nombre)}</p>
-            <p class="ed-view-cargo">${esc(ev.colaborador_cargo || '—')}</p>
-          </div>
-          <hr class="ed-view-divider">
-          <div class="ed-view-cat">SECCIÓN A · COMPETENCIAS CONDUCTUALES</div>
-          <div class="ed-view-crit-list">${seccionA}</div>
-          <div class="ed-view-cat">SECCIÓN B · COMPETENCIAS OPERATIVAS</div>
-          <div class="ed-view-crit-list">${seccionB}</div>
-          <div class="ed-view-notes"><span class="iv-k">Fortalezas observadas</span><span class="iv-v">${esc(ev.fortalezas || '—')}</span></div>
-          <div class="ed-view-notes"><span class="iv-k">Aspectos a mejorar</span><span class="iv-v">${esc(ev.aspectos_mejora || '—')}</span></div>
-          <div class="ed-view-notes"><span class="iv-k">Plan de acción</span><span class="iv-v">${esc(ev.plan_accion || '—')}</span></div>
-          <div class="ed-view-notes"><span class="iv-k">Historial del expediente</span><div class="ev-report-timeline">${timeline}</div></div>
-        </div>
-      </div>`;
+      <article class="ev-sheet">
+        <div class="ev-sheet-title">EVALUACIÓN DE DESEMPEÑO INDIVIDUAL — TALLY ${esc((ev.periodo || '').slice(0,4))}</div>
+        <div class="ev-sheet-section">Datos del evaluado</div>
+        <table><tbody><tr><td class="ev-sheet-label">Nombre completo</td><td>${esc(ev.colaborador_nombre)}</td><td class="ev-sheet-label">Período evaluado</td><td>${esc(ev.periodo)}</td></tr><tr><td class="ev-sheet-label">Código</td><td>${esc(ev.colaborador_codigo || '—')}</td><td class="ev-sheet-label">Evaluador</td><td>${esc(ev.coordinador_nombre || '—')}</td></tr><tr><td class="ev-sheet-label">Cargo</td><td>${esc(ev.colaborador_cargo || '—')}</td><td class="ev-sheet-label">Fecha de evaluación</td><td>${esc(ev.fecha_evaluacion || '—')}</td></tr><tr><td class="ev-sheet-label">DNI</td><td>${esc(ev.colaborador_dni || '—')}</td><td class="ev-sheet-label">Fecha de ingreso</td><td>${esc(ev.fecha_ingreso || '—')}</td></tr></tbody></table>
+        <div class="ev-sheet-section">Sección A — Competencias conductuales</div><table>${tableHead}<tbody>${conductuales.map((c,i) => filaVista(c, i + 1, 'conductual')).join('')}<tr class="subtotal"><td colspan="5">SUBTOTAL SECCIÓN A</td><td class="center">${subtotalA}</td><td colspan="2">/ ${conductuales.length * 10}</td></tr></tbody></table>
+        <div class="ev-sheet-section">Sección B — Competencias operativas</div><table>${tableHead}<tbody>${operativas.map((c,i) => filaVista(c, conductuales.length + i + 1, 'operativa')).join('')}<tr class="subtotal"><td colspan="5">SUBTOTAL SECCIÓN B</td><td class="center">${subtotalB}</td><td colspan="2">/ ${operativas.length * 10}</td></tr></tbody></table>
+        <div class="ev-sheet-summary"><div class="ev-sheet-total"><span>PUNTAJE TOTAL</span><span>${ev.puntaje_total} / 100</span></div><table><tbody><tr><td class="ev-sheet-label">Puntaje anterior</td><td>${ev.puntaje_anterior ?? '—'}</td></tr><tr><td class="ev-sheet-label">Variación</td><td>${ev.variacion_pct == null ? '—' : (ev.variacion_pct >= 0 ? '+' : '') + ev.variacion_pct + '%'}</td></tr></tbody></table></div>
+        <div class="ev-sheet-section">Clasificación: ${esc(ev.clasificacion)}</div>
+        <div class="ev-sheet-note"><strong>Fortalezas observadas</strong><p>${esc(ev.fortalezas || '—')}</p></div><div class="ev-sheet-note"><strong>Aspectos a mejorar</strong><p>${esc(ev.aspectos_mejora || '—')}</p></div><div class="ev-sheet-note"><strong>Plan de acción para próximo trimestre</strong><p>${esc(ev.plan_accion || '—')}</p></div>
+      </article>`;
 
     $('evViewSub').textContent = `${ev.colaborador_nombre} · ${ev.periodo}`;
     $('evViewEdit').dataset.id = ev.id;
