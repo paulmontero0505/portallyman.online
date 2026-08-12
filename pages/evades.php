@@ -323,6 +323,11 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       display:flex; flex-direction:column; gap:22px;
       background:#f5f8f7; border-right:1px solid var(--co-line);
     }
+    .ed-modal.block-workspace .ed-rail { background:linear-gradient(160deg,#005c3d 0%,#00875A 100%);color:#fff;border-right-color:rgba(255,255,255,.18); }
+    .ed-modal.block-workspace .ed-rail-kicker,.ed-modal.block-workspace .ed-rail-lbl,.ed-modal.block-workspace .ed-rail-cargo,.ed-modal.block-workspace .ed-rail-max { color:rgba(255,255,255,.72); }
+    .ed-modal.block-workspace .ed-rail-folio { color:#fff;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.26); }
+    .ed-modal.block-workspace .ed-rail-name,.ed-modal.block-workspace .ed-rail-eval { color:#fff; }
+    .ed-modal.block-workspace .ed-rail-count { color:#fff; }
     .ed-rail > * { position:relative; z-index:1; }
     .ed-rail-top { display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .ed-rail-kicker { font-family:var(--mono); font-size:9.5px; letter-spacing:.22em; color:var(--co-mute); }
@@ -617,7 +622,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 </div>
 
 <div class="ed-modal-back" id="evModalBack">
-  <div class="ed-modal ed-create" style="width:1040px">
+  <div class="ed-modal ed-create" id="evWorkspaceModal" style="width:1040px">
     <aside class="ed-rail">
       <div class="ed-rail-top">
         <span class="ed-rail-kicker">FICHA · EVADES</span>
@@ -1044,6 +1049,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
   function renderBlockRail() {
     if (!currentBlock) return;
+    $('evWorkspaceModal').classList.add('block-workspace');
     const estados = ['generado','revisado','modificado','cerrado'];
     const actual = estados.indexOf(currentBlock.estado);
     $('evBlockRoute').innerHTML = estados.map((s,i) => `<div class="ev-route-step ${i < actual ? 'done' : ''} ${i === actual ? 'current' : ''}">${s}</div>`).join('');
@@ -1051,7 +1057,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     $('evBlockRosterMobile').innerHTML = (currentBlock.evaluaciones || []).map(ev => `<option value="${ev.id}" ${workspaceState && Number(workspaceState.selectedId) === Number(ev.id) ? 'selected' : ''}>${esc(ev.colaborador_nombre)} · ${ev.puntaje_total}/100</option>`).join('');
     $('evBlockContext').style.display = '';
     $('evBlockRoster').style.display = '';
-    $('evBlockClose').style.display = currentBlock.estado === 'cerrado' ? 'none' : '';
+    $('evBlockClose').style.display = currentBlock.estado === 'cerrado' || USER_ROL !== 'Administrador' ? 'none' : '';
     $('evBlockPdf').style.display = '';
     $('evBlockReport').style.display = '';
     $('evBlockPrev').style.display = ''; $('evBlockNext').style.display = '';
@@ -1121,6 +1127,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
 
   function openModal(isBlock = false) {
     if (!isBlock) { currentBlock = null; workspaceState = null; }
+    $('evWorkspaceModal').classList.toggle('block-workspace', isBlock);
     document.querySelectorAll('#evModalBack .ed-form-body select,#evModalBack .ed-form-body input,#evModalBack .ed-form-body textarea').forEach(el => { el.disabled = false; });
     editingId = null;
     $('evModalTitle').textContent = 'Nueva evaluación EVADES';
@@ -1457,6 +1464,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   });
   $('evBlockClose').addEventListener('click', async () => {
     if (!currentBlock || currentBlock.estado === 'cerrado') return;
+    if (USER_ROL !== 'Administrador') { toast('Solo un administrador puede cerrar el bloque', 'error'); return; }
     if (workspaceState && workspaceState.dirty) { toast('Guarda los cambios pendientes antes de cerrar', 'error'); return; }
     if (!confirm('¿Cerrar todo el bloque? Después no podrá modificarse.')) return;
     const btn = $('evBlockClose'); btn.disabled = true; btn.textContent = 'Cerrando…';
