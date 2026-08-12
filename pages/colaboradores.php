@@ -746,6 +746,8 @@ require_admin();
               <tr>
                 <th style="width:38px"><input class="col-select" type="checkbox" id="colSelectAll" aria-label="Seleccionar todos los colaboradores visibles"></th>
                 <th>Colaborador</th>
+                <th>Fecha nac.</th>
+                <th>Fecha ing.</th>
                 <th>Puesto</th>
                 <th>Coordinador</th>
                 <th>Función</th>
@@ -755,7 +757,7 @@ require_admin();
               </tr>
             </thead>
             <tbody id="colTbody">
-              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
+              <tr><td colspan="10" style="text-align:center;padding:32px;color:var(--co-faint)">Cargando…</td></tr>
             </tbody>
           </table>
         </div>
@@ -1011,7 +1013,7 @@ require_admin();
     const tbody = $('colTbody');
     tbody.innerHTML = '';
     if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--co-faint)">Sin resultados.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--co-faint)">Sin resultados.</td></tr>`;
       updateBulkBar();
       return;
     }
@@ -1029,6 +1031,8 @@ require_admin();
             </div>
           </div>
         </td>
+        <td>${formatDate(c.fecha_nacimiento)}</td>
+        <td>${formatDate(c.fecha_ingreso)}</td>
         <td><span class="col-puesto-text">${esc(c.funcion_principal)}</span></td>
         <td>${c.coordinador_nombre
               ? `<span class="col-coord-chip" title="${esc(c.coordinador_nombre)}"><span class="ini">${esc(initials(c.coordinador_nombre))}</span><span class="nm">${esc(c.coordinador_nombre)}</span></span>`
@@ -1049,6 +1053,12 @@ require_admin();
     selectAll.checked = list.length > 0 && list.every(c => selectedIds.has(Number(c.id)));
     selectAll.indeterminate = list.some(c => selectedIds.has(Number(c.id))) && !selectAll.checked;
     updateBulkBar();
+  }
+
+  function formatDate(value) {
+    if (!value || value === '0000-00-00') return '—';
+    const parts = String(value).slice(0, 10).split('-');
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : esc(value);
   }
 
   function updateBulkBar() {
