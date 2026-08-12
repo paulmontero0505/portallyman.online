@@ -769,3 +769,53 @@ function evades_cerrar_bloque($conn, $bloqueId, $versionEsperada, $actorId) {
         throw $e;
     }
 }
+
+/** Revisión administrativa: marca toda la nómina revisada y cierra el bloque. */
+function evades_revisar_y_cerrar_bloque($conn, $bloqueId, $actorId) {
+    $bloqueId = (int)$bloqueId;
+    $actorId = (int)$actorId;
+    if ($bloqueId <= 0 || $actorId <= 0) throw new RuntimeException('Datos de revisión EVADES incompletos.');
+
+    mysqli_begin_transaction($conn);
+    try {
+        $stmt = mysqli_prepare($conn,
+            "SELECT b.*,u.rol AS actor_rol FROM evades_bloques b
+              JOIN usuarios u ON u.id=? AND u.estado='Activo' WHERE b.id=? LIMIT 1 FOR UPDATE"
+        );
+        mysqli_stmt_bind_param($stmt, 'ii', $actorId, $bloqueId);
+        mysqli_stmt_execute($stmt);
+        $bloque = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        mysqli_stmt_close($stmt);
+        if (!$bloque) throw new RuntimeException('Bloque EVADES no encontrado.');
+        if ($bloque['actor_rol'] !== 'Administrador') throw new RuntimeException('Solo un administrador puede revisar y cerrar el bloque EVADES.');
+        if ($bloque['estado'] === 'cerrado') {
+            mysqli_commit($conn);
+            return ['id' => $bloqueId, 'estado' => 'cerrado', 'revisadas' => 0];
+        }
+
+        $stmt = mysqli_prepare($conn, 'UPDATE evades_evaluaciones SET revisado_at=COALESCE(revisado_at,NOW()),revisado_por=COALESCE(revisado_por,?) WHERE bloque_id=?');
+        mysqli_stmt_bind_param($stmt, 'ii', $actorId, $bloqueId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        $revisadas = mysqli_stmt_affected_rows($stmt);
+        mysqli_stmt_close($stmt);
+
+        $estadoAnterior = $bloque['estado'];
+        $stmt = mysqli_prepare($conn, "UPDATE evades_bloques SET estado='cerrado',revisado_at=COALESCE(revisado_at,NOW()),cerrado_at=NOW(),cerrado_por=?,version=version+1 WHERE id=?");
+        mysqli_stmt_bind_param($stmt, 'ii', $actorId, $bloqueId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        $estadoNuevo = 'cerrado';
+        $contexto = 'Bloque revisado y cerrado por Administración; toda la nómina fue marcada como revisada';
+        $stmt = mysqli_prepare($conn, 'INSERT INTO evades_bloques_estados (bloque_id,estado_anterior,estado_nuevo,usuario_id,contexto) VALUES (?,?,?,?,?)');
+        mysqli_stmt_bind_param($stmt, 'issis', $bloqueId, $estadoAnterior, $estadoNuevo, $actorId, $contexto);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        mysqli_commit($conn);
+        return ['id' => $bloqueId, 'estado' => 'cerrado', 'revisadas' => $revisadas];
+    } catch (Throwable $e) {
+        mysqli_rollback($conn);
+        throw $e;
+    }
+}

@@ -775,15 +775,15 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
         <div class="ev-preview-list" id="evBlockPreviewList"><div class="ev-sub" style="padding:14px">Selecciona los datos para consultar la nómina.</div></div>
       </div>
     </div>
-    <div class="ev-create-foot"><button class="ed-btn" id="evBlockCreateCancel">Cancelar</button><button class="ed-btn primary" id="evBlockGenerate" disabled>Generar evaluaciones</button></div>
+    <div class="ev-create-foot"><button class="ed-btn" id="evBlockCreateCancel">Cancelar</button><button class="ed-btn primary" id="evBlockGenerate" disabled>Guardar evaluaciones</button></div>
   </div>
 </div>
 
 <div class="ed-modal-back ev-create-back" id="evBlockReviewBack">
   <div class="ev-create-card" style="width:min(540px,94vw)">
-    <div class="ev-create-head"><div><span class="ed-rail-kicker">REVISIÓN ADMINISTRATIVA</span><h3>Revisar bloque EVADES</h3><p>La revisión bloquea la edición del coordinador. Administración podrá editar hasta cerrar el bloque.</p></div><button class="ed-modal-close" id="evBlockReviewX" type="button" aria-label="Cerrar revisión" style="color:#005c3d;border-color:#fff;background:#fff;font-size:25px;font-weight:500;line-height:1">×</button></div>
+    <div class="ev-create-head"><div><span class="ed-rail-kicker">REVISIÓN ADMINISTRATIVA</span><h3>Revisar y cerrar bloque EVADES</h3><p>Marca como revisada a toda la nómina y bloquea definitivamente las evaluaciones.</p></div><button class="ed-modal-close" id="evBlockReviewX" type="button" aria-label="Cerrar revisión" style="color:#005c3d;border-color:#fff;background:#fff;font-size:25px;font-weight:500;line-height:1">×</button></div>
     <div class="ev-create-body"><div class="ed-row2"><div class="ed-field"><label>Coordinador</label><select id="evReviewCoordinator"><option value="">Selecciona…</option></select></div><div class="ed-field"><label>Período disponible</label><select id="evReviewPeriod" disabled><option value="">Selecciona un coordinador…</option></select></div></div><p class="ev-sub" id="evReviewHint" style="margin:14px 0 0">Selecciona el bloque que Administración revisará.</p></div>
-    <div class="ev-create-foot"><button class="ed-btn" id="evBlockReviewCancel" type="button">Cancelar</button><button class="ed-btn primary" id="evBlockReviewSave" type="button" disabled>Marcar bloque revisado</button></div>
+    <div class="ev-create-foot"><button class="ed-btn" id="evBlockReviewCancel" type="button">Cancelar</button><button class="ed-btn primary" id="evBlockReviewSave" type="button" disabled>Revisar y cerrar bloque</button></div>
   </div>
 </div>
 
@@ -1016,7 +1016,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   }
   function closeBlockCreate() { $('evBlockCreateBack').classList.remove('open'); }
   function openBlockReview() {
-    const available = bloques.filter(block => block.estado === 'generado' || block.estado === 'modificado');
+    const available = bloques.filter(block => block.estado !== 'cerrado');
     const coordinators = Array.from(new Map(available.map(block => [Number(block.coordinador_id), block.coordinador_nombre])).entries());
     $('evReviewCoordinator').innerHTML = '<option value="">Selecciona…</option>' + coordinators.map(([id, name]) => `<option value="${id}">${esc(name)}</option>`).join('');
     $('evReviewPeriod').disabled = true;
@@ -1028,7 +1028,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   function closeBlockReview() { $('evBlockReviewBack').classList.remove('open'); }
   function updateReviewPeriods() {
     const coordinatorId = Number($('evReviewCoordinator').value || 0);
-    const choices = bloques.filter(block => Number(block.coordinador_id) === coordinatorId && (block.estado === 'generado' || block.estado === 'modificado'));
+    const choices = bloques.filter(block => Number(block.coordinador_id) === coordinatorId && block.estado !== 'cerrado');
     $('evReviewPeriod').disabled = !choices.length;
     $('evReviewPeriod').innerHTML = choices.length
       ? '<option value="">Selecciona…</option>' + choices.map(block => `<option value="${block.id}">${esc(block.periodo)} · ${esc(block.puesto)}</option>`).join('')
@@ -1040,15 +1040,15 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     const id = Number($('evReviewPeriod').value || 0);
     if (!id) return;
     const block = bloques.find(item => Number(item.id) === id);
-    if (!confirm(`¿Marcar como revisado el bloque ${block?.periodo || ''} de ${block?.coordinador_nombre || ''}? El coordinador ya no podrá editar sus evaluaciones.`)) return;
-    const button = $('evBlockReviewSave'); button.disabled = true; button.textContent = 'Revisando…';
+    if (!confirm(`¿Revisar y cerrar el bloque ${block?.periodo || ''} de ${block?.coordinador_nombre || ''}? Todas las evaluaciones se marcarán como revisadas y ya no podrán editarse.`)) return;
+    const button = $('evBlockReviewSave'); button.disabled = true; button.textContent = 'Cerrando…';
     try {
       const response = await fetch(`${BASE}/api/revisar_evades_bloque.php`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id }) });
       const data = await response.json();
       if (!data.success) throw new Error(data.error || 'No se pudo revisar el bloque');
-      closeBlockReview(); await cargarEvaluaciones(); toast('Bloque revisado. El coordinador quedó bloqueado para editar.');
+      closeBlockReview(); await cargarEvaluaciones(); toast(`Bloque cerrado. ${data.data.revisadas} evaluación(es) marcada(s) como revisada(s).`);
     } catch (error) { toast(error.message, 'error'); }
-    finally { button.disabled = false; button.textContent = 'Marcar bloque revisado'; }
+    finally { button.disabled = false; button.textContent = 'Revisar y cerrar bloque'; }
   }
   function renderCoveragePreview(data) {
     const summary = EvadesBloquesModel.coverageSummary(data.cobertura);
@@ -1094,7 +1094,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       if (!data.success) throw new Error(data.error || 'No se pudo generar el bloque');
       closeBlockCreate(); await cargarEvaluaciones(); toast(`Bloque generado con ${data.data.total_colaboradores} evaluaciones`); openBlock(data.data.id);
     } catch (e) { toast(e.message, 'error'); }
-    finally { btn.textContent = 'Generar evaluaciones'; btn.disabled = false; }
+    finally { btn.textContent = 'Guardar evaluaciones'; btn.disabled = false; }
   }
   function renderBlockRail() {
     if (!currentBlock) return;
@@ -1106,7 +1106,7 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     $('evBlockRosterMobile').innerHTML = (currentBlock.evaluaciones || []).map(ev => `<option value="${ev.id}" ${workspaceState && Number(workspaceState.selectedId) === Number(ev.id) ? 'selected' : ''}>${esc(ev.colaborador_nombre)} · ${ev.puntaje_total}/100</option>`).join('');
     $('evBlockContext').style.display = '';
     $('evBlockRoster').style.display = '';
-    $('evBlockClose').style.display = currentBlock.estado === 'cerrado' || USER_ROL !== 'Administrador' ? 'none' : '';
+    $('evBlockClose').style.display = 'none';
     $('evBlockPdf').style.display = '';
     $('evBlockReport').style.display = '';
     $('evBlockPrev').style.display = ''; $('evBlockNext').style.display = '';
