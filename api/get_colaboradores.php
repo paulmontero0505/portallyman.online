@@ -43,7 +43,7 @@ if ($turnoId > 0) {
 // devolviendo (coordinador_id NULL).
 $r = mysqli_query(
     $conn,
-    "SELECT c.id, c.codigo, c.dni, c.celular, c.nombre, c.funcion_principal, c.tipo_funcion,
+    "SELECT c.id, c.codigo, c.dni, c.celular, c.nombre, c.fecha_nacimiento, c.fecha_ingreso, c.funcion_principal, c.tipo_funcion,
             c.cuadrilla, c.activo, c.coordinador_id, u.nombre AS coordinador_nombre,
             c.created_at, c.updated_at
        FROM colaboradores c

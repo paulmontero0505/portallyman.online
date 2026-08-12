@@ -26,13 +26,19 @@ mysqli_begin_transaction($conn);
 
 $stmt = mysqli_prepare(
     $conn,
-    "INSERT INTO colaboradores (codigo, nombre, funcion_principal, cuadrilla, activo)
-          VALUES (?, ?, ?, ?, 1)
+    "INSERT INTO colaboradores (codigo,dni,celular,nombre,fecha_nacimiento,fecha_ingreso,funcion_principal,tipo_funcion,cuadrilla,coordinador_id,activo)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)
      ON DUPLICATE KEY UPDATE
-       nombre = VALUES(nombre),
-       funcion_principal = VALUES(funcion_principal),
-       cuadrilla = VALUES(cuadrilla),
-       updated_at = CURRENT_TIMESTAMP"
+        dni = VALUES(dni),
+        celular = VALUES(celular),
+        nombre = VALUES(nombre),
+        fecha_nacimiento = VALUES(fecha_nacimiento),
+        fecha_ingreso = VALUES(fecha_ingreso),
+        funcion_principal = VALUES(funcion_principal),
+        tipo_funcion = VALUES(tipo_funcion),
+        cuadrilla = VALUES(cuadrilla),
+        coordinador_id = VALUES(coordinador_id),
+        updated_at = CURRENT_TIMESTAMP"
 );
 
 $inserted = 0;
@@ -44,6 +50,12 @@ try {
         $nombre    = trim($r['nombre']    ?? '');
         $funcion   = trim($r['funcion']   ?? '');
         $cuadrilla = trim($r['cuadrilla'] ?? '');
+        $dni = trim($r['dni'] ?? '');
+        $celular = trim($r['celular'] ?? '');
+        $tipoFuncion = trim($r['tipo_funcion'] ?? '');
+        $coordinadorNombre = trim($r['coordinador'] ?? '');
+        $fechaNacimiento = trim($r['fecha_nacimiento'] ?? '');
+        $fechaIngreso = trim($r['fecha_ingreso'] ?? '');
 
         // Re-validación defensiva (cliente ya validó)
         if ($codigo === '' || !preg_match('/^[A-Za-z0-9]+$/', $codigo) || mb_strlen($codigo) > 20) {
@@ -52,8 +64,25 @@ try {
         if (mb_strlen($nombre) < 3)  throw new RuntimeException("Fila " . ($i+1) . ": nombre inválido.");
         if ($funcion === '')         throw new RuntimeException("Fila " . ($i+1) . ": función vacía.");
         if ($cuadrilla === '')       throw new RuntimeException("Fila " . ($i+1) . ": cuadrilla vacía.");
+        if ($dni !== '' && !preg_match('/^\d{8}$/', $dni)) throw new RuntimeException("Fila " . ($i+1) . ": DNI inválido.");
+        if ($celular !== '' && !preg_match('/^\+51 9\d{8}$/', $celular)) throw new RuntimeException("Fila " . ($i+1) . ": celular inválido.");
+        foreach (['fecha_nacimiento' => $fechaNacimiento, 'fecha_ingreso' => $fechaIngreso] as $campo => $fecha) {
+            if ($fecha !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) throw new RuntimeException("Fila " . ($i+1) . ": $campo debe usar YYYY-MM-DD.");
+        }
+        $coordinadorId = null;
+        if ($coordinadorNombre !== '') {
+            $stmtCoord = mysqli_prepare($conn, "SELECT id FROM usuarios WHERE rol='Coordinador' AND nombre=? LIMIT 1");
+            mysqli_stmt_bind_param($stmtCoord, 's', $coordinadorNombre);
+            mysqli_stmt_execute($stmtCoord);
+            $coord = mysqli_fetch_assoc(mysqli_stmt_get_result($stmtCoord));
+            mysqli_stmt_close($stmtCoord);
+            if (!$coord) throw new RuntimeException("Fila " . ($i+1) . ": coordinador no encontrado.");
+            $coordinadorId = (int)$coord['id'];
+        }
 
-        mysqli_stmt_bind_param($stmt, 'ssss', $codigo, $nombre, $funcion, $cuadrilla);
+        $dniVal = $dni !== '' ? $dni : null; $celularVal = $celular !== '' ? $celular : null;
+        $nacimientoVal = $fechaNacimiento !== '' ? $fechaNacimiento : null; $ingresoVal = $fechaIngreso !== '' ? $fechaIngreso : null;
+        mysqli_stmt_bind_param($stmt, 'sssssssssi', $codigo, $dniVal, $celularVal, $nombre, $nacimientoVal, $ingresoVal, $funcion, $tipoFuncion, $cuadrilla, $coordinadorId);
         if (!mysqli_stmt_execute($stmt)) {
             throw new RuntimeException("Fila " . ($i+1) . ": " . mysqli_stmt_error($stmt));
         }

@@ -16,6 +16,8 @@ $id           = isset($data['id']) ? (int)$data['id'] : 0;
 $codigo       = trim($data['codigo'] ?? '');
 $dni          = trim($data['dni'] ?? '');
 $celular      = trim($data['celular'] ?? '');
+$fechaNacimiento = trim($data['fecha_nacimiento'] ?? '');
+$fechaIngreso = trim($data['fecha_ingreso'] ?? '');
 $nombre       = trim($data['nombre'] ?? '');
 $funcion      = trim($data['funcion_principal'] ?? '');
 $tipo_funcion = trim($data['tipo_funcion'] ?? '');
@@ -35,6 +37,11 @@ if ($celular !== '' && !preg_match('/^\+51 9\d{8}$/', $celular)) {
 }
 $dniVal = $dni === '' ? null : $dni;
 $celularVal = $celular === '' ? null : $celular;
+$fechaNacimientoVal = $fechaNacimiento === '' ? null : $fechaNacimiento;
+$fechaIngresoVal = $fechaIngreso === '' ? null : $fechaIngreso;
+if (($fechaNacimiento !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaNacimiento)) || ($fechaIngreso !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fechaIngreso))) {
+    echo json_encode(['success' => false, 'error' => 'Las fechas deben usar el formato YYYY-MM-DD.']); exit;
+}
 if ($nombre === '' || mb_strlen($nombre) < 3) {
     echo json_encode(['success' => false, 'error' => 'Nombre requerido (mínimo 3 caracteres).']); exit;
 }
@@ -62,11 +69,11 @@ if ($id > 0) {
     $stmt = mysqli_prepare(
         $conn,
         "UPDATE colaboradores
-            SET codigo=?, dni=?, celular=?, nombre=?, funcion_principal=?, tipo_funcion=?, cuadrilla=?,
-                coordinador_id=?, activo=?
+            SET codigo=?, dni=?, celular=?, nombre=?, fecha_nacimiento=?, fecha_ingreso=?, funcion_principal=?, tipo_funcion=?, cuadrilla=?,
+                 coordinador_id=?, activo=?
           WHERE id=?"
     );
-    mysqli_stmt_bind_param($stmt, 'sssssssiii', $codigo, $dniVal, $celularVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo, $id);
+    mysqli_stmt_bind_param($stmt, 'sssssssssiii', $codigo, $dniVal, $celularVal, $nombre, $fechaNacimientoVal, $fechaIngresoVal, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo, $id);
 
     $ok  = mysqli_stmt_execute($stmt);
     $err = mysqli_stmt_error($stmt);
@@ -89,10 +96,10 @@ if ($id > 0) {
     // INSERT con codigo provisto por el usuario.
     $stmt = mysqli_prepare(
         $conn,
-        "INSERT INTO colaboradores (codigo, dni, celular, nombre, funcion_principal, tipo_funcion, cuadrilla, coordinador_id, activo)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO colaboradores (codigo, dni, celular, nombre, fecha_nacimiento, fecha_ingreso, funcion_principal, tipo_funcion, cuadrilla, coordinador_id, activo)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
-    mysqli_stmt_bind_param($stmt, 'sssssssii', $codigo, $dniVal, $celularVal, $nombre, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo);
+    mysqli_stmt_bind_param($stmt, 'sssssssssii', $codigo, $dniVal, $celularVal, $nombre, $fechaNacimientoVal, $fechaIngresoVal, $funcion, $tipo_funcion, $cuadrilla, $coordinadorVal, $activo);
     $ok  = mysqli_stmt_execute($stmt);
     $err = mysqli_stmt_error($stmt);
 

@@ -793,6 +793,10 @@ require_admin();
           <input id="cm-dni" type="text" inputmode="numeric" placeholder="8 dígitos" maxlength="8" pattern="\d{8}">
         </div>
       </div>
+      <div class="col-row2">
+        <div class="col-field"><label>Fecha de nacimiento</label><input id="cm-fecha-nacimiento" type="date"></div>
+        <div class="col-field"><label>Fecha de ingreso</label><input id="cm-fecha-ingreso" type="date"></div>
+      </div>
       <div class="col-field">
         <label>Celular</label>
         <input id="cm-celular" type="tel" inputmode="numeric" placeholder="+51 987654321" maxlength="13" pattern="\+51 9\d{8}">
@@ -860,7 +864,7 @@ require_admin();
     <div class="col-modal-head">
       <div>
         <h3 id="impModalTitle">Importar colaboradores desde Excel</h3>
-        <div class="sub" id="impModalSub">Selecciona un archivo .xlsx con las columnas: Código, Nombre, Función, Team.</div>
+        <div class="sub" id="impModalSub">Descarga el reporte, actualiza los datos y vuelve a importarlo. El estado activo/cesado se conserva.</div>
       </div>
       <button class="col-modal-close" id="impModalClose">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -877,8 +881,8 @@ require_admin();
           <div class="col-drop-sub">o haz click para seleccionarlo</div>
         </div>
         <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--co-mute)">
-          <span>Encabezados aceptados: <code>Código · Nombre · Función · Team</code></span>
-          <a href="#" id="impDownloadTpl" style="color:var(--co-navy);font-weight:600;text-decoration:none">↓ Descargar plantilla Excel</a>
+          <span>Incluye datos personales, fechas, puesto, función, team y coordinador.</span>
+          <a href="#" id="impDownloadTpl" style="color:var(--co-navy);font-weight:600;text-decoration:none">↓ Exportar reporte Excel</a>
         </div>
       </div>
 
@@ -1119,6 +1123,8 @@ require_admin();
     $('cm-nombre').value          = c ? (c.nombre ?? '') : '';
     $('cm-codigo').value          = c ? (c.codigo ?? '') : '';
     $('cm-dni').value             = c ? (c.dni ?? '') : '';
+    $('cm-fecha-nacimiento').value = c ? (c.fecha_nacimiento ?? '') : '';
+    $('cm-fecha-ingreso').value    = c ? (c.fecha_ingreso ?? '') : '';
     $('cm-celular').value         = c ? (c.celular ?? '') : '';
     $('cm-funcion').value         = c ? (c.funcion_principal ?? '') : '';
     $('cm-tipo-funcion').value    = c ? (c.tipo_funcion ?? '') : '';
@@ -1135,6 +1141,8 @@ require_admin();
       id:                Number($('cm-id').value || 0),
       codigo:            $('cm-codigo').value.trim(),
       dni:               $('cm-dni').value.trim(),
+      fecha_nacimiento:  $('cm-fecha-nacimiento').value,
+      fecha_ingreso:     $('cm-fecha-ingreso').value,
       celular:           $('cm-celular').value.trim(),
       nombre:            $('cm-nombre').value.trim(),
       funcion_principal: $('cm-funcion').value.trim(),
@@ -1225,8 +1233,10 @@ require_admin();
   const HEADER_MAP = {
     codigo:    ['Código','Codigo','CODIGO','Cod.','COD.','Código Trabajador','Codigo Trabajador','ID'],
     nombre:    ['Nombre','NOMBRE','Nombres','Nombre completo','Apellidos y Nombres','APELLIDOS Y NOMBRES'],
-    funcion:   ['Función','Funcion','FUNCION','Función Principal','Cargo','CARGO','Puesto'],
-    cuadrilla: ['Team','TEAM','Teams','Cuadrilla','CUADRILLA','Turno','Grupo','Equipo']
+    dni:       ['DNI'], celular: ['Celular','CELULAR','Teléfono','Telefono'],
+    fecha_nacimiento: ['Fecha de nacimiento','Fecha nac','Fecha nac.'], fecha_ingreso: ['Fecha de ingreso','Fecha ing','Fecha ing.'],
+    funcion:   ['Función','Funcion','FUNCION','Función Principal','Cargo','CARGO','Puesto'], tipo_funcion: ['Tipo función','Tipo funcion','Función tally','Funcion tally'],
+    cuadrilla: ['Team','TEAM','Teams','Cuadrilla','CUADRILLA','Turno','Grupo','Equipo'], coordinador: ['Coordinador','Coordinador Tallyman']
   };
 
   let impRows = [];        // filas con status calculado
@@ -1268,7 +1278,7 @@ require_admin();
   }
 
   function normalizeRow(raw, fileMap) {
-    const out = { codigo:'', nombre:'', funcion:'', cuadrilla:'' };
+    const out = { codigo:'', nombre:'', dni:'', celular:'', fecha_nacimiento:'', fecha_ingreso:'', funcion:'', tipo_funcion:'', cuadrilla:'', coordinador:'' };
     for (const outKey in out) {
       const rawHeader = fileMap[outKey];
       if (rawHeader && raw[rawHeader] !== undefined && raw[rawHeader] !== null) {
@@ -1378,14 +1388,14 @@ require_admin();
 
   function impDownloadTemplate(ev) {
     ev.preventDefault();
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Código','Nombre','Función','Team'],
-      ['A001','Ejemplo Colaborador Uno','Estibador','G1 TEAM A'],
-      ['A002','Ejemplo Colaborador Dos','Winchero','G2 TEAM B'],
-    ]);
+    const rows = [['Código','Nombre','DNI','Celular','Fecha de nacimiento','Fecha de ingreso','Puesto','Tipo función','Team','Coordinador']];
+    colaboradores.forEach(c => rows.push([c.codigo || '',c.nombre || '',c.dni || '',c.celular || '',c.fecha_nacimiento || '',c.fecha_ingreso || '',c.funcion_principal || '',c.tipo_funcion || '',c.cuadrilla || '',c.coordinador_nombre || '']));
+    if (rows.length === 1) rows.push(['A001','Ejemplo Colaborador Uno','12345678','+51 987654321','1995-01-15','2024-01-15','Asistente de Estiba','TALLY CALIFICADO','G1 TEAM A','']);
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [14,34,12,18,19,17,28,20,18,34].map(wch => ({ wch }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Colaboradores');
-    XLSX.writeFile(wb, 'plantilla_colaboradores.xlsx');
+    XLSX.writeFile(wb, 'reporte_colaboradores_para_actualizar.xlsx');
   }
 
   // ─── Eventos ───
@@ -1480,7 +1490,7 @@ require_admin();
   $('impConfirm').addEventListener('click', async () => {
       const payload = impRows
         .filter(r => r.status === 'new' || r.status === 'update')
-        .map(r => ({ codigo: r.codigo, nombre: r.nombre, funcion: r.funcion, cuadrilla: r.cuadrilla }));
+        .map(r => ({ codigo:r.codigo,nombre:r.nombre,dni:r.dni,celular:r.celular,fecha_nacimiento:r.fecha_nacimiento,fecha_ingreso:r.fecha_ingreso,funcion:r.funcion,tipo_funcion:r.tipo_funcion,cuadrilla:r.cuadrilla,coordinador:r.coordinador }));
 
       if (!payload.length) { toast('No hay filas válidas para importar', 'error'); return; }
 
