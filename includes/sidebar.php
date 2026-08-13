@@ -62,7 +62,7 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
     <!-- OPERACIÓN · Coordinador / Supervisor / Administrador -->
 
     <!-- CONTROL DE CAMPO (grupo) · contiene Incidencias -->
-    <?php $ccActive = in_array($cur, ['incidencias.php', 'reporte_inspeccion.php', 'evaluacion_desempeno.php', 'evades.php', 'asistencias.php', 'capacitaciones.php', 'reconocimientos.php', 'record_personal_tallyman.php'], true); ?>
+    <?php $ccActive = in_array($cur, ['incidencias.php', 'sanciones_disciplinarias.php', 'reporte_inspeccion.php', 'evaluacion_desempeno.php', 'evades.php', 'asistencias.php', 'capacitaciones.php', 'reconocimientos.php', 'record_personal_tallyman.php'], true); ?>
     <a href="#" class="nav-item nav-toggle<?= $ccActive ? ' open' : '' ?>" data-submenu="submenu-cc">
       <span class="nav-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -87,6 +87,15 @@ $cur = basename($_SERVER['PHP_SELF'] ?? '');
           </svg>
         </span>
         <span class="sub-label">Incidencias</span>
+      </a>
+      <a href="<?= $sb_base ?? '..' ?>/pages/sanciones_disciplinarias.php" class="sub-item sub-item--icon<?= ($cur === 'sanciones_disciplinarias.php') ? ' active' : '' ?>">
+        <span class="sub-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </span>
+        <span class="sub-label">Sanciones disciplinarias</span>
       </a>
       <a href="<?= $sb_base ?? '..' ?>/pages/reporte_inspeccion.php" class="sub-item sub-item--icon<?= ($cur === 'reporte_inspeccion.php') ? ' active' : '' ?>">
         <span class="sub-icon">
