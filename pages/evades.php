@@ -878,12 +878,15 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       tb.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--co-faint)">No hay evaluaciones para estos filtros.</td></tr>`;
       return;
     }
+    const blockDeleteShown = new Set();
     list.forEach(e => {
       const block = blocksById[Number(e.bloque_id)];
       const estado = e.bloque_estado || 'generado';
       const estadoVisible = estado === 'cerrado' ? 'cerrado' : 'abierto';
       const revisado = Boolean(e.revisado_at);
       const bloqueBloqueadoParaCoordinador = USER_ROL === 'Coordinador' && estado === 'revisado';
+      const showBlockDelete = USER_ROL === 'Administrador' && e.bloque_id && !blockDeleteShown.has(Number(e.bloque_id));
+      if (showBlockDelete) blockDeleteShown.add(Number(e.bloque_id));
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td><div class="ev-name">${esc(e.colaborador_nombre)}</div><div class="ev-sub">${esc(e.colaborador_codigo || 'Sin código')} · ${esc(e.colaborador_cargo || '—')}</div></td>
@@ -901,6 +904,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
             <button class="ev-act-btn" data-action="view" data-id="${e.id}">Ver informe</button>
             <button class="ev-act-btn" data-action="pdf" data-id="${e.id}">PDF</button>
             ${e.bloque_id ? `<button class="ev-act-btn" data-action="edit" data-id="${e.id}">${estado === 'cerrado' || bloqueBloqueadoParaCoordinador ? 'Consultar' : 'Evaluar'}</button>` : ''}
+            ${USER_ROL === 'Administrador' && e.bloque_id ? `<button class="ev-act-btn danger" data-action="delete-evaluation" data-id="${e.id}">Eliminar individual</button>` : ''}
+            ${showBlockDelete ? `<button class="ev-act-btn danger" data-action="delete-block" data-id="${e.bloque_id}">Eliminar bloque</button>` : ''}
             ${USER_ROL === 'Supervisor' && block && estado !== 'cerrado' ? `<button class="ev-act-btn danger" data-action="open-block" data-id="${e.bloque_id}">Cerrar bloque</button>` : ''}
           </div>
         </td>`;
@@ -964,6 +969,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
     if (b.dataset.action === 'pdf') exportarPDF(b.dataset.id);
     if (b.dataset.action === 'review') markReviewed(b.dataset.id);
     if (b.dataset.action === 'reopen-review') reopenReview(b.dataset.id);
+    if (b.dataset.action === 'delete-evaluation') eliminar(b.dataset.id);
+    if (b.dataset.action === 'delete-block') eliminarBloque(b.dataset.id);
   });
   function shiftQuarter(offset) {
     const match = /^(\d{4})-T([1-4])$/.exec(filtroPeriodo);
@@ -995,7 +1002,8 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
   async function eliminar(id) {
     const ev = evaluaciones.find(x => Number(x.id) === Number(id));
     if (!ev) return;
-    if (!confirm(`¿Eliminar la evaluación EVADES de "${ev.colaborador_nombre}" (${ev.periodo})?`)) return;
+    if (USER_ROL !== 'Administrador') { toast('Solo un administrador puede eliminar evaluaciones', 'error'); return; }
+    if (!confirm(`¿Eliminar individualmente la evaluación EVADES de "${ev.colaborador_nombre}" (${ev.periodo})? Esta acción no se puede deshacer.`)) return;
     try {
       const res = await fetch(`${BASE}/api/delete_evades.php`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -1004,6 +1012,22 @@ foreach ([$anioActual - 1, $anioActual] as $anio) {
       const data = await res.json();
       if (data.success) { toast('Evaluación eliminada'); cargarEvaluaciones(); }
       else { toast(data.error || 'Error al eliminar', 'error'); }
+    } catch (e) { toast('Error de red', 'error'); }
+  }
+  async function eliminarBloque(id) {
+    const block = bloques.find(x => Number(x.id) === Number(id));
+    if (!block) return;
+    if (USER_ROL !== 'Administrador') { toast('Solo un administrador puede eliminar bloques', 'error'); return; }
+    const label = `${block.periodo} · ${block.coordinador_nombre}`;
+    if (!confirm(`¿Eliminar todo el bloque EVADES ${label}? Se eliminarán sus ${block.evaluaciones_total} evaluaciones, evidencias y auditoría. Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await fetch(`${BASE}/api/delete_evades.php`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Number(id), bloque: true }),
+      });
+      const data = await res.json();
+      if (data.success) { toast('Bloque EVADES eliminado'); cargarEvaluaciones(); }
+      else { toast(data.error || 'Error al eliminar el bloque', 'error'); }
     } catch (e) { toast('Error de red', 'error'); }
   }
 

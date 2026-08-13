@@ -43,6 +43,101 @@ function evades_listar_bloques($conn, $actorId, $rol) {
     return $bloques;
 }
 
+/** Elimina una ficha de un bloque y conserva el bloque para el resto de la nómina. Sólo Administrador. */
+function evades_eliminar_evaluacion_bloque($conn, $evaluacionId, $actorId) {
+    $evaluacionId = (int)$evaluacionId;
+    $actorId = (int)$actorId;
+    if ($evaluacionId <= 0 || $actorId <= 0) throw new RuntimeException('Evaluación o usuario inválido.');
+
+    mysqli_begin_transaction($conn);
+    try {
+        $stmt = mysqli_prepare($conn,
+            "SELECT ev.id,ev.bloque_id,b.estado,b.total_colaboradores,u.rol AS actor_rol
+               FROM evades_evaluaciones ev
+               JOIN evades_bloques b ON b.id=ev.bloque_id
+               JOIN usuarios u ON u.id=? AND u.estado='Activo'
+              WHERE ev.id=? LIMIT 1 FOR UPDATE"
+        );
+        mysqli_stmt_bind_param($stmt, 'ii', $actorId, $evaluacionId);
+        mysqli_stmt_execute($stmt);
+        $row = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        mysqli_stmt_close($stmt);
+        if (!$row) throw new RuntimeException('La evaluación no pertenece a un bloque EVADES activo.');
+        if ($row['actor_rol'] !== 'Administrador') throw new RuntimeException('Solo un administrador puede eliminar evaluaciones EVADES.');
+
+        $bloqueId = (int)$row['bloque_id'];
+        $stmt = mysqli_prepare($conn, 'DELETE FROM evades_modificaciones WHERE evaluacion_id=?');
+        mysqli_stmt_bind_param($stmt, 'i', $evaluacionId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($conn, 'DELETE FROM evades_evaluaciones WHERE id=? AND bloque_id=?');
+        mysqli_stmt_bind_param($stmt, 'ii', $evaluacionId, $bloqueId);
+        if (!mysqli_stmt_execute($stmt) || mysqli_stmt_affected_rows($stmt) !== 1) throw new RuntimeException('No se pudo eliminar la evaluación.');
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($conn, 'UPDATE evades_bloques SET total_colaboradores=GREATEST(total_colaboradores-1,0),version=version+1 WHERE id=?');
+        mysqli_stmt_bind_param($stmt, 'i', $bloqueId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        $contexto = 'Evaluación individual eliminada por Administración';
+        $stmt = mysqli_prepare($conn, 'INSERT INTO evades_bloques_estados (bloque_id,estado_anterior,estado_nuevo,usuario_id,contexto) VALUES (?,?,?,?,?)');
+        mysqli_stmt_bind_param($stmt, 'issis', $bloqueId, $row['estado'], $row['estado'], $actorId, $contexto);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        mysqli_commit($conn);
+        return ['bloque_id' => $bloqueId];
+    } catch (Throwable $e) {
+        mysqli_rollback($conn);
+        throw $e;
+    }
+}
+
+/** Elimina un bloque completo, su nómina y la auditoría vinculada. Sólo Administrador. */
+function evades_eliminar_bloque($conn, $bloqueId, $actorId) {
+    $bloqueId = (int)$bloqueId;
+    $actorId = (int)$actorId;
+    if ($bloqueId <= 0 || $actorId <= 0) throw new RuntimeException('Bloque o usuario inválido.');
+
+    mysqli_begin_transaction($conn);
+    try {
+        $stmt = mysqli_prepare($conn,
+            "SELECT b.id,u.rol AS actor_rol FROM evades_bloques b
+               JOIN usuarios u ON u.id=? AND u.estado='Activo'
+              WHERE b.id=? LIMIT 1 FOR UPDATE"
+        );
+        mysqli_stmt_bind_param($stmt, 'ii', $actorId, $bloqueId);
+        mysqli_stmt_execute($stmt);
+        $bloque = mysqli_fetch_assoc(mysqli_stmt_get_result($stmt));
+        mysqli_stmt_close($stmt);
+        if (!$bloque) throw new RuntimeException('Bloque EVADES no encontrado.');
+        if ($bloque['actor_rol'] !== 'Administrador') throw new RuntimeException('Solo un administrador puede eliminar bloques EVADES.');
+
+        $stmt = mysqli_prepare($conn, 'DELETE FROM evades_modificaciones WHERE bloque_id=?');
+        mysqli_stmt_bind_param($stmt, 'i', $bloqueId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($conn, 'DELETE FROM evades_evaluaciones WHERE bloque_id=?');
+        mysqli_stmt_bind_param($stmt, 'i', $bloqueId);
+        if (!mysqli_stmt_execute($stmt)) throw new RuntimeException(mysqli_stmt_error($stmt));
+        mysqli_stmt_close($stmt);
+
+        $stmt = mysqli_prepare($conn, 'DELETE FROM evades_bloques WHERE id=?');
+        mysqli_stmt_bind_param($stmt, 'i', $bloqueId);
+        if (!mysqli_stmt_execute($stmt) || mysqli_stmt_affected_rows($stmt) !== 1) throw new RuntimeException('No se pudo eliminar el bloque EVADES.');
+        mysqli_stmt_close($stmt);
+
+        mysqli_commit($conn);
+        return ['id' => $bloqueId];
+    } catch (Throwable $e) {
+        mysqli_rollback($conn);
+        throw $e;
+    }
+}
+
 /** Cabecera, nómina e historiales de un bloque visible. */
 function evades_obtener_bloque($conn, $bloqueId, $actorId, $rol) {
     $bloqueId = (int)$bloqueId;
