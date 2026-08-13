@@ -467,10 +467,7 @@ $LOGO_B64  = is_file($logo_path) ? 'data:image/png;base64,' . base64_encode(file
       }
 
       /* Rail: altura natural, sin scroll */
-      .inc-modal.inc-create .inc-rail {
-        flex: 0 0 auto !important;
-        overflow: visible !important;
-      }
+      .inc-modal.inc-create .inc-rail { display:none !important; }
 
       /* Form: ocupa el espacio restante y scrollea */
       .inc-modal.inc-create .inc-form {
@@ -502,7 +499,8 @@ $LOGO_B64  = is_file($logo_path) ? 'data:image/png;base64,' . base64_encode(file
       .inc-form-body  { padding: 12px 14px 16px !important; }
       .inc-form-head  { padding: 14px 14px 10px !important; }
       .inc-form-head h3 { font-size: 16px !important; }
-      .inc-form-foot  { padding: 12px 14px !important; }
+      .inc-form-foot { padding:12px 14px !important; gap:8px !important; }
+      .inc-form-foot .inc-btn { flex:1 1 0; justify-content:center; min-height:44px; padding:10px 12px !important; }
 
       /* ─── Campos: 1 columna siempre ─── */
       .inc-row2 { grid-template-columns: 1fr !important; }
@@ -532,7 +530,7 @@ $LOGO_B64  = is_file($logo_path) ? 'data:image/png;base64,' . base64_encode(file
       }
 
       /* Search de colaborador: ancho completo */
-      .inc-colsel-panel { min-width: 90vw !important; max-width: 94vw !important; }
+      .inc-colsel-panel { min-width:0 !important; max-width:none !important; }
 
       /* Sección números */
       .inc-sec-num {
@@ -548,7 +546,6 @@ $LOGO_B64  = is_file($logo_path) ? 'data:image/png;base64,' . base64_encode(file
     }
 
     @media (max-width: 390px) {
-      .inc-rail { display: none !important; } /* Oculta rail en pantallas muy pequeñas */
       .inc-form { width: 100% !important; }
     }
 
@@ -1045,8 +1042,10 @@ $LOGO_B64  = is_file($logo_path) ? 'data:image/png;base64,' . base64_encode(file
       const r = inp.getBoundingClientRect();
       const spaceBelow = window.innerHeight - r.bottom - 8;
       const spaceAbove = r.top - 8;
-      panel.style.left  = r.left + 'px';
-      panel.style.width = Math.max(320, r.width) + 'px';
+      const margin = 8;
+      const width = Math.min(Math.max(r.width, 320), window.innerWidth - margin * 2);
+      panel.style.left  = Math.max(margin, Math.min(r.left, window.innerWidth - width - margin)) + 'px';
+      panel.style.width = width + 'px';
       if (spaceBelow >= 150 || spaceBelow >= spaceAbove) {
         panel.style.top    = (r.bottom + 4) + 'px';
         panel.style.bottom = 'auto';

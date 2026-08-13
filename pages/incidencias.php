@@ -595,16 +595,17 @@ $zona_ubicaciones = inc_zonas(true);
         width: calc(100vw - 12px) !important; max-width: 100% !important; height: 95dvh !important; max-height: 95dvh !important;
         border-radius: 16px !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
       }
-      .inc-modal.inc-create .inc-rail { flex: 0 0 auto !important; overflow: visible !important; padding: 14px 16px !important; gap: 10px !important; }
+      .inc-modal.inc-create .inc-rail { display:none !important; }
       .inc-modal.inc-create .inc-form { flex: 1 1 0 !important; min-height: 0 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; }
       .inc-form-body { flex: 1 1 0 !important; min-height: 0 !important; overflow-y: auto !important; overscroll-behavior: contain !important; padding: 14px !important; }
       .inc-form-head { padding: 14px !important; }
       .inc-form-head h3 { font-size: 16px !important; }
-      .inc-form-foot { padding: 12px 14px !important; }
+      .inc-form-foot { padding:12px 14px !important; gap:8px !important; }
+      .inc-form-foot .inc-btn { flex:1 1 0; justify-content:center; min-height:44px; padding:10px 12px !important; }
       .inc-row2 { grid-template-columns: 1fr !important; }
       .inc-sec  { padding: 12px 0 !important; }
       .inc-field input, .inc-field select, .inc-field textarea { font-size: 15px !important; padding: 11px 12px !important; }
-      .inc-colsel-panel { min-width: 90vw !important; max-width: 94vw !important; }
+      .inc-colsel-panel { min-width:0 !important; max-width:none !important; }
       .inc-sev-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; }
       .inc-sev-opt { padding: 8px 4px !important; }
       .inc-kpis { grid-template-columns: 1fr !important; }
@@ -1339,8 +1340,10 @@ $zona_ubicaciones = inc_zonas(true);
       const r = inp.getBoundingClientRect();
       const spaceBelow = window.innerHeight - r.bottom - 8;
       const spaceAbove = r.top - 8;
-      panel.style.left  = r.left + 'px';
-      panel.style.width = Math.max(320, r.width) + 'px';
+      const margin = 8;
+      const width = Math.min(Math.max(r.width, 320), window.innerWidth - margin * 2);
+      panel.style.left  = Math.max(margin, Math.min(r.left, window.innerWidth - width - margin)) + 'px';
+      panel.style.width = width + 'px';
       if (spaceBelow >= 150 || spaceBelow >= spaceAbove) {
         panel.style.top    = (r.bottom + 4) + 'px';
         panel.style.bottom = 'auto';

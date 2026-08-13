@@ -250,7 +250,19 @@ require_once('../includes/drive_config.php');
     .aso-toast.show { opacity:1; transform:translateY(0); }
     .aso-toast.error { background:#dc2626; }
 
-    @media (max-width:640px){ .aso-grid, .aso-view-grid { grid-template-columns:1fr; } }
+    @media (max-width:640px){
+      .aso-modal-back { padding:6px; align-items:center; }
+      .aso-modal { width:calc(100vw - 12px); max-width:none; height:95dvh; max-height:95dvh; border-radius:14px; }
+      .aso-modal-head { padding:15px 16px 12px; }.aso-modal-head h2 { font-size:16px; }.aso-modal-head .sub { font-size:12px; }
+      .aso-modal-body { min-height:0; flex:1; padding:14px 16px; gap:14px; overscroll-behavior:contain; }
+      .aso-modal-foot { padding:12px 16px; align-items:stretch; flex-direction:column; }
+      .aso-modal-foot > div { width:100%; }.aso-modal-foot > div .aso-btn { flex:1; justify-content:center; min-height:44px; }
+      .aso-grid, .aso-view-grid { grid-template-columns:1fr; }
+      .aso-tipos { gap:5px; }.aso-tipos button { flex:1 1 142px; min-height:40px; padding:8px 10px; }
+      .aso-picker-list { max-height:175px; }.aso-opt { padding:10px; }.aso-opt .nm { font-size:12px; }
+      .aso-part { align-items:flex-start; flex-wrap:wrap; }.aso-part .info { flex-basis:calc(100% - 34px); }.aso-estado-toggle { margin-left:auto; }.aso-part .rm { min-height:34px; }
+      .aso-hint { line-height:1.35; }
+    }
   </style>
 </head>
 <body>

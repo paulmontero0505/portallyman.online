@@ -60,15 +60,15 @@
   .rp-suggestion-mark { width:32px; height:32px; display:grid; place-items:center; flex:0 0 auto; border-radius:9px; background:#e5f5ec; color:var(--d); font-size:11px; font-weight:800; }
   .rp-suggestion b { display:block; font-size:13px; }.rp-suggestion small { display:block; margin-top:2px; color:var(--m); font-size:11px; }
   .rp-performance { grid-column:1/-1; overflow:hidden; }
-  .rp-performance-body { display:grid; grid-template-columns:minmax(380px,1.15fr) minmax(300px,.85fr); gap:18px; padding:18px; }
-  .rp-chart-wrap { min-width:0; }.rp-chart { width:100%; min-height:250px; display:block; overflow:visible; }
-  .rp-chart-empty { min-height:230px; display:grid; place-items:center; color:var(--m); font-size:13px; background:#f7fbf8; border-radius:10px; }
+  .rp-performance-body { display:grid; grid-template-columns:minmax(300px,1fr) minmax(300px,.9fr); gap:14px; padding:14px 18px; }
+  .rp-chart-wrap { min-width:0; }.rp-chart { width:100%; min-height:180px; display:block; overflow:visible; }
+  .rp-chart-empty { min-height:180px; display:grid; place-items:center; color:var(--m); font-size:13px; background:#f7fbf8; border-radius:10px; }
   .rp-chart-grid { stroke:#dbe8e1; stroke-width:1; }.rp-chart-axis { fill:#718078; font:10px 'DM Sans',sans-serif; }.rp-chart-bar { fill:#a7dec0; }.rp-chart-line { fill:none; stroke:#00875a; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }.rp-chart-dot { fill:#005c3d; stroke:#fff; stroke-width:2; }.rp-chart-score { fill:#005c3d; font:700 10px 'DM Sans',sans-serif; text-anchor:middle; }
-  .rp-performance-notes { display:flex; flex-direction:column; gap:8px; max-height:290px; overflow:auto; padding-right:3px; }
+  .rp-performance-notes { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; padding-right:3px; }
   .rp-performance-note { padding:10px 11px; border-radius:10px; background:#f7fbf8; border:1px solid #e1eee7; }
   .rp-performance-note-head { display:flex; justify-content:space-between; gap:10px; font-size:12px; font-weight:800; color:var(--d); }.rp-performance-note p { margin:6px 0 0; color:#52645b; font-size:12px; line-height:1.45; }
   @media (max-width:900px) { .rp-performance-body { grid-template-columns:1fr; }.rp-performance-notes { max-height:none; }.rp-search-wrap { width:100%; } }
-  @media (max-width:760px) { .rp-hero { flex-direction:column; align-items:stretch; }.rp-search-wrap { min-width:0; }.rp-performance-body { padding:14px; }.rp-chart { min-height:220px; } }
+  @media (max-width:760px) { .rp-hero { flex-direction:column; align-items:stretch; }.rp-search-wrap { min-width:0; }.rp-performance-body { padding:14px; }.rp-chart { min-height:180px; } }
 </style></head><body><div class="overlay" id="overlay"></div><div class="shell"><?php $sb_base='..';include('../includes/sidebar.php');?><div class="main-area"><?php include('../includes/header.php');?><main class="content"><div class="rp">
 <section class="rp-hero"><div><div class="rp-tag">Control de campo · Consulta individual</div><h1>Record Personal Tallyman</h1><p>Consulta el historial operativo, disciplinario, participativo y de reconocimientos de cada tallyman.</p></div><div class="rp-search-wrap"><div class="rp-search"><input id="persona" placeholder="Escribe nombre o código…" autocomplete="off" disabled><button id="buscar" disabled>Consultar récord</button></div><div class="rp-suggestions hide" id="sugerenciasPersonas" role="listbox" aria-label="Tallyman filtrados"></div></div></section>
 <section class="rp-empty" id="empty"><b>Selecciona un tallyman</b>El record se mostrará con información consolidada de los módulos existentes.</section>
@@ -114,12 +114,12 @@ async function cargar(){try{let r=await fetch('../api/get_record_personal_tallym
       return;
     }
     const width = Math.max(420, evaluaciones.length * 88);
-    const height = 250, left = 38, right = 18, top = 28, bottom = 38, chartHeight = height - top - bottom;
+    const height = 180, left = 34, right = 14, top = 22, bottom = 30, chartHeight = height - top - bottom;
     const step = evaluaciones.length === 1 ? 0 : (width - left - right) / (evaluaciones.length - 1);
     const scoreY = score => top + (100 - Math.max(0, Math.min(100, Number(score) || 0))) * chartHeight / 100;
     const points = evaluaciones.map((row, index) => ({ x: evaluaciones.length === 1 ? width / 2 : left + index * step, y: scoreY(row.puntaje_total), score: Number(row.puntaje_total || 0) }));
     const grid = [0, 25, 50, 75, 100].map(score => { const y = scoreY(score); return `<line class="rp-chart-grid" x1="${left}" y1="${y}" x2="${width-right}" y2="${y}"/><text class="rp-chart-axis" x="4" y="${y + 3}">${score}</text>`; }).join('');
-    const bars = points.map(point => `<rect class="rp-chart-bar" x="${point.x - 15}" y="${point.y}" width="30" height="${top + chartHeight - point.y}" rx="5"/>`).join('');
+    const bars = points.map(point => `<rect class="rp-chart-bar" x="${point.x - 12}" y="${point.y}" width="24" height="${top + chartHeight - point.y}" rx="4"/>`).join('');
     const line = points.map(point => `${point.x},${point.y}`).join(' ');
     const labels = evaluaciones.map((row, index) => `<text class="rp-chart-axis" x="${points[index].x}" y="${height - 13}" text-anchor="middle">${esc(row.periodo || '—')}</text>`).join('');
     const dots = points.map(point => `<circle class="rp-chart-dot" cx="${point.x}" cy="${point.y}" r="5"/><text class="rp-chart-score" x="${point.x}" y="${point.y - 10}">${point.score.toFixed(0)}</text>`).join('');
