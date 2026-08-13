@@ -9,6 +9,7 @@ $JS_PUNTOS   = inc_puntos_competencia();   // punto => competencia
 $JS_IMPACTOS = inc_impactos();             // clave => [label,color]
 $JS_TURNOS   = inc_turnos();               // clave => label
 $COORDINADOR = $_SESSION['user_name'] ?? '';
+$ES_ADMINISTRADOR = is_admin();
 
 // Zonas de trabajo activas (tabla ubicaciones). El formulario ofrece exactamente
 // las que save_incidencia.php acepta.
@@ -423,6 +424,21 @@ $zona_ubicaciones = inc_zonas(true);
     .inc-view-field--purple { border-left: 3px solid #7c3aed; padding-left: 10px; }
     .inc-view-detalle { background: #f9fafb; border: 1px solid var(--co-line); border-radius: 10px; padding: 12px 14px; }
     .inc-view-detalle .iv-v { font-size: 13.5px; color: #4b5563; font-weight: 400; line-height: 1.5; }
+    .inc-medida-card { border: 1px solid rgba(0,135,90,.22); border-radius: 12px; background: linear-gradient(135deg,#f5fcf8,#fff); padding: 14px; }
+    .inc-medida-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .inc-medida-title { margin:0; color:#005c3d; font-size:13px; font-weight:800; }
+    .inc-medida-help { margin:3px 0 0; color:var(--co-mute); font-size:11.5px; line-height:1.4; }
+    .inc-medida-status { display:inline-flex; align-items:center; border-radius:999px; padding:5px 9px; background:#e7f8ee; color:#087443; font-size:10px; font-weight:800; white-space:nowrap; }
+    .inc-medida-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .inc-medida-control { border:1px solid #d9e8e0; border-radius:9px; padding:10px; background:#fff; }
+    .inc-medida-control label { color:#27364d; font-size:11.5px; font-weight:700; display:block; }
+    .inc-medida-control select { width:100%; margin-top:7px; border:1px solid #bfd9cb; border-radius:7px; padding:7px 8px; color:#172033; font:inherit; font-size:12px; background:#fff; }
+    .inc-medida-preview { margin-top:8px; color:#b42318; font-size:11.5px; font-weight:800; }
+    .inc-medida-summary { margin-top:11px; padding:9px 10px; border-radius:8px; background:#f5f7f6; color:#405066; font-size:12px; font-weight:600; }
+    .inc-medida-save { margin-top:11px; width:100%; border:0; border-radius:8px; padding:9px 12px; background:#007a50; color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+    .inc-medida-save:hover { background:#005c3d; }
+    .inc-medida-save:disabled { opacity:.6; cursor:wait; }
+    @media (max-width:640px) { .inc-medida-grid { grid-template-columns:1fr; } }
     .inc-view-attachments { display: flex; gap: 8px; flex-wrap: wrap; }
     .inc-view-attach {
       flex: 1; border-radius: 8px; padding: 9px 6px; text-align: center;
@@ -927,6 +943,7 @@ $zona_ubicaciones = inc_zonas(true);
   const COORD    = <?= json_encode($COORDINADOR, JSON_UNESCAPED_UNICODE) ?>;
   const SEV_ORDER = Object.keys(IMPACTOS);
   const BASE     = '..';
+  const ES_ADMINISTRADOR = <?= $ES_ADMINISTRADOR ? 'true' : 'false' ?>;
   const UBIC_ZONA = <?= json_encode($zona_ubicaciones, JSON_UNESCAPED_UNICODE) ?>;
   const GROUPS_UBIC = [
     { test: /^muelle/i,                             label: 'Muelles',  color: '#0f4c81' },
@@ -1050,6 +1067,55 @@ $zona_ubicaciones = inc_zonas(true);
     const m = IMPACTOS[key];
     if (!m) return esc(key || '—');
     return `<span class="inc-badge" style="background:${m.color}"><span class="dot"></span>${esc(m.label)}</span>`;
+  }
+  const EVADES = {
+    minimo: [2], bajo: [2], moderado: [4], alto: [6], critico: [8],
+  };
+  function puntosEvades(impacto) { return (EVADES[impacto] || [0])[0] || 0; }
+  function textoSancion(tipo) {
+    return tipo === 'suspension' ? 'Suspensión' : tipo === 'amonestacion_escrita' ? 'Amonestación escrita' : '';
+  }
+  function textoActo(i) {
+    const descuento = Number(i.descuento_puntos || 0);
+    const sancion = textoSancion(i.sancion_disciplinaria);
+    if (descuento && sancion) return `Descuento -${descuento} pts + ${sancion}`;
+    if (descuento) return `Descuento -${descuento} pts`;
+    return sancion || 'Sin medida aplicada';
+  }
+  function medidaHtml(i) {
+    const tieneMedida = Number(i.descuento_puntos || 0) > 0 || !!textoSancion(i.sancion_disciplinaria);
+    const resumen = tieneMedida
+      ? `${textoActo(i)}${i.medida_aplicada_por ? ` · Aplicado por ${esc(i.medida_aplicada_por)}` : ''}`
+      : 'Sin descuento de puntos ni sanción disciplinaria registrados.';
+    if (!ES_ADMINISTRADOR) {
+      return `<section class="inc-medida-card"><div class="inc-medida-head"><div><h4 class="inc-medida-title">Decisión administrativa</h4><p class="inc-medida-help">Resultado registrado para esta incidencia.</p></div><span class="inc-medida-status">${tieneMedida ? 'MEDIDA APLICADA' : 'SIN MEDIDA'}</span></div><div class="inc-medida-summary">${resumen}</div></section>`;
+    }
+    const descuento = Number(i.descuento_puntos || 0) > 0;
+    const impacto = IMPACTOS[i.impacto] || { label: i.impacto || '—' };
+    return `<section class="inc-medida-card">
+      <div class="inc-medida-head"><div><h4 class="inc-medida-title">Decisión administrativa · EVADES</h4><p class="inc-medida-help">El descuento se define por el impacto registrado y afecta la competencia indicada en esta incidencia.</p></div><span class="inc-medida-status">ADMINISTRADOR</span></div>
+      <div class="inc-medida-grid">
+        <div class="inc-medida-control"><label for="medidaDescuento">¿Aplica descuento de puntos?</label><select id="medidaDescuento"><option value="no" ${descuento ? '' : 'selected'}>No · 0 puntos</option><option value="si" ${descuento ? 'selected' : ''}>Sí · aplicar descuento EVADES</option></select><div class="inc-medida-preview" id="medidaPreview">${descuento ? `Descuento EVADES: -${puntosEvades(i.impacto)} puntos` : 'Descuento: 0 puntos'}</div><div class="inc-medida-summary">Impacto: <strong>${esc(impacto.label)}</strong><br>Competencia afectada: <strong>${esc(i.competencia || '—')}</strong></div></div>
+        <div class="inc-medida-control"><label for="medidaSancion">Sanción disciplinaria</label><select id="medidaSancion"><option value="sin_sancion" ${i.sancion_disciplinaria === 'sin_sancion' || !i.sancion_disciplinaria ? 'selected' : ''}>No aplica</option><option value="amonestacion_escrita" ${i.sancion_disciplinaria === 'amonestacion_escrita' ? 'selected' : ''}>Amonestación escrita</option><option value="suspension" ${i.sancion_disciplinaria === 'suspension' ? 'selected' : ''}>Suspensión</option></select><div id="sancionDetails" style="margin-top:9px;display:${textoSancion(i.sancion_disciplinaria) ? 'grid' : 'none'};grid-template-columns:1fr 1fr;gap:7px"><label>Desde<input id="medidaInicio" type="date" value="${esc(i.fecha || '')}" style="width:100%;margin-top:4px"></label><label>Hasta<input id="medidaFin" type="date" value="${esc(i.fecha || '')}" style="width:100%;margin-top:4px"></label><label style="grid-column:1/-1">Evidencia de la sanción<input id="medidaEvidencia" type="file" accept=".pdf,image/jpeg,image/png" style="width:100%;margin-top:4px"></label></div><div class="inc-medida-summary">${tieneMedida ? resumen : 'Aún no hay una decisión administrativa guardada.'}</div></div>
+      </div><button type="button" class="inc-medida-save" id="medidaGuardar">Guardar decisión administrativa</button>
+    </section>`;
+  }
+  function wireMedida(i) {
+    if (!ES_ADMINISTRADOR) return;
+    const aplica = $('medidaDescuento'), preview = $('medidaPreview'), guardarBtn = $('medidaGuardar');
+    if (!aplica || !preview || !guardarBtn) return;
+    aplica.addEventListener('change', () => { preview.textContent = aplica.value === 'si' ? `Descuento EVADES: -${puntosEvades(i.impacto)} puntos` : 'Descuento: 0 puntos'; });
+    let evidenciaPath = '';
+    $('medidaSancion').addEventListener('change', e => { $('sancionDetails').style.display = e.target.value === 'sin_sancion' ? 'none' : 'grid'; });
+    $('medidaEvidencia').addEventListener('change', async e => { const file = e.target.files[0]; if (!file) return; const fd = new FormData(); fd.append('file', file); try { const r = await fetch(`${BASE}/api/upload_sancion_evidencia.php`, { method: 'POST', body: fd }); const d = await r.json(); if (!d.success) throw Error(d.error); evidenciaPath = d.path; toast('Evidencia adjuntada'); } catch (err) { toast(err.message || 'No se pudo adjuntar la evidencia', 'error'); } });
+    guardarBtn.addEventListener('click', async () => {
+      guardarBtn.disabled = true; guardarBtn.textContent = 'Guardando decisión…';
+      try {
+        const res = await fetch(`${BASE}/api/save_incidencia_medida.php`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: i.id, aplica_descuento: aplica.value === 'si', sancion_disciplinaria: $('medidaSancion').value, fecha_inicio: $('medidaInicio').value, fecha_fin: $('medidaFin').value, evidencia_path: evidenciaPath }) });
+        const data = await res.json(); if (!data.success) throw new Error(data.error || 'No se pudo guardar la decisión.');
+        Object.assign(i, data.data || {}); render(); toast('Decisión administrativa guardada'); openView(i.id);
+      } catch (e) { toast(e.message || 'Error de red', 'error'); guardarBtn.disabled = false; guardarBtn.textContent = 'Guardar decisión administrativa'; }
+    });
   }
   function turnoLabel(key) { return TURNOS[key] || key || '—'; }
   function fmtFecha(f) {
@@ -1588,16 +1654,18 @@ $zona_ubicaciones = inc_zonas(true);
             <span class="iv-k">Competencia afectada</span>
             <span class="iv-v">${esc(i.competencia)}</span>
           </div>
-          <div class="inc-view-detalle">
-            <span class="iv-k">Detalle</span>
-            <span class="iv-v">${esc(i.detalle || '—')}</span>
-          </div>
-          ${attachHtml}
+           <div class="inc-view-detalle">
+             <span class="iv-k">Detalle</span>
+             <span class="iv-v">${esc(i.detalle || '—')}</span>
+           </div>
+           ${medidaHtml(i)}
+           ${attachHtml}
         </div>
       </div>`;
 
     $('incViewSub').textContent = `${i.colaborador_nombre} · ${fmtFecha(i.fecha)}`;
     $('incViewEdit').dataset.id = i.id;
+    wireMedida(i);
     $('incViewBack').classList.add('open');
   }
   function closeView() { $('incViewBack').classList.remove('open'); }

@@ -19,9 +19,10 @@ header('Content-Type: application/json');
 $r = mysqli_query(
     $conn,
     "SELECT i.id, i.colaborador_id, i.colaborador_nombre, i.colaborador_cargo,
-            i.punto_mejorar, i.competencia, i.impacto, i.coordinador, i.coordinador_id,
-            i.turno, i.fecha, i.zona_trabajo, i.detalle,
-            i.foto_path, i.foto_drive_url, i.declaracion_path, i.declaracion_drive_url,
+             i.punto_mejorar, i.competencia, i.impacto, i.coordinador, i.coordinador_id,
+             i.turno, i.fecha, i.zona_trabajo, i.detalle,
+             i.descuento_puntos, i.sancion_disciplinaria, i.medida_aplicada_por, i.medida_aplicada_at,
+             i.foto_path, i.foto_drive_url, i.declaracion_path, i.declaracion_drive_url,
             i.declaracion_uploaded_at, i.created_at, i.updated_at,
             col.coordinador_id AS coord_cargo_id,
             u.nombre           AS coord_cargo_nombre
