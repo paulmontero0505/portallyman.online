@@ -48,11 +48,32 @@
     .rp-avatar { flex-basis:46px; width:46px; height:46px; }
     .rp-kpi { padding:12px 10px; }
   }
+</style><style>
+  .rp-hero { padding:30px 34px; }
+  .rp-search-wrap { position:relative; width:min(530px,100%); }
+  .rp-search { width:100%; min-width:0; padding:7px; border:1px solid rgba(255,255,255,.5); box-shadow:0 10px 24px rgba(0,42,28,.16); }
+  .rp-search input { flex:1; min-width:0; border:0; outline:0; padding:10px 12px; color:var(--i); font:600 14px inherit; background:transparent; }
+  .rp-search input::placeholder { color:#718078; }
+  .rp-suggestions { position:absolute; z-index:20; top:calc(100% + 8px); left:0; right:0; max-height:270px; overflow:auto; background:#fff; border:1px solid #cfe2d8; border-radius:12px; box-shadow:0 14px 32px rgba(10,48,31,.2); padding:6px; }
+  .rp-suggestion { width:100%; display:flex; align-items:center; gap:10px; border:0; border-radius:8px; padding:10px; background:#fff; color:var(--i); text-align:left; cursor:pointer; font:inherit; }
+  .rp-suggestion:hover,.rp-suggestion:focus { background:#edf8f2; outline:0; }
+  .rp-suggestion-mark { width:32px; height:32px; display:grid; place-items:center; flex:0 0 auto; border-radius:9px; background:#e5f5ec; color:var(--d); font-size:11px; font-weight:800; }
+  .rp-suggestion b { display:block; font-size:13px; }.rp-suggestion small { display:block; margin-top:2px; color:var(--m); font-size:11px; }
+  .rp-performance { grid-column:1/-1; overflow:hidden; }
+  .rp-performance-body { display:grid; grid-template-columns:minmax(380px,1.15fr) minmax(300px,.85fr); gap:18px; padding:18px; }
+  .rp-chart-wrap { min-width:0; }.rp-chart { width:100%; min-height:250px; display:block; overflow:visible; }
+  .rp-chart-empty { min-height:230px; display:grid; place-items:center; color:var(--m); font-size:13px; background:#f7fbf8; border-radius:10px; }
+  .rp-chart-grid { stroke:#dbe8e1; stroke-width:1; }.rp-chart-axis { fill:#718078; font:10px 'DM Sans',sans-serif; }.rp-chart-bar { fill:#a7dec0; }.rp-chart-line { fill:none; stroke:#00875a; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }.rp-chart-dot { fill:#005c3d; stroke:#fff; stroke-width:2; }.rp-chart-score { fill:#005c3d; font:700 10px 'DM Sans',sans-serif; text-anchor:middle; }
+  .rp-performance-notes { display:flex; flex-direction:column; gap:8px; max-height:290px; overflow:auto; padding-right:3px; }
+  .rp-performance-note { padding:10px 11px; border-radius:10px; background:#f7fbf8; border:1px solid #e1eee7; }
+  .rp-performance-note-head { display:flex; justify-content:space-between; gap:10px; font-size:12px; font-weight:800; color:var(--d); }.rp-performance-note p { margin:6px 0 0; color:#52645b; font-size:12px; line-height:1.45; }
+  @media (max-width:900px) { .rp-performance-body { grid-template-columns:1fr; }.rp-performance-notes { max-height:none; }.rp-search-wrap { width:100%; } }
+  @media (max-width:760px) { .rp-hero { flex-direction:column; align-items:stretch; }.rp-search-wrap { min-width:0; }.rp-performance-body { padding:14px; }.rp-chart { min-height:220px; } }
 </style></head><body><div class="overlay" id="overlay"></div><div class="shell"><?php $sb_base='..';include('../includes/sidebar.php');?><div class="main-area"><?php include('../includes/header.php');?><main class="content"><div class="rp">
-<section class="rp-hero"><div><div class="rp-tag">Control de campo · Consulta individual</div><h1>Record Personal Tallyman</h1><p>Consulta el historial operativo, disciplinario, participativo y de reconocimientos de cada tallyman.</p></div><div class="rp-search"><input id="persona" list="personas" placeholder="Escribe nombre o código…" autocomplete="off" disabled><datalist id="personas"></datalist><button id="buscar" disabled>Consultar record</button></div></section>
+<section class="rp-hero"><div><div class="rp-tag">Control de campo · Consulta individual</div><h1>Record Personal Tallyman</h1><p>Consulta el historial operativo, disciplinario, participativo y de reconocimientos de cada tallyman.</p></div><div class="rp-search-wrap"><div class="rp-search"><input id="persona" placeholder="Escribe nombre o código…" autocomplete="off" disabled><button id="buscar" disabled>Consultar récord</button></div><div class="rp-suggestions hide" id="sugerenciasPersonas" role="listbox" aria-label="Tallyman filtrados"></div></div></section>
 <section class="rp-empty" id="empty"><b>Selecciona un tallyman</b>El record se mostrará con información consolidada de los módulos existentes.</section>
 <div id="result" class="hide"><section class="rp-profile"><div class="rp-person"><div class="rp-avatar" id="avatar">—</div><div><h2 id="nombre">—</h2><p id="cargo">—</p></div></div><div class="rp-data"><div><b>COORDINADOR</b><span id="coord">Sin asignar</span></div><div><b>PRÓXIMO CUMPLEAÑOS</b><span id="cumple">Sin registrar</span></div><div><b>ANTIGÜEDAD</b><span id="ingreso">Sin registrar</span></div></div></section><section class="rp-kpis" id="kpis"></section><div class="rp-grid">
-<section class="rp-section"><div class="rp-head"><h3>Evaluaciones de desempeño</h3><span class="rp-count" id="c-evaluacionesDesempeno">0</span></div><ul class="rp-list" id="l-evaluacionesDesempeno"></ul></section><section class="rp-section"><div class="rp-head"><h3>Incidencias</h3><span class="rp-count" id="c-incidencias">0</span></div><ul class="rp-list" id="l-incidencias"></ul></section><section class="rp-section"><div class="rp-head"><h3>Sanciones disciplinarias</h3><span class="rp-count" id="c-sanciones">0</span></div><ul class="rp-list" id="l-sanciones"></ul></section><section class="rp-section"><div class="rp-head"><h3>Propuestas de mejora reconocidas</h3><span class="rp-count" id="c-propuestas">0</span></div><ul class="rp-list" id="l-propuestas"></ul></section><section class="rp-section"><div class="rp-head"><h3>Reconocimientos</h3><span class="rp-count" id="c-reconocimientos">0</span></div><ul class="rp-list" id="l-reconocimientos"></ul></section><section class="rp-section"><div class="rp-head"><h3>Charlas preoperativas</h3><span class="rp-count" id="c-charlas">0</span></div><ul class="rp-list" id="l-charlas"></ul></section><section class="rp-section"><div class="rp-head"><h3>Capacitaciones</h3><span class="rp-count" id="c-capacitaciones">0</span></div><ul class="rp-list" id="l-capacitaciones"></ul></section>
+<section class="rp-section rp-performance"><div class="rp-head"><h3>Evolución de desempeño</h3><span class="rp-count" id="c-evaluacionesDesempeno">0</span></div><div class="rp-performance-body"><div class="rp-chart-wrap" id="graficoDesempeno"></div><div class="rp-performance-notes" id="notasDesempeno"></div></div></section><section class="rp-section"><div class="rp-head"><h3>Incidencias</h3><span class="rp-count" id="c-incidencias">0</span></div><ul class="rp-list" id="l-incidencias"></ul></section><section class="rp-section"><div class="rp-head"><h3>Sanciones disciplinarias</h3><span class="rp-count" id="c-sanciones">0</span></div><ul class="rp-list" id="l-sanciones"></ul></section><section class="rp-section"><div class="rp-head"><h3>Propuestas de mejora reconocidas</h3><span class="rp-count" id="c-propuestas">0</span></div><ul class="rp-list" id="l-propuestas"></ul></section><section class="rp-section"><div class="rp-head"><h3>Reconocimientos</h3><span class="rp-count" id="c-reconocimientos">0</span></div><ul class="rp-list" id="l-reconocimientos"></ul></section><section class="rp-section"><div class="rp-head"><h3>Charlas preoperativas</h3><span class="rp-count" id="c-charlas">0</span></div><ul class="rp-list" id="l-charlas"></ul></section><section class="rp-section"><div class="rp-head"><h3>Capacitaciones</h3><span class="rp-count" id="c-capacitaciones">0</span></div><ul class="rp-list" id="l-capacitaciones"></ul></section>
 </div></div></div></main></div></div>
 <script>
 const $=x=>document.getElementById(x),esc=x=>String(x??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])),dt=x=>{const m=String(x??'').match(/^(\\d{4}-\\d{2}-\\d{2})/);if(!m)return 'Sin fecha';const d=new Date(m[1]+'T00:00:00');return Number.isNaN(d.getTime())?'Sin fecha':new Intl.DateTimeFormat('es-PE',{day:'2-digit',month:'short',year:'numeric'}).format(d)},pl=(n,a,b)=>n+' '+(n===1?a:b),chip=(x,c='')=>'<span class="rp-chip '+c+'">'+esc(x)+'</span>';
@@ -66,12 +87,7 @@ async function cargar(){try{let r=await fetch('../api/get_record_personal_tallym
   mostrar = function(data) {
     mostrarRecordBase(data);
     const evaluaciones = data.historial.evaluacionesDesempeno || [];
-    $('c-evaluacionesDesempeno').textContent = evaluaciones.length;
-    $('l-evaluacionesDesempeno').innerHTML = evaluaciones.length ? evaluaciones.map(x =>
-      '<li><div class="rp-line"><span>' + esc(x.periodo || 'Sin trimestre') + '</span>' + chip(x.puntaje_total ?? '—', 'estado-aprobado') + '</div>' +
-      '<div class="rp-sub"><b>Coordinador evaluador:</b> ' + esc(x.coordinador_nombre || 'Sin registrar') + ' · ' + dt(x.fecha_evaluacion) + '</div>' +
-      '<div class="rp-sub"><b>Aspectos a mejorar:</b> ' + esc(x.aspectos_mejora || 'Sin observaciones registradas.') + '</div></li>'
-    ).join('') : '<li class="rp-none">No hay evaluaciones de desempeño registradas.</li>';
+    renderDesempeno(evaluaciones);
     $('kpis').insertAdjacentHTML('beforeend', '<div class="rp-kpi"><div class="rp-n">' + evaluaciones.length + '</div><div class="rp-l">Evaluaciones de desempeño</div></div>');
     const asistio = data.resumen.asistencias_charlas || 0;
     const tardanza = data.resumen.tardanzas_charlas || 0;
@@ -85,4 +101,49 @@ async function cargar(){try{let r=await fetch('../api/get_record_personal_tallym
       return '<li><div class="rp-line"><span>' + esc(x.tema) + '</span>' + chip(estado, clase) + '</div><div class="rp-sub">' + dt(x.fecha) + ' · ' + esc(x.tipo_reunion.replaceAll('_',' ')) + (x.capacitador ? ' · ' + esc(x.capacitador) : '') + '</div></li>';
     }).join('') : '<li class="rp-none">Asistió a ' + (asistio + tardanza) + ' charla(s). No registra tardanzas ni faltas.</li>';
   };
+</script><script>
+  function ordenarPeriodos(rows) {
+    return [...rows].sort((a, b) => String(a.periodo || '').localeCompare(String(b.periodo || '')) || String(a.fecha_evaluacion || '').localeCompare(String(b.fecha_evaluacion || '')));
+  }
+  function renderDesempeno(rows) {
+    const evaluaciones = ordenarPeriodos(rows || []);
+    $('c-evaluacionesDesempeno').textContent = evaluaciones.length;
+    if (!evaluaciones.length) {
+      $('graficoDesempeno').innerHTML = '<div class="rp-chart-empty">No hay evaluaciones de desempeño registradas.</div>';
+      $('notasDesempeno').innerHTML = '<div class="rp-chart-empty">Cuando se registre una evaluación, aquí aparecerán el evaluador y los aspectos de mejora.</div>';
+      return;
+    }
+    const width = Math.max(420, evaluaciones.length * 88);
+    const height = 250, left = 38, right = 18, top = 28, bottom = 38, chartHeight = height - top - bottom;
+    const step = evaluaciones.length === 1 ? 0 : (width - left - right) / (evaluaciones.length - 1);
+    const scoreY = score => top + (100 - Math.max(0, Math.min(100, Number(score) || 0))) * chartHeight / 100;
+    const points = evaluaciones.map((row, index) => ({ x: evaluaciones.length === 1 ? width / 2 : left + index * step, y: scoreY(row.puntaje_total), score: Number(row.puntaje_total || 0) }));
+    const grid = [0, 25, 50, 75, 100].map(score => { const y = scoreY(score); return `<line class="rp-chart-grid" x1="${left}" y1="${y}" x2="${width-right}" y2="${y}"/><text class="rp-chart-axis" x="4" y="${y + 3}">${score}</text>`; }).join('');
+    const bars = points.map(point => `<rect class="rp-chart-bar" x="${point.x - 15}" y="${point.y}" width="30" height="${top + chartHeight - point.y}" rx="5"/>`).join('');
+    const line = points.map(point => `${point.x},${point.y}`).join(' ');
+    const labels = evaluaciones.map((row, index) => `<text class="rp-chart-axis" x="${points[index].x}" y="${height - 13}" text-anchor="middle">${esc(row.periodo || '—')}</text>`).join('');
+    const dots = points.map(point => `<circle class="rp-chart-dot" cx="${point.x}" cy="${point.y}" r="5"/><text class="rp-chart-score" x="${point.x}" y="${point.y - 10}">${point.score.toFixed(0)}</text>`).join('');
+    $('graficoDesempeno').innerHTML = `<svg class="rp-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Notas de desempeño por período"><title>Notas de desempeño por período</title>${grid}${bars}<polyline class="rp-chart-line" points="${line}"/>${dots}${labels}</svg>`;
+    $('notasDesempeno').innerHTML = evaluaciones.map(row => `<article class="rp-performance-note"><div class="rp-performance-note-head"><span>${esc(row.periodo || 'Sin período')} · ${Number(row.puntaje_total || 0).toFixed(1)}/100</span><span>${dt(row.fecha_evaluacion)}</span></div><p><b>Evaluó:</b> ${esc(row.coordinador_nombre || 'Sin registrar')}</p><p><b>Aspectos a mejorar:</b> ${esc(row.aspectos_mejora || 'Sin observaciones registradas.')}</p></article>`).join('');
+  }
+  function mostrarSugerencias() {
+    const input = $('persona'), panel = $('sugerenciasPersonas');
+    const query = input.value.trim().toLowerCase();
+    if (!query) { panel.classList.add('hide'); panel.innerHTML = ''; return; }
+    const matches = personas.filter(persona => [persona.nombre, persona.codigo].some(value => String(value || '').toLowerCase().includes(query))).slice(0, 8);
+    if (!matches.length) { panel.innerHTML = '<div class="rp-suggestion"><span>No se encontraron tallyman con ese criterio.</span></div>'; panel.classList.remove('hide'); return; }
+    panel.innerHTML = matches.map(persona => `<button type="button" class="rp-suggestion" data-persona-id="${persona.id}" role="option"><span class="rp-suggestion-mark">${esc((persona.nombre || '?').split(/\s+/).slice(0, 2).map(part => part[0]).join(''))}</span><span><b>${esc(persona.nombre)}</b><small>${esc(persona.codigo || 'Sin código')}</small></span></button>`).join('');
+    panel.classList.remove('hide');
+  }
+  $('persona').addEventListener('input', mostrarSugerencias);
+  $('sugerenciasPersonas').addEventListener('click', event => {
+    const option = event.target.closest('[data-persona-id]');
+    if (!option) return;
+    const persona = personas.find(item => Number(item.id) === Number(option.dataset.personaId));
+    if (!persona) return;
+    $('persona').value = persona.label;
+    $('sugerenciasPersonas').classList.add('hide');
+    consultar();
+  });
+  document.addEventListener('click', event => { if (!event.target.closest('.rp-search-wrap')) $('sugerenciasPersonas').classList.add('hide'); });
 </script></body></html>
