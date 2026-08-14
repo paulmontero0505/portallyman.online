@@ -56,10 +56,12 @@
   function naveById(id) { return naves.filter(function (x) { return String(x.id) === String(id); })[0] || null; }
   function navesEnBerth(berthVal) { var n = ubicNum(berthVal); if (n == null) return []; return naves.filter(function (x) { return ubicNum(x.muelle) === n; }); }
 
-  // Opciones del select NAVE filtradas por tipo. Si tipoVal está vacío, muestra todas.
-  // ensureId fuerza incluir esa nave aunque no calce con el tipo (p. ej. al editar).
-  function naveOptsHTML(tipoVal, ensureId) {
-    var list = naves.filter(function (n) { return !tipoVal || String(n.tipo_nave_id) === String(tipoVal); });
+  // Opciones del select NAVE filtradas por ubicación y tipo.
+  // ensureId fuerza incluir esa nave aunque no calce con los filtros (p. ej. al editar).
+  function naveOptsHTML(tipoVal, berthVal, ensureId) {
+    var list = navesEnBerth(berthVal).filter(function (n) {
+      return !tipoVal || String(n.tipo_nave_id) === String(tipoVal);
+    });
     if (ensureId != null && !list.some(function (n) { return String(n.id) === String(ensureId); })) {
       var ex = naveById(ensureId); if (ex) list = [ex].concat(list);
     }
@@ -180,7 +182,7 @@
 
     if (tipo === 'BERTH') {
       var navesOpt = [{ v: '', t: '— Sin nave —' }]
-        .concat(naves.map(function (n) { return { v: String(n.id), t: n.nombre }; }))
+        .concat(navesEnBerth(UBICS_BERTH[0]).map(function (n) { return { v: String(n.id), t: n.nombre }; }))
         .concat([{ v: '__otros__', t: 'Otros (registrar nueva nave)' }]);
       var actOpt = actividades.map(function (a) { return { v: String(a.id), t: a.nombre }; });
       var tipoFiltroOpt = [{ v: '', t: 'Todos los tipos' }]
@@ -593,11 +595,11 @@
     var tipoSel = body.querySelector('[data-k="tipo_filtro"]');
     var tiposLoaded = false;
 
-    // Reconstruye el select NAVE según el tipo elegido, conservando la selección
+    // Reconstruye el select NAVE según el muelle y tipo elegidos, conservando la selección
     // actual si sigue presente. ensureId fuerza incluir una nave concreta (editar).
     function rebuildNaves(keepVal, ensureId) {
       if (!naveSel) return;
-      naveSel.innerHTML = naveOptsHTML(tipoSel ? tipoSel.value : '', ensureId);
+      naveSel.innerHTML = naveOptsHTML(tipoSel ? tipoSel.value : '', ubicSel ? ubicSel.value : '', ensureId);
       var has = [].some.call(naveSel.options, function (o) { return o.value === keepVal; });
       naveSel.value = has ? keepVal : '';
     }
@@ -776,7 +778,8 @@
           sugerirStatus();
           setUbicNote(ns.length > 1 ? 'Hay varias naves en este muelle — verifica la nave seleccionada.' : '');
         } else {
-          naveSel.value = ''; plannedIn.value = '';
+          rebuildNaves('', null);
+          plannedIn.value = '';
           setUbicNote('No hay nave registrada en este muelle (Operaciones).');
           sugerirStatus();
         }
