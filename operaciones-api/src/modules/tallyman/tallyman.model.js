@@ -52,17 +52,15 @@ export const TallymanModel = {
     return this.obtenerRegistro(id);
   },
 
-  // Suma de executed de turnos ANTERIORES (estrictamente) para una combinación
-  // nave+actividad+ubicación. Se usa para el acumulado previo (sin el actual).
-  // `nave_id <=> ?` es el operador null-seguro de MySQL (un Yard puede no tener nave).
-  async executedPrevio({ nave_id, actividad_id, ubicacion, fecha_turno, turno }) {
+  // Suma de executed de turnos ANTERIORES (estrictamente) para una nave en muelle.
+  // El ciclo acompaña a la nave aunque cambie de Berth o se corrija su actividad.
+  async executedPrevio({ nave_id, fecha_turno, turno }) {
     const [rows] = await pool.query(
       `SELECT COALESCE(SUM(executed), 0) AS prev
          FROM tallyman_registros
-        WHERE actividad_id = ? AND ubicacion = ?
-          AND ((nave_id <=> ?))
-          AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
-      [actividad_id, ubicacion, nave_id ?? null, fecha_turno, fecha_turno, turno],
+         WHERE ubicacion_tipo = 'BERTH' AND (nave_id <=> ?)
+           AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
+      [nave_id ?? null, fecha_turno, fecha_turno, turno],
     );
     return Number(rows[0]?.prev) || 0;
   },
@@ -87,6 +85,16 @@ export const TallymanModel = {
         ORDER BY id DESC
         LIMIT 1`,
       [actividad_id, nave_id ?? null],
+    );
+    return rows.length ? rows[0].status_act : null;
+  },
+
+  async ultimoStatusBerth(nave_id) {
+    const [rows] = await pool.query(
+      `SELECT status_act FROM tallyman_registros
+        WHERE ubicacion_tipo = 'BERTH' AND (nave_id <=> ?)
+        ORDER BY id DESC LIMIT 1`,
+      [nave_id ?? null],
     );
     return rows.length ? rows[0].status_act : null;
   },

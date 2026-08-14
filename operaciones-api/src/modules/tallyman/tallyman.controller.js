@@ -214,7 +214,7 @@ async function prevPara(r) {
     });
   }
   return TallymanModel.executedPrevio({
-    nave_id: r.nave_id, actividad_id: r.actividad_id, ubicacion: r.ubicacion,
+    nave_id: r.nave_id,
     fecha_turno: r.fecha_turno, turno: r.turno,
   });
 }
@@ -343,7 +343,9 @@ export const estadoSugerido = asyncHandler(async (req, res) => {
   if (!Number.isInteger(actividadId) || actividadId <= 0) {
     throw new ApiError(400, 'actividad_id es obligatorio.');
   }
-  const ultimo = await TallymanModel.ultimoStatus({ nave_id: naveId, actividad_id: actividadId, nave_patio: navePatio });
+  const ultimo = navePatio
+    ? await TallymanModel.ultimoStatus({ nave_patio: navePatio, actividad_id: actividadId })
+    : await TallymanModel.ultimoStatusBerth(naveId);
   const status = (!ultimo || ultimo === 'Culminado') ? 'Inicio' : 'En Proceso';
   // Acumulado previo (executed de turnos anteriores, excluyendo el turno actual) para
   // mostrar el avance del turno anterior y la proyección al ingresar datos.
@@ -353,7 +355,7 @@ export const estadoSugerido = asyncHandler(async (req, res) => {
       if (navePatio) {
         acumulado = await TallymanModel.executedPrevioYard({ nave_id: naveId, nave_patio: navePatio, actividad_id: actividadId, fecha_turno: fechaTurno, turno });
       } else if (naveId) {
-        acumulado = await TallymanModel.executedPrevio({ nave_id: naveId, actividad_id: actividadId, ubicacion, fecha_turno: fechaTurno, turno });
+        acumulado = await TallymanModel.executedPrevio({ nave_id: naveId, fecha_turno: fechaTurno, turno });
       }
     } catch (e) { acumulado = 0; }
   }

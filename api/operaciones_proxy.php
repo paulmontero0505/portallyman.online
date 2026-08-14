@@ -1098,8 +1098,9 @@ function fallback_get(string $path, array $params): string
             $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE actividad_id = ? AND nave_patio = ? ORDER BY id DESC LIMIT 1");
             $s->execute([$actId, $navePatio]);
         } else {
-            $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE actividad_id = ? AND (nave_id <=> ?) ORDER BY id DESC LIMIT 1");
-            $s->execute([$actId, $naveId]);
+            // Una nave conserva su ciclo aunque cambie de Berth o se corrija la actividad.
+            $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE ubicacion_tipo='BERTH' AND (nave_id <=> ?) ORDER BY id DESC LIMIT 1");
+            $s->execute([$naveId]);
         }
         $ultimo = ($s->fetch() ?: null);
         $ultimoStatus = $ultimo ? $ultimo['status_act'] : null;
@@ -1146,9 +1147,9 @@ function tm_executed_previo(PDO $pdo, array $r): float
         } else { return 0.0; }
     } else {
         $s = $pdo->prepare("SELECT COALESCE(SUM(executed),0) AS p FROM tallyman_registros
-          WHERE actividad_id=? AND ubicacion=? AND (nave_id<=>?)
+          WHERE ubicacion_tipo='BERTH' AND (nave_id<=>?)
             AND (fecha_turno<? OR (fecha_turno=? AND turno<>?))");
-        $s->execute([$aId, $r['ubicacion'], $r['nave_id'], $f, $f, $t]);
+        $s->execute([$r['nave_id'], $f, $f, $t]);
     }
     return (float)($s->fetch()['p'] ?? 0);
 }
