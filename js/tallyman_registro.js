@@ -54,6 +54,10 @@
   function ubicNum(s) { var m = String(s == null ? '' : s).match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
   function muelleToBerth(muelle) { var n = ubicNum(muelle); if (n == null) return null; for (var i = 0; i < UBICS_BERTH.length; i++) { if (ubicNum(UBICS_BERTH[i]) === n) return UBICS_BERTH[i]; } return null; }
   function naveById(id) { return naves.filter(function (x) { return String(x.id) === String(id); })[0] || null; }
+  function naveEtiqueta(n) {
+    var fecha = String(n && n.created_at ? n.created_at : '').slice(0, 10);
+    return n && n.nombre ? n.nombre + (fecha ? ' - ' + fecha : '') : 'Nave';
+  }
 
   // Filtro de ACTIVIDAD por TIPO DE NAVE. Cada entrada lista los prefijos (en
   // minúsculas) de los nombres de actividad que aplican a ese tipo. Los tipos que
@@ -167,7 +171,7 @@
 
     if (tipo === 'BERTH') {
       var navesOpt = [{ v: '', t: '— Sin nave —' }]
-        .concat(naves.map(function (n) { return { v: String(n.id), t: n.nombre }; }))
+        .concat(naves.map(function (n) { return { v: String(n.id), t: naveEtiqueta(n) }; }))
         .concat([{ v: '__otros__', t: 'Otros (registrar nueva nave)' }]);
       var actOpt = actividades.map(function (a) { return { v: String(a.id), t: a.nombre }; });
       var tipoFiltroOpt = [{ v: '', t: 'Todos los tipos' }]
@@ -307,6 +311,7 @@
   // el status pasa de "En Proceso"/sugerido a "Culminado". Si baja del total, se
   // restablece el status sugerido. Solo actúa cuando hay un planned > 0.
   function aplicarAutoStatus(planned, accumulated) {
+    if (editId) return; // En una corrección el status se mantiene bajo control del usuario.
     var seg = bodyEl().querySelector('[data-seg="status_act"]');
     if (!seg || !(planned > 0)) return;
     var actual = getField('status_act');
@@ -685,8 +690,13 @@
         var status = r.data.status, ultimo = r.data.ultimo;
         acumuladoPrevio = Number(r.data.acumulado) || 0;
         statusSugerido = status;
-        setSeg('status_act', status);
+        if (!editId) setSeg('status_act', status);
         aplicarPlannedSegunStatus();
+        if (editId) {
+          setStatusNote('Registro existente: se conserva el status actual mientras corriges ubicación, tipo o actividad.');
+          recalc();
+          return;
+        }
         if (status === 'Inicio' && !ultimo)
           setStatusNote('Sugerido automáticamente: Inicio — no hay registros previos de esta nave y actividad.');
         else if (status === 'Inicio' && ultimo === 'Culminado')
