@@ -529,65 +529,8 @@ $canDefinir    = ($rol === 'Administrador');
     // ── Helpers para la sección Operaciones del modal de edición ──
     // Mismas plantillas que en operaciones.php (Nueva Nave) para mantener consistencia.
 
-    var ED_CARGA_DEFAULT = ['Otros'];
-    var ED_CARGA_POR_TIPO = {
-      'containera':    ['Contenedores General', 'Contenedores IMOS', 'Otros'],
-      'granelera':     ['Maíz', 'Soya', 'Trigo', 'Harina de Pescado', 'Maíz / Soya', 'Otros'],
-      'cementero':     ['Big Bags', 'Otros'],
-      'ro-ro':         ['Carga Rodante', 'Otros'],
-      'carga general': ['Planchas metálicas', 'Urea', 'Bultos', 'Nitrato', 'Salt', 'Big Bags', 'Carbón', 'Fertilizante', 'Otros']
-    };
-    var edCargaActual = ED_CARGA_DEFAULT;
-
     function edNorm(s) {
       return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
-    }
-    function edSetSeg(segEl, v) {
-      if (!segEl) return;
-      segEl.querySelectorAll('.op-seg').forEach(function (x) { x.classList.toggle('on', x.getAttribute('data-v') === v); });
-    }
-    function edSelectCargaHtml(id, ph) {
-      var opts = '<option value="">' + (ph || 'Seleccionar…') + '</option>' +
-        edCargaActual.map(function (c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
-      return '<div class="op-input">' +
-        '<svg class="op-input-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>' +
-        '<select class="op-control has-ic op-select" id="' + id + '">' + opts + '</select>' +
-        '<svg class="op-input-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
-        '</div>';
-    }
-    function edCargaFieldHtml() {
-      return '<div class="op-field full">' +
-        '<label>Tipo de carga <span class="op-req">*</span></label>' +
-        edSelectCargaHtml('op-carga', 'Seleccionar…') +
-        '<input class="op-control" id="op-carga-otro" type="text" placeholder="Especifica el tipo de carga…" style="display:none;margin-top:8px">' +
-        '</div>';
-    }
-    function edEsOtros(v) { return /^otros?$/i.test(String(v || '').trim()); }
-    function edWireCargaOtros() {
-      var sel = $('op-carga'), otro = $('op-carga-otro');
-      if (!sel || !otro) return;
-      function upd() { var on = edEsOtros(sel.value); otro.style.display = on ? '' : 'none'; if (!on) otro.value = ''; }
-      sel.addEventListener('change', upd); upd();
-    }
-    function edCollectCarga() {
-      var sel = $('op-carga');
-      if (!sel) return { ok: true, value: null };
-      var v = sel.value;
-      if (!v) return { ok: false, error: 'Selecciona el tipo de carga', focusId: 'op-carga' };
-      if (edEsOtros(v)) {
-        var otro = $('op-carga-otro'), t = otro ? otro.value.trim() : '';
-        if (!t) return { ok: false, error: 'Especifica el tipo de carga (Otros)', focusId: 'op-carga-otro' };
-        return { ok: true, value: t };
-      }
-      return { ok: true, value: v };
-    }
-    // Pre-rellena el select de carga: si el valor guardado no está en la lista usa "Otros" + texto libre.
-    function edSetCarga(tipoCarga) {
-      var sel = $('op-carga'); if (!sel || !tipoCarga) return;
-      var isStandard = edCargaActual.indexOf(tipoCarga) !== -1;
-      sel.value = isStandard ? tipoCarga : (edCargaActual.indexOf('Otros') !== -1 ? 'Otros' : '');
-      if (!isStandard && $('op-carga-otro')) $('op-carga-otro').value = tipoCarga;
-      sel.dispatchEvent(new Event('change'));
     }
 
     var ED_OPER_TPL = {
@@ -597,7 +540,6 @@ $canDefinir    = ($rol === 'Administrador');
             '<div class="op-field full"><label>TEU\'s a bordo <span class="op-req">*</span></label>' +
               '<div class="op-input"><svg class="op-input-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="1"/><path d="M2 11h20"/><path d="M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/></svg>' +
               '<input type="number" min="0" step="1" class="op-control has-ic" id="op-teus" placeholder="Ej. 1200"></div></div>' +
-            edCargaFieldHtml() +
           '</div>';
         },
         wire: function () { return {}; }
@@ -608,38 +550,9 @@ $canDefinir    = ($rol === 'Administrador');
             '<div class="op-field full"><label>Cantidad total (TM) <span class="op-req">*</span></label>' +
               '<div class="op-input"><svg class="op-input-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>' +
               '<input type="number" min="0" step="any" class="op-control has-ic" id="op-cant" placeholder="Ej. 25000"></div></div>' +
-            edCargaFieldHtml() +
-            '<div class="op-field full op-bodegas-q" id="op-bodq" style="display:none">' +
-              '<label>¿Todas las bodegas tienen la misma carga?</label>' +
-              '<div class="op-segment op-bodq-seg"><button type="button" class="op-seg on" data-v="si">Sí</button><button type="button" class="op-seg" data-v="no">No</button></div>' +
-              '<input type="hidden" id="op-boduniforme" value="si">' +
-            '</div>' +
-            '<div class="op-field full" id="op-bodegas" style="display:none"></div>' +
           '</div>';
         },
-        wire: function () {
-          var selCarga = $('op-carga'), bodq = $('op-bodq'), bodWrap = $('op-bodegas'), uniHidden = $('op-boduniforme');
-          var bodqSeg = bodq ? bodq.querySelector('.op-bodq-seg') : null;
-          function renderBodegas() {
-            if (!selCarga.value || uniHidden.value !== 'no') { bodWrap.style.display = 'none'; bodWrap.innerHTML = ''; return; }
-            var rows = '';
-            for (var i = 1; i <= 5; i++) {
-              rows += '<div class="op-bodega-row"><span class="op-bodega-tag">Bodega ' + i + '</span>' + edSelectCargaHtml('op-bodega-' + i, 'Tipo de carga…') + '</div>';
-            }
-            bodWrap.innerHTML = '<label style="margin-bottom:8px;display:block">Carga por bodega</label><div class="op-bodega-list">' + rows + '</div>';
-            bodWrap.style.display = '';
-          }
-          selCarga.addEventListener('change', function () {
-            bodq.style.display = selCarga.value ? '' : 'none';
-            if (!selCarga.value) { uniHidden.value = 'si'; edSetSeg(bodqSeg, 'si'); }
-            renderBodegas();
-          });
-          if (bodqSeg) bodqSeg.addEventListener('click', function (e) {
-            var b = e.target.closest('.op-seg'); if (!b) return;
-            uniHidden.value = b.getAttribute('data-v'); edSetSeg(bodqSeg, uniHidden.value); renderBodegas();
-          });
-          return { renderBodegas: renderBodegas };
-        }
+        wire: function () { return {}; }
       },
       'ro-ro': {
         html: function () {
@@ -647,7 +560,6 @@ $canDefinir    = ($rol === 'Administrador');
             '<div class="op-field full"><label>Cantidad total de vehículos <span class="op-req">*</span></label>' +
               '<div class="op-input"><svg class="op-input-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>' +
               '<input type="number" min="0" step="1" class="op-control has-ic" id="op-vehiculos" placeholder="Ej. 850"></div></div>' +
-            edCargaFieldHtml() +
           '</div>';
         },
         wire: function () { return {}; }
@@ -660,9 +572,6 @@ $canDefinir    = ($rol === 'Administrador');
       var datos = nave.datos_adicionales || {};
       var tipoNombre = nave.tipo_nave || '';
       var rawKey = edNorm(tipoNombre);
-
-      // Fijar lista de cargas según tipo (antes del mapeo de template).
-      edCargaActual = ED_CARGA_POR_TIPO[rawKey] || ED_CARGA_DEFAULT;
 
       var key = rawKey;
       if (key === 'cementero' || key === 'sales' || key === 'carga general') key = 'granelera';
@@ -679,30 +588,15 @@ $canDefinir    = ($rol === 'Administrador');
       edOperBody.innerHTML = head + tpl.html();
       edOperSection.style.display = '';
 
-      edWireCargaOtros();
-      var wireResult = tpl.wire();
+      tpl.wire();
 
       // Pre-rellenar con datos existentes.
       if (key === 'containera') {
         if ($('op-teus') && datos.teus != null) $('op-teus').value = datos.teus;
-        edSetCarga(datos.tipo_carga);
       } else if (key === 'granelera') {
         if ($('op-cant') && datos.cantidad_total != null) $('op-cant').value = datos.cantidad_total;
-        edSetCarga(datos.tipo_carga);
-        // bodegas_uniforme puede venir como boolean (true/false) o string ('si'/'no')
-        var uni = (datos.bodegas_uniforme === false || datos.bodegas_uniforme === 'no') ? 'no' : 'si';
-        if ($('op-boduniforme')) $('op-boduniforme').value = uni;
-        var bodqSeg2 = $('op-bodq') ? $('op-bodq').querySelector('.op-bodq-seg') : null;
-        edSetSeg(bodqSeg2, uni);
-        if (uni === 'no' && wireResult && wireResult.renderBodegas) {
-          wireResult.renderBodegas();
-          if (datos.bodegas && datos.bodegas.length) {
-            datos.bodegas.forEach(function (b) { var s = $('op-bodega-' + b.bodega); if (s) s.value = b.tipo_carga || ''; });
-          }
-        }
       } else if (key === 'ro-ro') {
         if ($('op-vehiculos') && datos.vehiculos != null) $('op-vehiculos').value = datos.vehiculos;
-        edSetCarga(datos.tipo_carga);
       }
     }
 
@@ -716,29 +610,17 @@ $canDefinir    = ($rol === 'Administrador');
       if (key === 'ro-ro') {
         var veh = $('op-vehiculos') ? $('op-vehiculos').value.trim() : '';
         if (veh === '') return { ok: false, error: 'Ingresa la cantidad total de vehículos', focusId: 'op-vehiculos' };
-        var cR = edCollectCarga(); if (!cR.ok) return cR;
-        return { ok: true, datos: { vehiculos: Number(veh), tipo_carga: cR.value } };
+        return { ok: true, datos: { vehiculos: Number(veh) } };
       }
       if (key === 'containera') {
         var teus = $('op-teus') ? $('op-teus').value.trim() : '';
         if (teus === '') return { ok: false, error: 'Ingresa los TEU\'s a bordo', focusId: 'op-teus' };
-        var cC = edCollectCarga(); if (!cC.ok) return cC;
-        return { ok: true, datos: { teus: Number(teus), tipo_carga: cC.value } };
+        return { ok: true, datos: { teus: Number(teus) } };
       }
       if (key === 'granelera') {
         var cant = $('op-cant') ? $('op-cant').value.trim() : '';
         if (cant === '') return { ok: false, error: 'Ingresa la cantidad total', focusId: 'op-cant' };
-        var cG = edCollectCarga(); if (!cG.ok) return cG;
-        var datosOut = { cantidad_total: Number(cant), tipo_carga: cG.value };
-        var uniforme = $('op-boduniforme') ? $('op-boduniforme').value : 'si';
-        datosOut.bodegas_uniforme = (uniforme === 'si');
-        if (uniforme === 'no') {
-          var bodegas = [];
-          for (var i = 1; i <= 5; i++) { var s = $('op-bodega-' + i); if (s && s.value) bodegas.push({ bodega: i, tipo_carga: s.value }); }
-          if (!bodegas.length) return { ok: false, error: 'Indica la carga de al menos una bodega' };
-          datosOut.bodegas = bodegas;
-        }
-        return { ok: true, datos: datosOut };
+        return { ok: true, datos: { cantidad_total: Number(cant) } };
       }
       return { ok: true, datos: null };
     }
