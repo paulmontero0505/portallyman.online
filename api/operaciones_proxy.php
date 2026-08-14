@@ -233,6 +233,56 @@ function fallback_write(string $path, ?string $body, string $method): string
         return json_encode(['success'=>true,'data'=>$row,'_fallback'=>true]);
     }
 
+    // ── PUT /naves/{id}/muelle-actividad ─────────────────────────────────────
+    // Mantiene la sincronización desde Tallyman disponible si la API Node está
+    // detenida, igual que el resto de operaciones de escritura del fallback.
+    if (preg_match('#^naves/(\d+)/muelle-actividad$#', $path, $m) && $method === 'PUT') {
+        $id = (int)$m[1];
+        $cambios = [];
+        $params = [];
+
+        if (array_key_exists('muelle', $data)) {
+            $cambios[] = 'muelle=?';
+            $muelle = trim((string)($data['muelle'] ?? ''));
+            $params[] = $muelle !== '' ? $muelle : null;
+        }
+        if (array_key_exists('actividad_id', $data)) {
+            $actividadId = $data['actividad_id'];
+            if ($actividadId === null || $actividadId === '') {
+                $actividadId = null;
+            } elseif (!filter_var($actividadId, FILTER_VALIDATE_INT) || (int)$actividadId <= 0) {
+                http_response_code(400);
+                return json_encode(['success' => false, 'error' => 'actividad_id inválido.']);
+            } else {
+                $actividadId = (int)$actividadId;
+                $actividad = $pdo->prepare('SELECT id FROM tallyman_actividades WHERE id=? AND activo=1 LIMIT 1');
+                $actividad->execute([$actividadId]);
+                if (!$actividad->fetch()) {
+                    http_response_code(400);
+                    return json_encode(['success' => false, 'error' => 'La actividad no existe o está inactiva.']);
+                }
+            }
+            $cambios[] = 'actividad_id=?';
+            $params[] = $actividadId;
+        }
+        if (!$cambios) {
+            http_response_code(400);
+            return json_encode(['success' => false, 'error' => 'Nada que actualizar: envía muelle y/o actividad_id.']);
+        }
+
+        $params[] = $id;
+        $pdo->prepare('UPDATE naves SET ' . implode(', ', $cambios) . ', updated_at=NOW() WHERE id=?')->execute($params);
+        $COLS = "n.id, n.nombre, n.muelle, n.tipo_nave_id, t.nombre AS tipo_nave,
+                 n.actividad_id, ta.nombre AS actividad,
+                 n.eta, n.etb, n.etd, n.estado, n.datos_adicionales, n.created_at, n.updated_at";
+        $nave = fetch_nave_by_id($pdo, $COLS, $id);
+        if (!$nave) {
+            http_response_code(404);
+            return json_encode(['success' => false, 'error' => 'Nave no encontrada.']);
+        }
+        return json_encode(['success' => true, 'data' => $nave, '_fallback' => true]);
+    }
+
     // ── PUT /naves/{id} ─────────────────────────────────────────────────────
     if (preg_match('#^naves/(\d+)$#', $path, $m) && $method === 'PUT') {
         $id     = (int)$m[1];
