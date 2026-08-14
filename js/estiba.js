@@ -2587,6 +2587,8 @@
     function rmSeleccionados() { return [...rmSel]; }
     function rmUpdateInfo() {
       const sel = rmSel.size;
+      const count = $('rmSelectedCount');
+      if (count) count.textContent = `${sel} seleccionado${sel !== 1 ? 's' : ''}`;
       $('rmInfo').textContent = sel
         ? `Se registrará refrigerio a ${sel} persona${sel > 1 ? 's' : ''} seleccionada${sel > 1 ? 's' : ''}.`
         : 'Selecciona al menos una persona.';

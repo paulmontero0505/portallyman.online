@@ -8,7 +8,7 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Turno Actual · Estiba Shift Command Deck</title>
   <link rel="icon" type="image/png" href="img/logo.jpg">
 
@@ -571,23 +571,45 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
       border-color: #ef4444 !important;
     }
 
-    /* Refrigerio masivo: búsqueda rápida y disposición utilizable en móvil. */
+    /* Refrigerio masivo: hoja de tarea para operación en campo. */
     #refMasivoModal .rm-modal-body { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
-    #refMasivoModal .rm-search { min-height:44px; display:flex; align-items:center; gap:9px; padding:0 12px; border:1.5px solid #00875A; border-radius:11px; background:#fff; color:#00875A; }
+    #refMasivoModal .rm-search { min-height:46px; display:flex; align-items:center; gap:9px; padding:0 13px; border:1.5px solid #00875A; border-radius:12px; background:#fff; color:#00875A; }
     #refMasivoModal .rm-search:focus-within { box-shadow:0 0 0 3px rgba(0,135,90,.14); }
     #refMasivoModal .rm-search svg { width:18px; height:18px; flex:0 0 auto; }
     #refMasivoModal .rm-search input { width:100%; min-width:0; border:0; outline:0; background:transparent; color:#172033; font:600 13px 'DM Sans',sans-serif; }
     #refMasivoModal .rm-search input::placeholder { color:#94a3b8; font-weight:500; }
+    #refMasivoModal .rm-section-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; }
+    #refMasivoModal .rm-section-head label { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.06em; }
+    #refMasivoModal .rm-selection-actions { display:flex; align-items:center; gap:8px; }
+    #refMasivoModal .rm-selection-actions button { min-height:32px; padding:0 4px; font:700 12px 'DM Sans',sans-serif; color:#006b47; background:none; border:0; cursor:pointer; }
+    #refMasivoModal .rm-selection-actions button:last-child { color:#64748b; }
+    #refMasivoModal .rm-selected-count { display:inline-flex; align-items:center; min-height:24px; padding:2px 8px; border-radius:999px; background:#e6f5ef; color:#006b47; font-size:11px; font-weight:700; white-space:nowrap; }
+    #refMasivoModal .rm-personnel { display:flex; flex-direction:column; min-height:0; }
+    #refMasivoModal #rmLista { border-radius:12px!important; background:#f8fafc!important; }
+    #refMasivoModal .rm-row { min-height:58px; transition:background .15s, box-shadow .15s; }
+    #refMasivoModal .rm-row:has(input:checked) { background:#f0faf6; box-shadow:inset 3px 0 0 #00875A; }
     #refMasivoModal .rm-modal-foot { flex:0 0 auto; border-top:1px solid #e2e8f0; background:#fff; }
-    @media (max-width:640px) {
-      body #refMasivoModal { top:auto; bottom:0; left:0; transform:translateY(105%); width:100% !important; max-width:none !important; max-height:94dvh; border-radius:18px 18px 0 0; }
+    @media (max-width:760px) {
+      body #refMasivoModal { top:auto; bottom:0; left:0; transform:translateY(105%); width:100% !important; max-width:none !important; max-height:96dvh; border-radius:22px 22px 0 0; }
       body #refMasivoModal.open { transform:translateY(0); }
-      #refMasivoModal .rm-modal-body { padding:14px 18px!important; gap:12px!important; }
-      #refMasivoModal .rm-time-grid, #refMasivoModal .rm-filter-grid { grid-template-columns:1fr!important; gap:10px!important; }
-      #refMasivoModal .est-field input, #refMasivoModal .est-field select, #refMasivoModal .rm-search input { min-height:44px; font-size:16px; }
-      #refMasivoModal #rmLista { max-height:min(30dvh,260px)!important; }
-      #refMasivoModal .rm-modal-foot { padding:12px 18px max(12px,env(safe-area-inset-bottom))!important; }
-      #refMasivoModal .rm-modal-foot .est-btn { min-height:46px; }
+      #refMasivoModal .est-modal-head { position:relative; padding:30px 20px 16px!important; }
+      #refMasivoModal .est-modal-head::before { content:''; position:absolute; top:10px; left:50%; width:38px; height:4px; transform:translateX(-50%); border-radius:999px; background:#cbd5e1; }
+      #refMasivoModal .est-modal-head h2 { font-size:19px; letter-spacing:-.02em; }
+      #refMasivoModal .est-modal-sub { display:block; margin-top:3px; font-size:13px; line-height:1.4; }
+      #refMasivoModal .est-modal-close { width:40px; height:40px; font-size:23px; }
+      #refMasivoModal .rm-modal-body { padding:14px 18px!important; gap:13px!important; }
+      #refMasivoModal .rm-time-grid { gap:10px!important; }
+      #refMasivoModal .rm-filter-grid { display:flex!important; gap:8px!important; overflow-x:auto; padding-bottom:2px; scrollbar-width:none; }
+      #refMasivoModal .rm-filter-grid::-webkit-scrollbar { display:none; }
+      #refMasivoModal .rm-filter-grid .est-field { flex:0 0 min(72vw,280px); }
+      #refMasivoModal .est-field input, #refMasivoModal .est-field select, #refMasivoModal .rm-search input { min-height:46px; font-size:16px; }
+      #refMasivoModal .rm-personnel { flex:1 1 220px; }
+      #refMasivoModal #rmLista { flex:1; max-height:none!important; min-height:160px; }
+      #refMasivoModal .rm-row { min-height:62px!important; padding:10px 12px!important; }
+      #refMasivoModal .rm-row input[type="checkbox"] { width:20px!important; height:20px!important; }
+      #refMasivoModal .rm-row > span:nth-of-type(2) > span:first-child { font-size:13.5px!important; }
+      #refMasivoModal .rm-modal-foot { padding:12px 18px max(14px,env(safe-area-inset-bottom))!important; box-shadow:0 -8px 22px rgba(15,23,42,.06); }
+      #refMasivoModal .rm-modal-foot .est-btn { min-height:48px; justify-content:center; }
     }
   </style>
 </head>
@@ -961,13 +983,13 @@ $sheetUrl = defined('SHEETS_SHEET_URL') ? SHEETS_SHEET_URL : '';
             </div>
             <label class="rm-search" for="rmBuscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input id="rmBuscar" type="search" placeholder="Buscar por nombre, código o función" autocomplete="off"></label>
             <!-- Lista de personal activo para seleccionar -->
-            <div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <label style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.04em">Personal activo</label>
-                <div style="display:flex;gap:8px">
-                  <button type="button" id="rmSelAll" style="font-size:11px;font-weight:700;color:#0f4c81;background:none;border:none;cursor:pointer;padding:0">Todos</button>
-                  <span style="color:#cbd5e1">·</span>
-                  <button type="button" id="rmSelNone" style="font-size:11px;font-weight:700;color:#64748b;background:none;border:none;cursor:pointer;padding:0">Ninguno</button>
+            <div class="rm-personnel">
+              <div class="rm-section-head">
+                <label>Personal activo</label>
+                <div class="rm-selection-actions">
+                  <span class="rm-selected-count" id="rmSelectedCount">0 seleccionados</span>
+                  <button type="button" id="rmSelAll">Todos</button>
+                  <button type="button" id="rmSelNone">Ninguno</button>
                 </div>
               </div>
               <div id="rmLista" style="max-height:220px;overflow-y:auto;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc"></div>
