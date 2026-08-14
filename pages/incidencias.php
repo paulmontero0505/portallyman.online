@@ -389,16 +389,17 @@ $zona_ubicaciones = inc_zonas(true);
     .inc-thumb { max-width: 100%; max-height: 240px; border-radius: 10px; border: 1px solid var(--co-line); }
 
     /* ── Vista detalle ── */
+    .inc-modal--view { height: min(760px, 92vh); }
     .inc-modal--view .inc-modal-head { display: none; }
-    .inc-modal--view .inc-modal-body { padding: 0; overflow: hidden; display: block; }
+    .inc-modal--view .inc-modal-body { padding: 0; overflow: hidden; display: block; flex: 1 1 auto; min-height: 0; }
     .inc-modal--view #incViewEdit { background: linear-gradient(135deg,#00875A,#005c3d); border-color: transparent; }
     .inc-modal--view #incViewEdit:hover { background: linear-gradient(135deg,#00b377,#00875A); }
 
-    .inc-view-layout { display: grid; grid-template-columns: 110px 1fr; max-height: 74vh; }
+    .inc-view-layout { display: grid; grid-template-columns: 110px minmax(0, 1fr); height: 100%; min-height: 0; }
     .inc-view-sidebar {
       background: linear-gradient(160deg,#005c3d 0%,#00875A 100%);
       padding: 20px 12px; color: #fff;
-      display: flex; flex-direction: column; gap: 14px; align-items: center; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 14px; align-items: center; min-height: 0; overflow-y: auto;
     }
     .inc-view-sidebar .iv-badge {
       display: inline-flex; align-items: center; gap: 4px; color: #fff;
@@ -413,7 +414,7 @@ $zona_ubicaciones = inc_zonas(true);
     .inc-view-sidebar .iv-coord .iv-stat-k { opacity: .8; }
     .inc-view-sidebar .iv-coord .iv-stat-v { font-size: 10.5px; font-weight: 600; }
 
-    .inc-view-main { padding: 20px 18px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; background: #fff; }
+    .inc-view-main { padding: 20px 18px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; background: #fff; }
     .inc-view-name { font-size: 15px; font-weight: 800; color: #005c3d; line-height: 1.3; margin: 0; }
     .inc-view-cargo { font-size: 11.5px; color: var(--co-mute); margin-top: 3px; font-weight: 500; }
     .inc-view-divider { border: none; border-top: 1px solid var(--co-line); margin: 2px 0; }
