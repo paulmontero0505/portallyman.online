@@ -244,7 +244,12 @@
       '</div>';
     var sY1 = '<div class="op-field"><label>Ubicación <span class="op-req">*</span></label>' +
         '<div class="op-input"><input class="op-control" data-k="ubicacion" value="Yard" placeholder="Ej. Yard / Z1D1"></div></div>' +
-        fSelect('NAVE (PATIO)', 'nave_id', yardOpt, false) +
+        '<div class="op-field full tm-nave-field"><label>Nave o patio disponible</label>' +
+          '<div class="op-input"><select class="op-control op-select" data-k="nave_id">' +
+            yardOpt.map(function (o) { return '<option value="' + OP.esc(o.v) + '">' + OP.esc(o.t) + '</option>'; }).join('') +
+          '</select>' + CARET + '</div>' +
+          '<small>El proceso se mantiene por la nave o nombre de patio seleccionado. Puedes corregir ubicación y actividad.</small>' +
+        '</div>' +
         nuevoNombreBlock +
         fSelect('Actividad', 'actividad_id', actOptY, true) +
         fSeg('Status', 'status_act', STATUS_ACT, true) +
@@ -508,7 +513,7 @@
         var actId = getField('actividad_id');
         if (!actId) { setStatusNote('No hay registros de nave y actividad.'); recalc(); return; }
         try {
-          var q = { actividad_id: actId, fecha_turno: (turno && turno.fecha) || '', turno: (turno && turno.turno) || '' };
+          var q = { actividad_id: actId, ubicacion_tipo: 'YARD', fecha_turno: (turno && turno.fecha) || '', turno: (turno && turno.turno) || '' };
           if (naveId) q.nave_id = naveId;
           else if (navePatio) q.nave_patio = navePatio;
           else { setStatusNote('No hay registros de nave y actividad.'); recalc(); return; }
@@ -517,8 +522,12 @@
           var status = r.data.status, ultimo = r.data.ultimo;
           acumuladoPrevio = Number(r.data.acumulado) || 0;
           statusSugerido = status;
-          setSeg('status_act', status);
+          if (!editId) setSeg('status_act', status);
           recalc();
+          if (editId) {
+            setStatusNote('Registro existente: se conserva el status actual mientras corriges ubicación o actividad.');
+            return;
+          }
           if (status === 'Inicio' && !ultimo)
             setStatusNote('Sugerido automáticamente: Inicio — no hay registros previos de esta nave y actividad.');
           else if (status === 'Inicio' && ultimo === 'Culminado')
@@ -576,6 +585,13 @@
         if (!v || v === '__nuevo__' || v === '') { setStatusNote('No hay registros de nave y actividad.'); return; }
         if (v.startsWith('n:')) sugerirStatusYard(v.slice(2), null);
         else if (v.startsWith('p:')) sugerirStatusYard(null, patioNombres[Number(v.slice(2))] || null);
+      });
+
+      var ubicYard = body.querySelector('[data-k="ubicacion"]');
+      if (ubicYard) ubicYard.addEventListener('change', function () {
+        if (naveSel && naveSel.value && naveSel.value !== '__nuevo__') {
+          setStatusNote('Ubicación corregida. El historial del patio se mantiene al guardar.');
+        }
       });
 
       if (execIn) execIn.addEventListener('input', recalc);

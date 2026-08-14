@@ -14,6 +14,7 @@
 
 require_once('../includes/auth.php');
 require_once('../includes/db.php');   // define OPER_DB_* (credenciales centralizadas)
+require_once('../includes/tallyman_auto_cierre.php');
 header('Content-Type: application/json; charset=utf-8');
 
 // ── Credenciales BD Operaciones (vienen de includes/db.php) ──
@@ -807,6 +808,10 @@ function fallback_get(string $path, array $params): string
         return json_encode(['success' => false, 'error' => 'No se pudo conectar a la base de datos: ' . $e->getMessage()]);
     }
 
+    // La vista Tallyman también ejecuta el cierre al cargarse; el cron lo cubre
+    // cuando no hay usuarios conectados.
+    if (strpos($path, 'tallyman/') === 0) tm_auto_cerrar_naves_inactivas($pdo);
+
     // GET /tipos-nave
     if ($path === 'tipos-nave') {
         $rows = $pdo->query("SELECT id, nombre FROM tipos_nave WHERE activo = 1 ORDER BY nombre")->fetchAll();
@@ -1094,9 +1099,13 @@ function fallback_get(string $path, array $params): string
         if (!$actId) { http_response_code(400); return json_encode(['success' => false, 'error' => 'actividad_id es obligatorio.']); }
         $naveId   = isset($params['nave_id']) && $params['nave_id'] !== '' ? (int)$params['nave_id'] : null;
         $navePatio = $params['nave_patio'] ?? null;
-        if ($navePatio !== null && $navePatio !== '') {
-            $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE actividad_id = ? AND nave_patio = ? ORDER BY id DESC LIMIT 1");
-            $s->execute([$actId, $navePatio]);
+        $tipoUbi = strtoupper(trim($params['ubicacion_tipo'] ?? ($navePatio !== null && $navePatio !== '' ? 'YARD' : 'BERTH')));
+        if ($tipoUbi === 'YARD' && $navePatio !== null && $navePatio !== '') {
+            $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE ubicacion_tipo='YARD' AND nave_patio = ? ORDER BY id DESC LIMIT 1");
+            $s->execute([$navePatio]);
+        } elseif ($tipoUbi === 'YARD') {
+            $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE ubicacion_tipo='YARD' AND (nave_id <=> ?) ORDER BY id DESC LIMIT 1");
+            $s->execute([$naveId]);
         } else {
             // Una nave conserva su ciclo aunque cambie de Berth o se corrija la actividad.
             $s = $pdo->prepare("SELECT status_act FROM tallyman_registros WHERE ubicacion_tipo='BERTH' AND (nave_id <=> ?) ORDER BY id DESC LIMIT 1");
@@ -1113,7 +1122,7 @@ function fallback_get(string $path, array $params): string
         $tT    = $params['turno'] ?? null;
         if ($fT !== null && $fT !== '' && $tT !== null && $tT !== '') {
             $acumulado = tm_executed_previo($pdo, [
-                'ubicacion_tipo' => ($navePatio !== null && $navePatio !== '') ? 'YARD' : 'BERTH',
+                'ubicacion_tipo' => $tipoUbi === 'YARD' ? 'YARD' : 'BERTH',
                 'actividad_id'   => $actId,
                 'nave_id'        => $naveId,
                 'nave_patio'     => $navePatio,
@@ -1136,14 +1145,14 @@ function tm_executed_previo(PDO $pdo, array $r): float
     if ($r['ubicacion_tipo'] === 'YARD') {
         if ($r['nave_id'] !== null) {
             $s = $pdo->prepare("SELECT COALESCE(SUM(executed),0) AS p FROM tallyman_registros
-              WHERE actividad_id=? AND nave_id=? AND ubicacion_tipo='YARD'
+              WHERE nave_id=? AND ubicacion_tipo='YARD'
                 AND (fecha_turno<? OR (fecha_turno=? AND turno<>?))");
-            $s->execute([$aId, $r['nave_id'], $f, $f, $t]);
+            $s->execute([$r['nave_id'], $f, $f, $t]);
         } elseif (!empty($r['nave_patio'])) {
             $s = $pdo->prepare("SELECT COALESCE(SUM(executed),0) AS p FROM tallyman_registros
-              WHERE actividad_id=? AND nave_patio=? AND ubicacion_tipo='YARD'
+              WHERE nave_patio=? AND ubicacion_tipo='YARD'
                 AND (fecha_turno<? OR (fecha_turno=? AND turno<>?))");
-            $s->execute([$aId, $r['nave_patio'], $f, $f, $t]);
+            $s->execute([$r['nave_patio'], $f, $f, $t]);
         } else { return 0.0; }
     } else {
         $s = $pdo->prepare("SELECT COALESCE(SUM(executed),0) AS p FROM tallyman_registros

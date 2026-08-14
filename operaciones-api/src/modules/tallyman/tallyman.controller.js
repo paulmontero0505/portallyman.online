@@ -209,7 +209,7 @@ function conResumen(reg, prev) {
 async function prevPara(r) {
   if (r.ubicacion_tipo === 'YARD') {
     return TallymanModel.executedPrevioYard({
-      nave_id: r.nave_id, nave_patio: r.nave_patio, actividad_id: r.actividad_id,
+      nave_id: r.nave_id, nave_patio: r.nave_patio,
       fecha_turno: r.fecha_turno, turno: r.turno,
     });
   }
@@ -336,6 +336,7 @@ export const obtenerIncidencia = asyncHandler(async (req, res) => {
 export const estadoSugerido = asyncHandler(async (req, res) => {
   const naveId = req.query.nave_id ? Number(req.query.nave_id) : null;
   const navePatio = req.query.nave_patio ? String(req.query.nave_patio).trim() : null;
+  const ubicacionTipo = String(req.query.ubicacion_tipo || (navePatio ? 'YARD' : 'BERTH')).toUpperCase();
   const actividadId = Number(req.query.actividad_id);
   const ubicacion = req.query.ubicacion ? String(req.query.ubicacion).trim() : null;
   const fechaTurno = req.query.fecha_turno ? String(req.query.fecha_turno).trim() : null;
@@ -343,8 +344,8 @@ export const estadoSugerido = asyncHandler(async (req, res) => {
   if (!Number.isInteger(actividadId) || actividadId <= 0) {
     throw new ApiError(400, 'actividad_id es obligatorio.');
   }
-  const ultimo = navePatio
-    ? await TallymanModel.ultimoStatus({ nave_patio: navePatio, actividad_id: actividadId })
+  const ultimo = ubicacionTipo === 'YARD'
+    ? await TallymanModel.ultimoStatusYard({ nave_id: naveId, nave_patio: navePatio })
     : await TallymanModel.ultimoStatusBerth(naveId);
   const status = (!ultimo || ultimo === 'Culminado') ? 'Inicio' : 'En Proceso';
   // Acumulado previo (executed de turnos anteriores, excluyendo el turno actual) para
@@ -352,8 +353,8 @@ export const estadoSugerido = asyncHandler(async (req, res) => {
   let acumulado = 0;
   if (fechaTurno && turno) {
     try {
-      if (navePatio) {
-        acumulado = await TallymanModel.executedPrevioYard({ nave_id: naveId, nave_patio: navePatio, actividad_id: actividadId, fecha_turno: fechaTurno, turno });
+      if (ubicacionTipo === 'YARD') {
+        acumulado = await TallymanModel.executedPrevioYard({ nave_id: naveId, nave_patio: navePatio, fecha_turno: fechaTurno, turno });
       } else if (naveId) {
         acumulado = await TallymanModel.executedPrevio({ nave_id: naveId, fecha_turno: fechaTurno, turno });
       }

@@ -99,6 +99,18 @@ export const TallymanModel = {
     return rows.length ? rows[0].status_act : null;
   },
 
+  async ultimoStatusYard({ nave_id, nave_patio }) {
+    const where = nave_patio ? 'nave_patio = ?' : '(nave_id <=> ?)';
+    const value = nave_patio || nave_id || null;
+    const [rows] = await pool.query(
+      `SELECT status_act FROM tallyman_registros
+        WHERE ubicacion_tipo = 'YARD' AND ${where}
+        ORDER BY id DESC LIMIT 1`,
+      [value],
+    );
+    return rows.length ? rows[0].status_act : null;
+  },
+
   // Naves que tienen registros de descarga interna (BERTH), con la suma acumulada
   // de `interna` como planned_patio sugerido para el formulario de Patio.
   // También devuelve actividad_id_sugerida y planned_sugerido del último registro
@@ -150,15 +162,15 @@ export const TallymanModel = {
     return rows;
   },
 
-  // Acumulado de executed para registros YARD con la misma nave (real o texto) y actividad.
-  async executedPrevioYard({ nave_id, nave_patio, actividad_id, fecha_turno, turno }) {
+  // Acumulado de executed para registros YARD con la misma nave o nombre de patio.
+  async executedPrevioYard({ nave_id, nave_patio, fecha_turno, turno }) {
     if (nave_id != null) {
       const [rows] = await pool.query(
         `SELECT COALESCE(SUM(executed), 0) AS prev
            FROM tallyman_registros
-          WHERE actividad_id = ? AND nave_id = ? AND ubicacion_tipo = 'YARD'
-            AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
-        [actividad_id, nave_id, fecha_turno, fecha_turno, turno],
+           WHERE nave_id = ? AND ubicacion_tipo = 'YARD'
+             AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
+        [nave_id, fecha_turno, fecha_turno, turno],
       );
       return Number(rows[0]?.prev) || 0;
     }
@@ -166,9 +178,9 @@ export const TallymanModel = {
       const [rows] = await pool.query(
         `SELECT COALESCE(SUM(executed), 0) AS prev
            FROM tallyman_registros
-          WHERE actividad_id = ? AND nave_patio = ? AND ubicacion_tipo = 'YARD'
-            AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
-        [actividad_id, nave_patio, fecha_turno, fecha_turno, turno],
+           WHERE nave_patio = ? AND ubicacion_tipo = 'YARD'
+             AND (fecha_turno < ? OR (fecha_turno = ? AND turno <> ?))`,
+        [nave_patio, fecha_turno, fecha_turno, turno],
       );
       return Number(rows[0]?.prev) || 0;
     }
