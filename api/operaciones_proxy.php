@@ -1,17 +1,11 @@
 <?php
 /* ═══════════════════════════════════════════════════════════════════════
-   ESTIBA_TURNO · Proxy seguro hacia la API Node de Operaciones (:4000)
+   ESTIBA_TURNO · API PHP de Operaciones
    ───────────────────────────────────────────────────────────────────────
-   El navegador NUNCA habla directo con la API Node. Habla same-origin con
-   este proxy, que:
-     1) exige sesión PHP válida y rol con acceso a Operaciones,
-     2) inyecta la identidad (rol/nombre/id) desde $_SESSION en los headers
-        x-user-* que la API Node usa (auth simulada Fase 1). Así el rol NO se
-        puede falsificar desde el cliente: sale del servidor, no del fetch,
-     3) reenvía método + cuerpo a /api/operaciones/<path> y devuelve la
-        respuesta tal cual (status + JSON).
-     4) Si el Node API no responde y el método es GET, cae en fallback PHP
-        que consulta MySQL directo (DB "operaciones") para lectura inmediata.
+   El navegador habla same-origin con este endpoint, que:
+   1) exige sesión PHP válida y rol con acceso a Operaciones,
+   2) usa la identidad guardada en $_SESSION para las acciones auditables,
+   3) ejecuta todas las operaciones directamente en MySQL.
 
    Uso desde el front:  api/operaciones_proxy.php?path=naves            (GET)
                         api/operaciones_proxy.php?path=naves&estado=...  (GET + filtro)
@@ -30,9 +24,6 @@ define('OPER_DB',   OPER_DB_NAME);
 
 api_require_operaciones(); // 401 si no hay sesión, 403 si el rol no aplica
 
-// Base de la API Node (sobreescribible por variable de entorno del sistema).
-$NODE_BASE = getenv('OPERACIONES_API_BASE') ?: 'http://127.0.0.1:4000/api/operaciones';
-
 // ── Ruta destino: solo se permiten los recursos del módulo ──
 $path = trim($_GET['path'] ?? '', '/');
 if (!preg_match('#^(naves|tipos-nave|tallyman)(/[A-Za-z0-9_\-]+)*$#', $path)) {
@@ -48,62 +39,23 @@ if ($path === 'tallyman/registros-rango' && ($_SESSION['user_rol'] ?? '') !== 'A
     exit;
 }
 
-// ── Query params (todo menos 'path') se reenvían a la API ──
+// ── Query params (todo menos 'path') ─────────────────────────────────────────
 $query = $_GET;
 unset($query['path']);
-$url = $NODE_BASE . '/' . $path;
-if (!empty($query)) {
-    // RFC3986: el espacio va como %20 (no '+'), para que el estado tipo
-    // 'En Puerto' llegue inequívoco a la API.
-    $url .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
-}
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $body   = in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'], true)
         ? file_get_contents('php://input')
         : null;
 
-// ── Identidad de la sesión inyectada como headers (no falsificable por el cliente) ──
-$headers = [
-    'Content-Type: application/json',
-    'x-user-id: '   . ($_SESSION['user_id']  ?? ''),
-    'x-user-role: ' . ($_SESSION['user_rol'] ?? ''),
-    // El nombre se URL-codifica para no romper el header con acentos/espacios.
-    'x-user-name: ' . rawurlencode($_SESSION['user_name'] ?? ''),
-];
-
-$ch = curl_init($url);
-curl_setopt_array($ch, [
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_CUSTOMREQUEST  => $method,
-    CURLOPT_HTTPHEADER     => $headers,
-    CURLOPT_TIMEOUT        => 10,
-    CURLOPT_CONNECTTIMEOUT => 1,  // falla rápido; el fallback PHP entra en ~1 s
-]);
-if ($body !== null && $body !== '') {
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-}
-
-$resp    = curl_exec($ch);
-$apiDown = ($resp === false);
-$status  = $apiDown ? 0 : (curl_getinfo($ch, CURLINFO_RESPONSE_CODE) ?: 200);
-curl_close($ch);
-
-// ── Si el Node API no responde y es lectura → fallback PHP directo ──────────
-if ($apiDown && $method === 'GET') {
+if ($method === 'GET') {
     echo fallback_get($path, $query);
     exit;
 }
 
-if ($apiDown) {
-    echo fallback_write($path, $body, $method);
-    exit;
-}
+echo fallback_write($path, $body, $method);
 
-http_response_code($status);
-echo $resp;
-
-// ── Fallback escritura: POST/PUT/DELETE directo a MySQL ─────────────────────
+// ── Escritura directa a MySQL ────────────────────────────────────────────────
 function fallback_write(string $path, ?string $body, string $method): string
 {
     try {
@@ -120,8 +72,62 @@ function fallback_write(string $path, ?string $body, string $method): string
     $data = $body ? (json_decode($body, true) ?? []) : [];
     $registradoPor = rawurldecode($_SERVER['HTTP_X_USER_NAME'] ?? ($_SESSION['user_name'] ?? 'sistema'));
 
+    // ── Campos dinámicos por tipo de nave ────────────────────────────────────
+    if (preg_match('#^tipos-nave/(\d+)/campos(?:/(\d+))?$#', $path, $m) && in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+        if (($_SESSION['user_rol'] ?? '') !== 'Administrador') {
+            http_response_code(403);
+            return json_encode(['success' => false, 'error' => 'Solo Administrador puede configurar campos.']);
+        }
+        $tipoId = (int)$m[1];
+        $tipo = $pdo->prepare('SELECT id FROM tipos_nave WHERE id=? AND activo=1');
+        $tipo->execute([$tipoId]);
+        if (!$tipo->fetch()) {
+            http_response_code(404);
+            return json_encode(['success' => false, 'error' => 'Tipo de nave no encontrado.']);
+        }
+        if ($method === 'POST') {
+            $clave = trim($data['clave'] ?? '');
+            if (!preg_match('/^[a-z][a-z0-9_]*$/', $clave)) {
+                http_response_code(400);
+                return json_encode(['success' => false, 'error' => "La clave es obligatoria y debe ser [a-z][a-z0-9_]*."]);
+            }
+            $campo = fallback_validar_campo($data);
+            if (isset($campo['error'])) { http_response_code(400); return json_encode(['success' => false, 'error' => $campo['error']]); }
+            try {
+                $pdo->prepare('INSERT INTO campos_tipo_nave (tipo_nave_id, clave, etiqueta, tipo_dato, requerido, opciones, orden) VALUES (?,?,?,?,?,?,?)')
+                    ->execute([$tipoId, $clave, $campo['etiqueta'], $campo['tipo_dato'], $campo['requerido'], $campo['opciones'], $campo['orden']]);
+            } catch (PDOException $e) {
+                http_response_code(409);
+                return json_encode(['success' => false, 'error' => "Ya existe un campo con clave '$clave' en este tipo."]);
+            }
+            $id = (int)$pdo->lastInsertId();
+            http_response_code(201);
+            return json_encode(['success' => true, 'data' => fallback_obtener_campo($pdo, $id), '_fallback' => true]);
+        }
+        $campoId = (int)($m[2] ?? 0);
+        $actual = fallback_obtener_campo($pdo, $campoId);
+        if (!$actual || (int)$actual['tipo_nave_id'] !== $tipoId) {
+            http_response_code(404);
+            return json_encode(['success' => false, 'error' => 'Campo no encontrado.']);
+        }
+        if ($method === 'DELETE') {
+            $pdo->prepare('UPDATE campos_tipo_nave SET activo=0 WHERE id=?')->execute([$campoId]);
+            return json_encode(['success' => true, '_fallback' => true]);
+        }
+        $campo = fallback_validar_campo($data);
+        if (isset($campo['error'])) { http_response_code(400); return json_encode(['success' => false, 'error' => $campo['error']]); }
+        $activo = array_key_exists('activo', $data) ? (!empty($data['activo']) ? 1 : 0) : (int)$actual['activo'];
+        $pdo->prepare('UPDATE campos_tipo_nave SET etiqueta=?, tipo_dato=?, requerido=?, opciones=?, orden=?, activo=? WHERE id=?')
+            ->execute([$campo['etiqueta'], $campo['tipo_dato'], $campo['requerido'], $campo['opciones'], $campo['orden'], $activo, $campoId]);
+        return json_encode(['success' => true, 'data' => fallback_obtener_campo($pdo, $campoId), '_fallback' => true]);
+    }
+
     // ── POST /naves ──────────────────────────────────────────────────────────
     if ($path === 'naves' && $method === 'POST') {
+        if (!in_array($_SESSION['user_rol'] ?? '', ['Administrador', 'Supervisor'], true)) {
+            http_response_code(403);
+            return json_encode(['success' => false, 'error' => 'Solo Administrador o Supervisor puede crear naves.']);
+        }
         $nombre   = trim($data['nombre'] ?? '');
         $tipoId   = isset($data['tipo_nave_id']) ? (int)$data['tipo_nave_id'] : null;
         if (!$nombre || !$tipoId) { http_response_code(400); return json_encode(['success'=>false,'error'=>'nombre y tipo_nave_id son obligatorios.']); }
@@ -281,6 +287,61 @@ function fallback_write(string $path, ?string $body, string $method): string
             return json_encode(['success' => false, 'error' => 'Nave no encontrada.']);
         }
         return json_encode(['success' => true, 'data' => $nave, '_fallback' => true]);
+    }
+
+    // ── PUT /naves/{id}/tipo ─────────────────────────────────────────────────
+    if (preg_match('#^naves/(\d+)/tipo$#', $path, $m) && $method === 'PUT') {
+        $id = (int)$m[1];
+        $tipoId = filter_var($data['tipo_nave_id'] ?? null, FILTER_VALIDATE_INT);
+        if (!$tipoId || $tipoId <= 0) {
+            http_response_code(400);
+            return json_encode(['success' => false, 'error' => 'tipo_nave_id es obligatorio.']);
+        }
+        $tipo = $pdo->prepare('SELECT id FROM tipos_nave WHERE id=? AND activo=1');
+        $tipo->execute([$tipoId]);
+        if (!$tipo->fetch()) {
+            http_response_code(400);
+            return json_encode(['success' => false, 'error' => 'El tipo de nave no existe o está inactivo.']);
+        }
+        $pdo->prepare('UPDATE naves SET tipo_nave_id=?, updated_at=NOW() WHERE id=?')->execute([$tipoId, $id]);
+        $nave = fetch_nave_by_id($pdo, "n.id, n.nombre, n.muelle, n.tipo_nave_id, t.nombre AS tipo_nave, n.actividad_id, ta.nombre AS actividad, n.eta, n.etb, n.etd, n.estado, n.datos_adicionales, n.created_at, n.updated_at", $id);
+        if (!$nave) { http_response_code(404); return json_encode(['success' => false, 'error' => 'Nave no encontrada.']); }
+        return json_encode(['success' => true, 'data' => $nave, '_fallback' => true]);
+    }
+
+    // ── Reportes de avance por turno ─────────────────────────────────────────
+    if (preg_match('#^naves/(\d+)/avances(?:/(\d+))?$#', $path, $m) && in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
+        $naveId = (int)$m[1];
+        $avanceId = (int)($m[2] ?? 0);
+        $nave = $pdo->prepare('SELECT id FROM naves WHERE id=?');
+        $nave->execute([$naveId]);
+        if (!$nave->fetch()) { http_response_code(404); return json_encode(['success' => false, 'error' => 'Nave no encontrada.']); }
+        if ($method === 'POST' && ($_SESSION['user_rol'] ?? '') !== 'Coordinador') {
+            http_response_code(403); return json_encode(['success' => false, 'error' => 'Solo Coordinador puede registrar avances.']);
+        }
+        if ($method !== 'POST' && !in_array($_SESSION['user_rol'] ?? '', ['Administrador', 'Supervisor'], true)) {
+            http_response_code(403); return json_encode(['success' => false, 'error' => 'Solo Administrador o Supervisor puede modificar avances.']);
+        }
+        if ($method === 'DELETE') {
+            $pdo->prepare('DELETE FROM avances_nave WHERE id=? AND nave_id=?')->execute([$avanceId, $naveId]);
+            return json_encode(['success' => true, '_fallback' => true]);
+        }
+        $reporte = fallback_validar_avance($data);
+        if (isset($reporte['error'])) { http_response_code(400); return json_encode(['success' => false, 'error' => $reporte['error']]); }
+        if ($method === 'POST') {
+            $pdo->prepare('INSERT INTO avances_nave (nave_id, fecha_turno, turno, directa_tm, indirecta_tm, despacho_tm, descripcion_avance, registrado_por) VALUES (?,?,?,?,?,?,?,?)')
+                ->execute([$naveId, $reporte['fecha_turno'], $reporte['turno'], $reporte['directa_tm'], $reporte['indirecta_tm'], $reporte['despacho_tm'], $reporte['descripcion_avance'], $registradoPor]);
+            $avanceId = (int)$pdo->lastInsertId();
+            http_response_code(201);
+        } else {
+            $pdo->prepare('UPDATE avances_nave SET fecha_turno=?, turno=?, directa_tm=?, indirecta_tm=?, despacho_tm=?, descripcion_avance=? WHERE id=? AND nave_id=?')
+                ->execute([$reporte['fecha_turno'], $reporte['turno'], $reporte['directa_tm'], $reporte['indirecta_tm'], $reporte['despacho_tm'], $reporte['descripcion_avance'], $avanceId, $naveId]);
+        }
+        $avance = $pdo->prepare('SELECT id, nave_id, fecha_turno, turno, directa_tm, indirecta_tm, despacho_tm, bodegas, descripcion_avance, registrado_por, fecha_registro FROM avances_nave WHERE id=? AND nave_id=?');
+        $avance->execute([$avanceId, $naveId]);
+        $row = $avance->fetch();
+        if (!$row) { http_response_code(404); return json_encode(['success' => false, 'error' => 'Avance no encontrado.']); }
+        return json_encode(['success' => true, 'data' => decode_json_col($row, 'bodegas'), '_fallback' => true]);
     }
 
     // ── PUT /naves/{id} ─────────────────────────────────────────────────────
@@ -752,6 +813,18 @@ function fallback_get(string $path, array $params): string
         return json_encode(['success' => true, 'count' => count($rows), 'data' => $rows, '_fallback' => true]);
     }
 
+    // GET /tipos-nave/{id}/campos
+    if (preg_match('#^tipos-nave/(\d+)/campos$#', $path, $m)) {
+        $tipoId = (int)$m[1];
+        $tipo = $pdo->prepare('SELECT id FROM tipos_nave WHERE id=? AND activo=1');
+        $tipo->execute([$tipoId]);
+        if (!$tipo->fetch()) { http_response_code(404); return json_encode(['success' => false, 'error' => 'Tipo de nave no encontrado.']); }
+        $stmt = $pdo->prepare('SELECT id, tipo_nave_id, clave, etiqueta, tipo_dato, requerido, opciones, orden, activo FROM campos_tipo_nave WHERE tipo_nave_id=? AND activo=1 ORDER BY orden, id');
+        $stmt->execute([$tipoId]);
+        $campos = array_map(fn($r) => decode_json_col($r, 'opciones'), $stmt->fetchAll());
+        return json_encode(['success' => true, 'count' => count($campos), 'data' => $campos, '_fallback' => true]);
+    }
+
     $COLS = "n.id, n.nombre, n.muelle, n.tipo_nave_id, t.nombre AS tipo_nave,
              n.actividad_id, ta.nombre AS actividad,
              n.eta, n.etb, n.etd, n.estado, n.datos_adicionales, n.created_at, n.updated_at";
@@ -801,7 +874,10 @@ function fallback_get(string $path, array $params): string
     if (preg_match('#^naves/(\d+)$#', $path, $m)) {
         $nave = fetch_nave_by_id($pdo, $COLS, (int)$m[1]);
         if (!$nave) { http_response_code(404); return json_encode(['success' => false, 'error' => 'Nave no encontrada.']); }
-        return json_encode(['success' => true, 'data' => ['nave' => $nave, 'campos' => []], '_fallback' => true]);
+        $stmt = $pdo->prepare('SELECT id, tipo_nave_id, clave, etiqueta, tipo_dato, requerido, opciones, orden, activo FROM campos_tipo_nave WHERE tipo_nave_id=? AND activo=1 ORDER BY orden, id');
+        $stmt->execute([(int)$nave['tipo_nave_id']]);
+        $campos = array_map(fn($r) => decode_json_col($r, 'opciones'), $stmt->fetchAll());
+        return json_encode(['success' => true, 'data' => ['nave' => $nave, 'campos' => $campos], '_fallback' => true]);
     }
 
     // GET /naves
@@ -1049,7 +1125,7 @@ function fallback_get(string $path, array $params): string
     }
 
     http_response_code(503);
-    return json_encode(['success' => false, 'error' => 'Ruta no disponible en modo fallback (API Node no está corriendo).']);
+    return json_encode(['success' => false, 'error' => 'Ruta no disponible.']);
 }
 
 // ── Helpers tallyman ──────────────────────────────────────────────────────────
@@ -1116,6 +1192,58 @@ function tm_calcular_totales(array $regs): array
         'porcentaje'    => $porcentaje,
         'n_actividades' => count($regs),
     ];
+}
+
+function fallback_validar_campo(array $data): array
+{
+    $etiqueta = trim($data['etiqueta'] ?? '');
+    $tipo = $data['tipo_dato'] ?? '';
+    $tipos = ['texto', 'numero', 'fecha', 'booleano', 'seleccion'];
+    if ($etiqueta === '') return ['error' => 'La etiqueta es obligatoria.'];
+    if (!in_array($tipo, $tipos, true)) return ['error' => 'tipo_dato inválido.'];
+    $opciones = $data['opciones'] ?? null;
+    if ($tipo === 'seleccion' && (!is_array($opciones) || !$opciones)) {
+        return ['error' => "tipo_dato 'seleccion' requiere 'opciones' (array no vacío)."];
+    }
+    return [
+        'etiqueta' => $etiqueta,
+        'tipo_dato' => $tipo,
+        'requerido' => !empty($data['requerido']) ? 1 : 0,
+        'opciones' => $opciones ? json_encode($opciones) : null,
+        'orden' => isset($data['orden']) ? (int)$data['orden'] : 0,
+    ];
+}
+
+function fallback_obtener_campo(PDO $pdo, int $id): ?array
+{
+    $stmt = $pdo->prepare('SELECT id, tipo_nave_id, clave, etiqueta, tipo_dato, requerido, opciones, orden, activo FROM campos_tipo_nave WHERE id=?');
+    $stmt->execute([$id]);
+    $campo = $stmt->fetch();
+    return $campo ? decode_json_col($campo, 'opciones') : null;
+}
+
+function fallback_validar_avance(array $data): array
+{
+    $fecha = isset($data['fecha_turno']) && $data['fecha_turno'] !== '' ? trim((string)$data['fecha_turno']) : null;
+    if ($fecha !== null && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) return ['error' => 'fecha_turno debe ser YYYY-MM-DD.'];
+    $turno = isset($data['turno']) && $data['turno'] !== '' ? trim((string)$data['turno']) : null;
+    if ($turno !== null && !in_array($turno, ['Mañana', 'Noche'], true)) return ['error' => 'Turno inválido. Use: Mañana o Noche.'];
+    $valores = [];
+    foreach (['directa_tm' => 'Descarga directa', 'indirecta_tm' => 'Descarga indirecta', 'despacho_tm' => 'Despacho de almacén'] as $clave => $etiqueta) {
+        $valor = $data[$clave] ?? null;
+        if ($valor === '' || $valor === null) {
+            $valores[$clave] = null;
+        } elseif (!is_numeric($valor) || (float)$valor < 0) {
+            return ['error' => $etiqueta . ' debe ser un número ≥ 0.'];
+        } else {
+            $valores[$clave] = (float)$valor;
+        }
+    }
+    $obs = trim((string)($data['observaciones'] ?? $data['descripcion_avance'] ?? '')) ?: null;
+    if (!array_filter($valores, fn($v) => $v !== null && $v > 0) && !$obs) {
+        return ['error' => 'Registra al menos una cantidad movida o una observación.'];
+    }
+    return array_merge(['fecha_turno' => $fecha, 'turno' => $turno, 'descripcion_avance' => $obs], $valores);
 }
 
 function fetch_nave_by_id(PDO $pdo, string $cols, int $id): ?array
