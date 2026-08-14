@@ -123,15 +123,15 @@ export const TallymanModel = {
               ult.planned     AS planned_sugerido
          FROM naves n
          JOIN tallyman_registros tr ON tr.nave_id = n.id AND tr.interna > 0
-         LEFT JOIN tallyman_registros ult
-                ON ult.id = (
-                     SELECT MAX(id) FROM tallyman_registros
-                      WHERE ubicacion_tipo = 'YARD'
-                        AND status_act <> 'Culminado'
-                        AND nave_id = n.id
-                   )
-        GROUP BY n.id, n.nombre, ult.actividad_id, ult.planned
-        ORDER BY n.nombre`,
+          LEFT JOIN tallyman_registros ult
+                 ON ult.id = (
+                      SELECT MAX(id) FROM tallyman_registros
+                       WHERE ubicacion_tipo = 'YARD'
+                         AND nave_id = n.id
+                    )
+         GROUP BY n.id, n.nombre, ult.id, ult.actividad_id, ult.planned, ult.status_act
+        HAVING ult.status_act IS NULL OR ult.status_act <> 'Culminado'
+         ORDER BY n.nombre`,
     );
     return rows;
   },
@@ -144,18 +144,13 @@ export const TallymanModel = {
   // que el formulario autocomplete actividad y planned.
   async nombresPatioActivos() {
     const [rows] = await pool.query(
-      `SELECT DISTINCT tr.nave_patio AS nombre,
-              (SELECT tr2.actividad_id FROM tallyman_registros tr2
-                WHERE tr2.nave_patio = tr.nave_patio AND tr2.status_act <> 'Culminado'
-                ORDER BY tr2.id DESC LIMIT 1) AS actividad_id_sugerida,
-              (SELECT tr2.planned FROM tallyman_registros tr2
-                WHERE tr2.nave_patio = tr.nave_patio AND tr2.status_act <> 'Culminado'
-                ORDER BY tr2.id DESC LIMIT 1) AS planned_sugerido
+      `SELECT tr.nave_patio AS nombre,
+              tr.actividad_id AS actividad_id_sugerida,
+              tr.planned AS planned_sugerido
          FROM tallyman_registros tr
         WHERE tr.nave_patio IS NOT NULL AND tr.nave_patio <> ''
           AND tr.id = (SELECT MAX(m.id) FROM tallyman_registros m
-                        WHERE m.nave_patio = tr.nave_patio
-                          AND m.actividad_id = tr.actividad_id)
+                        WHERE m.nave_patio = tr.nave_patio)
           AND tr.status_act <> 'Culminado'
         ORDER BY tr.nave_patio`,
     );
