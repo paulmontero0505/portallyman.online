@@ -54,21 +54,6 @@
   function ubicNum(s) { var m = String(s == null ? '' : s).match(/(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : null; }
   function muelleToBerth(muelle) { var n = ubicNum(muelle); if (n == null) return null; for (var i = 0; i < UBICS_BERTH.length; i++) { if (ubicNum(UBICS_BERTH[i]) === n) return UBICS_BERTH[i]; } return null; }
   function naveById(id) { return naves.filter(function (x) { return String(x.id) === String(id); })[0] || null; }
-  function navesEnBerth(berthVal) { var n = ubicNum(berthVal); if (n == null) return []; return naves.filter(function (x) { return ubicNum(x.muelle) === n; }); }
-
-  // Opciones del select NAVE filtradas por ubicación y tipo.
-  // ensureId fuerza incluir esa nave aunque no calce con los filtros (p. ej. al editar).
-  function naveOptsHTML(tipoVal, berthVal, ensureId) {
-    var list = navesEnBerth(berthVal).filter(function (n) {
-      return !tipoVal || String(n.tipo_nave_id) === String(tipoVal);
-    });
-    if (ensureId != null && !list.some(function (n) { return String(n.id) === String(ensureId); })) {
-      var ex = naveById(ensureId); if (ex) list = [ex].concat(list);
-    }
-    return '<option value="">— Sin nave —</option>' +
-      list.map(function (n) { return '<option value="' + OP.esc(String(n.id)) + '">' + OP.esc(n.nombre) + '</option>'; }).join('') +
-      '<option value="__otros__">Otros (registrar nueva nave)</option>';
-  }
 
   // Filtro de ACTIVIDAD por TIPO DE NAVE. Cada entrada lista los prefijos (en
   // minúsculas) de los nombres de actividad que aplican a ese tipo. Los tipos que
@@ -182,7 +167,7 @@
 
     if (tipo === 'BERTH') {
       var navesOpt = [{ v: '', t: '— Sin nave —' }]
-        .concat(navesEnBerth(UBICS_BERTH[0]).map(function (n) { return { v: String(n.id), t: n.nombre }; }))
+        .concat(naves.map(function (n) { return { v: String(n.id), t: n.nombre }; }))
         .concat([{ v: '__otros__', t: 'Otros (registrar nueva nave)' }]);
       var actOpt = actividades.map(function (a) { return { v: String(a.id), t: a.nombre }; });
       var tipoFiltroOpt = [{ v: '', t: 'Todos los tipos' }]
@@ -215,7 +200,12 @@
           '</select>' + CARET + '</div></div>' +
           fSelect('Tipo de nave', 'tipo_filtro', tipoFiltroOpt, false) +
           '<div class="op-field full" data-ubicnote style="display:none;font-size:12px;color:var(--faint);margin-top:-6px"></div>' +
-          fSelect('Nave', 'nave_id', navesOpt, false) +
+          '<div class="op-field full tm-nave-field"><label>Nave disponible</label>' +
+            '<div class="op-input"><select class="op-control op-select" data-k="nave_id">' +
+              navesOpt.map(function (o) { return '<option value="' + OP.esc(o.v) + '">' + OP.esc(o.t) + '</option>'; }).join('') +
+            '</select>' + CARET + '</div>' +
+            '<small>Al seleccionarla se cargan ubicación, tipo y actividad. Puedes corregirlos antes de guardar.</small>' +
+          '</div>' +
           nnNombreField +
           nuevaNaveBanner +
           fSelect('Actividad', 'actividad_id', actOpt, true) +
@@ -595,19 +585,9 @@
     var tipoSel = body.querySelector('[data-k="tipo_filtro"]');
     var tiposLoaded = false;
 
-    // Reconstruye el select NAVE según el muelle y tipo elegidos, conservando la selección
-    // actual si sigue presente. ensureId fuerza incluir una nave concreta (editar).
-    function rebuildNaves(keepVal, ensureId) {
-      if (!naveSel) return;
-      naveSel.innerHTML = naveOptsHTML(tipoSel ? tipoSel.value : '', ubicSel ? ubicSel.value : '', ensureId);
-      var has = [].some.call(naveSel.options, function (o) { return o.value === keepVal; });
-      naveSel.value = has ? keepVal : '';
-    }
     if (tipoSel) tipoSel.addEventListener('change', function () {
-      rebuildNaves(naveSel.value, null);
       var nnTipo = body.querySelector('[data-k="nn_tipo"]');
       if (nnTipo) nnTipo.value = tipoSel.value;  // el tipo de la nave nueva = tipo elegido arriba
-      naveSel.dispatchEvent(new Event('change'));
       aplicarModoCementero();
     });
 
@@ -738,6 +718,7 @@
       plannedIn.value = n ? plannedDeNave(n) : '';
       heredarActividad(n);
       aplicarMuelleDeNave(n);
+      if (n) setUbicNote('Datos cargados desde Operaciones. Puedes corregir ubicación, tipo o actividad; los cambios se sincronizarán al guardar.');
       aplicarPlannedSegunStatus();
       aplicarModoCementero();
       recalc();
@@ -763,26 +744,10 @@
 
     if (ubicSel && ubicSel.tagName === 'SELECT') {
       ubicSel.addEventListener('change', function () {
-        var ns = navesEnBerth(ubicSel.value);
-        if (ns.length >= 1) {
-          // Sincroniza el filtro de tipo y reconstruye la lista para no perder la nave.
-          if (tipoSel && ns[0].tipo_nave_id != null) tipoSel.value = String(ns[0].tipo_nave_id);
-          rebuildNaves(String(ns[0].id), ns[0].id);
-          naveSel.value = String(ns[0].id);
-          plannedIn.value = plannedDeNave(ns[0]);
-          heredarActividad(ns[0]);
-          aplicarMuelleDeNave(ns[0]);
-          aplicarPlannedSegunStatus();
-          aplicarModoCementero();
-          recalc();
-          sugerirStatus();
-          setUbicNote(ns.length > 1 ? 'Hay varias naves en este muelle — verifica la nave seleccionada.' : '');
-        } else {
-          rebuildNaves('', null);
-          plannedIn.value = '';
-          setUbicNote('No hay nave registrada en este muelle (Operaciones).');
-          sugerirStatus();
+        if (naveSel.value && naveSel.value !== '__otros__') {
+          setUbicNote('Ubicación corregida. Se actualizará en Operaciones al guardar esta actividad.');
         }
+        sugerirStatus();
       });
     }
     if (directaIn) directaIn.addEventListener('input', recalc);
