@@ -5,8 +5,9 @@ require_operaciones();
 $rol           = $_SESSION['user_rol'] ?? '';
 $naveId        = (int)($_GET['id'] ?? 0);
 $canWriteDatos = in_array($rol, ['Administrador', 'Supervisor'], true);
-// El Coordinador también puede EDITAR la nave (no eliminarla): su edición se
-// propaga a las actividades registradas con esa nave.
+$canDeleteNave = in_array($rol, ['Administrador', 'Supervisor', 'Coordinador'], true);
+// El Coordinador también puede editar la nave; su edición se propaga a las
+// actividades registradas con esa nave.
 $canEditNave   = in_array($rol, ['Administrador', 'Supervisor', 'Coordinador'], true);
 $canAvance     = ($rol === 'Coordinador');
 $canDefinir    = ($rol === 'Administrador');
@@ -45,7 +46,7 @@ $canDefinir    = ($rol === 'Administrador');
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
               Editar nave
             </button>
-            <?php if ($canWriteDatos): ?>
+            <?php if ($canDeleteNave): ?>
             <button class="op-btn danger sm" id="btnDelNave" type="button">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
               Eliminar nave
@@ -220,6 +221,7 @@ $canDefinir    = ($rol === 'Administrador');
   id: <?= $naveId ?>,
   rol: <?= json_encode($rol) ?>,
   canWriteDatos: <?= $canWriteDatos ? 'true' : 'false' ?>,
+  canDeleteNave: <?= $canDeleteNave ? 'true' : 'false' ?>,
   canEditNave: <?= $canEditNave ? 'true' : 'false' ?>,
   canAvance: <?= $canAvance ? 'true' : 'false' ?>,
   canDefinir: <?= $canDefinir ? 'true' : 'false' ?>
@@ -896,8 +898,8 @@ $canDefinir    = ($rol === 'Administrador');
     });
   }
 
-  // Eliminar nave (Admin/Supervisor): borra en cascada sus avances y vuelve al listado.
-  if (CTX.canWriteDatos) {
+  // Eliminar nave (roles operativos): borra en cascada sus avances y vuelve al listado.
+  if (CTX.canDeleteNave) {
     var bDel = $('btnDelNave');
     if (bDel) bDel.addEventListener('click', async function () {
       var nombre = nave ? nave.nombre : ('#' + ID);

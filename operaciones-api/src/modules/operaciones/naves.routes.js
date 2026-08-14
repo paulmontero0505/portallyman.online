@@ -43,7 +43,7 @@ router.put('/naves/:id/muelle-actividad', requireRole('Administrador', 'Supervis
 // El Coordinador también puede editar; la edición se propaga a las actividades de la nave.
 router.put('/naves/:id', requireRole('Administrador', 'Supervisor', 'Coordinador'), actualizarNave);
 
-// Eliminar nave (y sus avances en cascada): Administrador o Supervisor
-router.delete('/naves/:id', requireRole('Administrador', 'Supervisor'), eliminarNave);
+// Eliminar nave (y sus avances en cascada): roles operativos
+router.delete('/naves/:id', requireRole('Administrador', 'Supervisor', 'Coordinador'), eliminarNave);
 
 export default router;

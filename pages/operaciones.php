@@ -4,6 +4,7 @@ require_operaciones();
 
 $rol       = $_SESSION['user_rol'] ?? '';
 $canCreate = in_array($rol, ['Administrador', 'Supervisor'], true);
+$canDelete = in_array($rol, ['Administrador', 'Supervisor', 'Coordinador'], true);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -250,7 +251,7 @@ $canCreate = in_array($rol, ['Administrador', 'Supervisor'], true);
   </div>
 </div>
 
-<script>window.OP_CTX = { rol: <?= json_encode($rol) ?>, canCreate: <?= $canCreate ? 'true' : 'false' ?> };</script>
+<script>window.OP_CTX = { rol: <?= json_encode($rol) ?>, canCreate: <?= $canCreate ? 'true' : 'false' ?>, canDelete: <?= $canDelete ? 'true' : 'false' ?> };</script>
 <script src="../js/operaciones.js"></script>
 <script>
 (function () {
@@ -541,7 +542,7 @@ $canCreate = in_array($rol, ['Administrador', 'Supervisor'], true);
   }
 
   function rowHtml(n) {
-    var del = CTX.canCreate
+    var del = CTX.canDelete
       ? '<button class="op-btn danger sm" type="button" data-del="' + n.id + '" title="Eliminar nave">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>' +
           'Eliminar</button>'
@@ -561,7 +562,7 @@ $canCreate = in_array($rol, ['Administrador', 'Supervisor'], true);
     '</tr>';
   }
 
-  // Elimina una nave (Admin/Supervisor). El backend borra en cascada sus avances.
+  // Elimina una nave (roles operativos). El backend borra en cascada sus avances.
   async function eliminarNave(id) {
     var n = naves.filter(function (x) { return String(x.id) === String(id); })[0];
     var nombre = n ? n.nombre : ('#' + id);
@@ -660,7 +661,7 @@ $canCreate = in_array($rol, ['Administrador', 'Supervisor'], true);
   });
   $('opSearch').addEventListener('input', function (e) { searchQ = e.target.value; render(); });
 
-  // Eliminar nave desde la vista tabla (botón por fila; sólo Admin/Supervisor).
+  // Eliminar nave desde la vista tabla (botón por fila; roles operativos).
   var tbodyEl = $('opTbody');
   if (tbodyEl) tbodyEl.addEventListener('click', function (e) {
     var b = e.target.closest('[data-del]'); if (!b) return;

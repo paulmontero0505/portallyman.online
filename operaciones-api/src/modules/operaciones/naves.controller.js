@@ -184,7 +184,7 @@ export const actualizarMuelleActividadNave = asyncHandler(async (req, res) => {
   res.json({ success: true, data: nave });
 });
 
-// DELETE /api/operaciones/naves/:id   (Administrador, Supervisor)
+// DELETE /api/operaciones/naves/:id   (Administrador, Supervisor, Coordinador)
 export const eliminarNave = asyncHandler(async (req, res) => {
   const naveId = Number(req.params.id);
   if (!Number.isInteger(naveId) || naveId <= 0) throw new ApiError(400, 'ID de nave inválido.');
