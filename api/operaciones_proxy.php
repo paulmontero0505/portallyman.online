@@ -125,9 +125,9 @@ function fallback_write(string $path, ?string $body, string $method): string
 
     // ── POST /naves ──────────────────────────────────────────────────────────
     if ($path === 'naves' && $method === 'POST') {
-        if (!in_array($_SESSION['user_rol'] ?? '', ['Administrador', 'Supervisor'], true)) {
+        if (!in_array($_SESSION['user_rol'] ?? '', ['Administrador', 'Supervisor', 'Coordinador'], true)) {
             http_response_code(403);
-            return json_encode(['success' => false, 'error' => 'Solo Administrador o Supervisor puede crear naves.']);
+            return json_encode(['success' => false, 'error' => 'Solo Administrador, Supervisor o Coordinador puede crear naves.']);
         }
         $nombre   = trim($data['nombre'] ?? '');
         $tipoId   = isset($data['tipo_nave_id']) ? (int)$data['tipo_nave_id'] : null;
