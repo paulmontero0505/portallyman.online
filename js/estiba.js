@@ -367,8 +367,11 @@
   // ── Permisos por rol + fecha de turno ─────────────────────────────────
   // Admin/Supervisor: cualquier turno. Coordinador: solo el turno de hoy.
   function _esTurnoHoy() {
-    // Comparar contra la fecha LOCAL, no UTC. En turno noche (UTC-5), toISOString()
-    // ya devuelve el día siguiente y bloqueaba al Coordinador en su propio turno.
+    // Usar la fecha que devuelve el servidor (America/Lima), no el reloj del
+    // dispositivo: un celular con hora/zona horaria desconfigurada (frecuente
+    // en iPhone sin "Ajustar automáticamente") bloqueaba al Coordinador en su
+    // propio turno aunque el servidor sí lo considerara "hoy".
+    if (state.serverFecha) return state.turnoFecha === state.serverFecha;
     const hoy = new Date();
     const local = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
     return state.turnoFecha === local;
@@ -2659,17 +2662,18 @@
       const selPersonal = state.personal.filter(p => ids.includes(p.id));
       const btn = $('refMasivoGuardar'); btn.disabled = true;
       btn.textContent = 'Guardando…';
-      let ok = 0, err = 0;
+      let ok = 0, err = 0, firstErrMsg = '';
       for (const p of selPersonal) {
         try {
           const r = await apiPost('api/add_evento.php', { tpId: p.tpId, tipo: 'refrigerio', horaInicio: ini, horaFin: fin, motivo, observaciones: '' });
           p.bitacora.push({ id: r.id, tipo: 'refrigerio', motivo, horaInicio: ini, horaFin: fin, observaciones: '' });
           ok++;
-        } catch (_) { err++; }
+        } catch (e) { err++; if (!firstErrMsg) firstErrMsg = e.message || ''; }
       }
       renderGrid(); renderKpis();
       pushAccion('evento', `Refrigerio masivo ${ini}${fin ? '–'+fin : ''} · ${motivo} (${ok} personas)`, '', '');
-      toast(`Refrigerio registrado a ${ok} persona${ok !== 1 ? 's' : ''}${err ? ` · ${err} error(es)` : ''}`);
+      const msg = `Refrigerio registrado a ${ok} persona${ok !== 1 ? 's' : ''}${err ? ` · ${err} error(es)${firstErrMsg ? ': ' + firstErrMsg : ''}` : ''}`;
+      toast(msg, err && !ok ? 'error' : undefined);
       btn.disabled = false; btn.textContent = 'Registrar refrigerio';
       closeRefMasivo();
     }
@@ -2966,6 +2970,7 @@
     state.jornadaId   = src.turnoJornadaId ?? null;
     state.jornadas    = [...(src.jornadas || [])];
     state.turnoFecha  = src.turnoFecha ?? null;
+    state.serverFecha = src.serverFecha ?? null;
     state.motivos     = [...(src.motivosDisponibles || [])];
     state.acciones    = [...(src.acciones || [])];
     state.puedeValidar = !!src.puedeValidar;

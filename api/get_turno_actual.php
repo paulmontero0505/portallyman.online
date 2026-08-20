@@ -188,4 +188,5 @@ echo json_encode([
     'puedeValidar'           => can_validate(),   // Admin/Supervisor: validar y REABRIR
     'puedeCerrar'            => can_report(),      // Admin/Supervisor/Coordinador: CERRAR
     'rol'                    => $_SESSION['user_rol'] ?? null,
+    'serverFecha'            => date('Y-m-d'),     // fecha del servidor (America/Lima): base para permisos por rol, no el reloj del dispositivo.
 ]);
